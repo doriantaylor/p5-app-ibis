@@ -1,8 +1,12 @@
 package App::IBIS::Controller::Root;
+
+use strict;
+use warnings FATAL => 'all';
+
 use Moose;
 use namespace::autoclean;
 
-BEGIN { extends 'Catalyst::Controller' }
+BEGIN { extends 'App::IBIS::Base::Controller' }
 
 #
 # Sets the actions in this controller to be registered with no prefix
