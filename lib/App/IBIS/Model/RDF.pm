@@ -8,11 +8,11 @@ use namespace::autoclean;
 
 extends 'Catalyst::Model::RDF';
 
-after BUILD => sub {
-    my $self = shift;
-    warn Data::Dumper::Dumper($self->config);
-    warn Data::Dumper::Dumper($self);
-};
+# after BUILD => sub {
+#     my $self = shift;
+#     warn Data::Dumper::Dumper($self->config);
+#     warn Data::Dumper::Dumper($self);
+# };
 
 =head1 NAME
 

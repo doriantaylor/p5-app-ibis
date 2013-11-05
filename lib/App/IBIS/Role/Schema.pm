@@ -1,20 +1,17 @@
-package App::IBIS::Base::Controller;
+package App::IBIS::Role::Schema;
 
 use strict;
 use warnings FATAL => 'all';
 
-use Moose;
+#use Moose;
+use Moose::Role;
 use namespace::autoclean;
 
 use URI;
-use URI::NamespaceMap;
+#use URI::NamespaceMap;
+use RDF::Trine::NamespaceMap;
 
-use RDF::Trine qw(iri blank literal);
-
-use Data::GUID::Any    ();
-use Data::UUID::NCName ();
-
-BEGIN { extends 'Catalyst::Controller' }
+#use RDF::Trine qw(iri blank literal);
 
 # if i hadn't already mentioned, the angry fruit salad takes care of
 # all this crap.
@@ -182,6 +179,11 @@ sub xmlns {
     \%out;
 }
 
+has re => (
+    is      => 'ro',
+    isa     => 'RegexpRef',
+    default => sub { $IBIS_RE },
+);
 
 =head2 labels
 
@@ -220,6 +222,14 @@ sub predicate_seq {
     @SEQ;
 }
 
+=head2 types
+
+=cut
+
+sub types {
+    map { $NS->ibis->uri($_) } qw(Issue Position Argument);
+}
+
 =head2 links
 
 =cut
@@ -246,19 +256,10 @@ has metas => (
 
 =cut
 
-has base => (
-    is  => 'rw',
-    isa => 'URI',
-);
-
-=head2 uuid4
-
-=cut
-
-sub uuid4 () {
-    lc Data::GUID::Any::v4_guid_as_string();
-}
-
+# has base => (
+#     is  => 'rw',
+#     isa => 'URI',
+# );
 
 =head1 METHODS
 
@@ -275,6 +276,6 @@ it under the same terms as Perl itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
+#__PACKAGE__->meta->make_immutable;
 
 1;

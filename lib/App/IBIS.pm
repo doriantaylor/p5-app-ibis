@@ -25,6 +25,8 @@ use Catalyst qw/
     ConfigLoader
     Static::Simple
 /;
+#    +CatalystX::Profile
+#/;
 
 extends 'Catalyst';
 
