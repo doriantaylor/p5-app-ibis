@@ -22,6 +22,7 @@ BEGIN { extends 'Catalyst::Controller' }
 my %XMLNS = (
     rdf   => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     ibis  => 'http://privatealpha.com/ontology/ibis/1#',
+    skos  => 'http://www.w3.org/2004/02/skos/core#',
     dct   => 'http://purl.org/dc/terms/',
     xsd   => 'http://www.w3.org/2001/XMLSchema#',
     xlink => 'http://www.w3.org/1999/xlink',
@@ -259,6 +260,9 @@ sub uuid4 () {
     lc Data::GUID::Any::v4_guid_as_string();
 }
 
+sub uuid4urn () {
+    URI->new('urn:uuid:' . uuid4);
+}
 
 =head1 METHODS
 

@@ -19,6 +19,7 @@ use RDF::Trine::NamespaceMap;
 my %XMLNS = (
     rdf   => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     ibis  => 'http://privatealpha.com/ontology/ibis/1#',
+    skos  => 'http://www.w3.org/2004/02/skos/core#',
     dct   => 'http://purl.org/dc/terms/',
     xsd   => 'http://www.w3.org/2001/XMLSchema#',
     xlink => 'http://www.w3.org/1999/xlink',

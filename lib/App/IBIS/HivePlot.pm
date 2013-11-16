@@ -31,6 +31,13 @@ has callback => (
     default  => sub { sub { shift } }, # yodawgyodawgyo
 );
 
+has collections => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    lazy    => 1,
+    default => sub { [] },
+);
+
 # # which RDF types we're interested in
 # has types => (
 #     is      => 'ro',

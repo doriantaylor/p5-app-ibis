@@ -27,13 +27,30 @@ use App::IBIS::HivePlot;
 
 my $UUID_RE = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
 
+has _dispatch => (
+    is => 'ro',
+    isa => 'HashRef',
+    lazy => 1,
+    default => sub {
+        my $self = shift;
+        my $ns = $self->ns;
+        my $ibis = $ns->ibis;
+        my $skos = $ns->skos;
+        return {
+            $ibis->Issue->value      => '_get_ibis',
+            $ibis->Position->value   => '_get_ibis',
+            $ibis->Argument->value   => '_get_ibis',
+            $skos->Concept->value    => '_get_concept',
+            $skos->Collection->value => '_get_collection',
+        };
+    },
+);
 
 #
 # Sets the actions in this controller to be registered with no prefix
 # so they function identically to actions created in MyApp.pm
 #
 __PACKAGE__->config(namespace => '');
-
 
 =head1 NAME
 
@@ -68,6 +85,8 @@ sub hp :Local {
     my $b   = $req->base;
     my $q   = $req->query_parameters;
     my $ref = $q->{referrer} || $q->{referer} || $req->referer;
+    my $col = $q->{collection} || [];
+    $col = ref $col ? $col : [$col];
 
     # glean subject from referrer
     my $s;
@@ -81,8 +100,9 @@ sub hp :Local {
     }
 
     my $hp = App::IBIS::HivePlot->new(
-        model    => $c->model('RDF'),
-        callback => sub { _from_urn(shift, $b) },
+        model       => $c->model('RDF'),
+        callback    => sub { _from_urn(shift, $b) },
+        collections => $col,
     );
     $c->res->content_type('image/svg+xml');
     $c->res->body($hp->plot($s)->toString(1));
@@ -107,11 +127,18 @@ sub uuid :Regexp('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})') {
         $resp->redirect($path);
     }
     elsif ($method eq 'GET' or $method eq 'HEAD') {
+        # do this for now until we can handle html properly
+        $resp->content_type('application/xhtml+xml');
         # check model for subject
         my $m = $c->model('RDF');
-        if ($m->count_statements($uuid, undef, undef)) {
+        if (my @o = $m->objects($uuid, $self->ns->rdf->type, undef)) {
+            # GHETTO FRESNEL
+            my $d = $self->_dispatch;
+            my ($handler) = map { $d->{$_->value} } grep { $d->{$_->value} } @o;
+            #warn $handler;
             $resp->status(200);
-            $resp->body($self->_get_uuid($c, $req->uri, $uuid));
+            $c->forward($handler, [$uuid]);
+            #$resp->body($self->_get_uuid($c, $req->uri, $uuid));
         }
         else {
             # 404
@@ -142,9 +169,50 @@ sub dump :Local {
     $resp->body($serializer->serialize_model_to_string($c->model('RDF')));
 }
 
+sub _get_collection :Private {
+    my ($self, $c, $subject) = @_;
 
-sub _get_uuid {
-    my ($self, $c, $uri, $subject) = @_;
+    # XXX COPY THIS SHIT FROM THE OTHER ONE
+
+    my $uri = $c->req->uri;
+
+    my $m = $c->model('RDF');
+
+    #warn $subject;
+    my $rns = $self->ns;
+
+    # XXX THIS CAN GET AWAY ON US
+    my ($type)  = $m->objects($subject, $rns->rdf->type);
+    my ($title) = $m->objects($subject, $rns->skos->prefLabel);
+    my ($desc)  = $m->objects($subject, $rns->skos->description);
+
+    my %attrs;
+    $attrs{typeof} = $rns->abbreviate($type) if $type;
+
+    my $maybetitle = $title ? $title->value : '';
+
+    my $body = $self->_doc($maybetitle || $subject->value,
+                           $uri, undef, \%attrs,
+                           (E form => { method => 'post',
+                                        action => $uri,
+                                        'accept-encoding' => 'utf-8' },
+                            (E h1 => {},
+                             E input => {
+                                 name => '= skos:prefLabel',
+                                 value => $maybetitle }),
+                            (E p => {},
+                             (E textarea => { name => '= skos:description' },
+                              $desc ? $desc->value : ''))),
+            )->toString(1);
+
+    # XXX forward this maybe?
+    $c->res->body($body);
+}
+
+sub _get_ibis :Private {
+    my ($self, $c, $subject) = @_;
+
+    my $uri = $c->req->uri;
 
     my $m = $c->model('RDF');
 
@@ -158,11 +226,11 @@ sub _get_uuid {
     my %attrs;
     $attrs{typeof} = $rns->abbreviate($type) if $type;
 
-    $self->_doc($title ? $title->value : '', $uri, undef, \%attrs,
+    my $body = $self->_doc($title ? $title->value : '', $uri, undef, \%attrs,
                 (E div => { class => 'aside' },
                  (E object => { class => 'hiveplot',
                                 data => '/hp',
-                                type => 'image/svg+xml' }, "\xa0")),
+                                type => 'image/svg+xml' }, "(Hive Plot)")),
                  (E div => { class => 'main' },
                   $self->_do_content($c, $subject),
                   (E div => {},
@@ -170,6 +238,9 @@ sub _get_uuid {
                    $self->_do_create_form($c, $uri, $type)),
                   $self->_do_toggle),
             )->toString(1);
+
+    # XXX forward this maybe?
+    $c->res->body($body);
 }
 
 sub _to_urn {
@@ -196,6 +267,7 @@ sub _post_uuid {
     my $ns = URI::NamespaceMap->new({
         rdf  => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
         ibis => 'http://privatealpha.com/ontology/ibis/1#',
+        skos => 'http://www.w3.org/2004/02/skos/core#',
         dct  => 'http://purl.org/dc/terms/',
     });
 
@@ -211,7 +283,7 @@ sub _post_uuid {
     my $patch = $kv->process($content);
     #warn Data::Dumper::Dumper($patch);
     my $m = $c->model('RDF');
-    warn $m->size;
+    $c->log->debug("Size: " .$m->size);
     # add a timestamp
     unless ($m->count_statements($subject, undef, undef)) {
         my $now = literal(DateTime->now . 'Z', undef, $rns->xsd->dateTime);
@@ -221,7 +293,8 @@ sub _post_uuid {
     $patch->apply($m);
 
     $m->_store->_model->sync;
-    warn $m->size;
+    $c->log->debug("Size: " .$m->size);
+
 }
 
 =head2 default
@@ -452,10 +525,88 @@ sub _do_content {
         (E "h$rank" => {}, $lit{$v} ? $lit{$v}[0]->value : $subject->value),
             (E form => { class => 'set-type',
                          method => 'POST', 'accept-charset' => 'utf-8',
-                         action => '' }, (E div => {}, @buttons)),
-                             @dl ? (E dl => {
-                                 class => 'predicates' }, @dl) : ();
+                         action => '' },
+             (E div => {}, @buttons,
+              $self->_do_collection_form($c, $subject))),
+                  @dl ? (E dl => {
+                      class => 'predicates' }, @dl) : ();
 
+}
+
+sub _do_collection_form {
+    my ($self, $c, $subject) = @_;
+
+    my $m = $c->model('RDF');
+    my $ns = $self->ns;
+
+    my @has = $m->subjects($ns->skos->member, $subject);
+    my %map = map { $_->value => 1 } @has;
+
+    my %boilerplate = (
+        method => 'post',
+        action => '',
+        'accept-encoding' => 'utf-8'
+    );
+
+    my @out;
+    # get the list of collections and their labels
+    my @s = $m->subjects($ns->rdf->type, $ns->skos->Collection);
+    if (@s) {
+        for my $i (0..$#s) {
+            my $s = $s[$i];
+            my ($label) = $m->objects($s, $ns->skos->prefLabel);
+            $s[$i] = [$s, $label ? $label->value : ''];
+        }
+
+        # make a bullet list
+        my @li;
+        for my $pair (sort { $a->[1] cmp $b->[1] } @s) {
+            my ($s, $label) = @$pair;
+            #warn $s;
+            next unless $map{$s->value};
+
+            my $uu = URI->new($s->value);
+
+            my $a = E a => { href => '/' . $uu->uuid }, $label;
+            my $li = E li => {}, $a,
+                     (E button => {
+                         name => '-! skos:member :', value => "$uu" },
+                 'Remove');
+            push @li, $li;
+        }
+
+        push @out, (E form => \%boilerplate, (E ul => {}, @li)) if @li;
+
+        if (my @which = grep { ! $map{$_->[0]->value} } @s) {
+            # generate a sorted list of option elements
+            my @opts = map {
+                (E option => { value => $_->[0]->value }, $_->[1]) }
+                sort { $a->[1] cmp $b->[1] } @which;
+
+            push @out, (E form => \%boilerplate,
+                        (E select => { name => '! skos:member :' }, @opts),
+                        (E button => {}, 'Attach'));
+        }
+    }
+
+    # XXX THERE IS NOW A PROTOCOL MACRO FOR THIS
+    my $newuuid = $self->uuid4urn;
+
+    push @out,
+        (E form => \%boilerplate,
+         (E div => {},
+          (E input => { type  => 'hidden',
+                        name  => "= $newuuid rdf:type :",
+                        value => $ns->skos->Collection->value }),
+          (E input => { type => 'hidden',
+                        name => '! skos:member :',
+                       value => $newuuid }),
+          (E div => {},
+           (E input => {
+               name => "= $newuuid skos:prefLabel" }),
+           (E button => {}, 'Create & Attach'))));
+
+    (E div => {}, @out);
 }
 
 sub _do_index {
@@ -479,7 +630,7 @@ sub _do_index {
             my ($v) = $m->objects($s, $ns->rdf->value);
             my $uu = URI->new($s->value);
             push @x, (E li => {}, (E a => { href => '/'. $uu->uuid },
-                                   $v->value || $s->value));
+                                   $v ? $v->value : $s->value));
             #push @x, $self->_do_content($c, $s, 2);
         }
         @x = E ul => {}, @x if @x;
@@ -508,7 +659,7 @@ sub _do_connect_form {
     my ($self, $c, $subject, $type) = @_;
 
     E form => { id => 'connect-existing',
-                method => 'POST', 'accept-charset' => 'utf-8', action => '' },
+                method => 'post', 'accept-charset' => 'utf-8', action => '' },
         (E fieldset => {}, $self->_menu($c, $type),
          (E fieldset => { class => 'interaction' },
           $self->_select($c, $subject), (E button => {}, 'Connect')));
@@ -517,11 +668,30 @@ sub _do_connect_form {
 sub _do_create_form {
     my ($self, $c, $subject, $type) = @_;
 
+    my $m = $c->model('RDF');
+    my $ns = $self->ns;
+
+    # XXX WHY IS THIS A URI OBJECT AGAIN?
+    my $s = $subject->isa('RDF::Trine::Node') ? $subject : iri("$subject");
+    if ($subject->isa('URI::http')) {
+        my $path = $subject->path;
+        if (my ($uuid) = $path =~ $UUID_RE) {
+            $s = iri("urn:uuid:$uuid");
+        }
+    }
+
+
+    my @has = $m->subjects($ns->skos->member, $s);
+
+    @has = map { E input => { type => 'hidden',
+                              name => '! skos:member :',
+                              value => $_->value  } } @has;
+
     my $new = '/' . $self->uuid4;
 
     E form => { id => 'create-new',
-                method => 'POST', 'accept-charset' => 'utf-8', action => $new },
-        (E fieldset => {},
+                method => 'post', 'accept-charset' => 'utf-8', action => $new },
+                    (E fieldset => {}, @has,
          (E input => { type => 'hidden', name => '$ obj', value => $subject }),
          $self->_menu($c, $type, 1),
          (E fieldset => { class => 'interaction' },
