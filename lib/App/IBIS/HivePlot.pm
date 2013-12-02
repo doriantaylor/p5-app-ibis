@@ -130,6 +130,8 @@ has _ts => (
 sub BUILD {
     my $self = shift;
 
+    my $ns = $self->ns;
+
     # Initial scan of graph
     my $iter = $self->model->get_statements(undef, undef, undef);
     while (my $stmt = $iter->next) {
@@ -165,7 +167,7 @@ sub BUILD {
             # getting all this so far?
             $ss->{$pv} = $o;
 
-            if ($p->equal($self->ns->rdf->uri('type'))) {
+            if ($p->equal($ns->rdf->uri('type'))) {
                 my $ov = $o->value;
                 my $tt = $self->_t->{$ov} ||= {};
                 $tt->{$sv} = $ss;
@@ -203,7 +205,7 @@ sub BUILD {
     }
 
     # now we lay out the subjects by creation date
-    my $c = $self->ns->dct->created->value;
+    my $c = $ns->dct->created->value;
     for my $t ($self->types) {
         my $x = $t->value;
 
@@ -219,7 +221,7 @@ sub BUILD {
                 for my $k (keys %$p) {
                     next unless $p->{$k}{$s};
                     for my $o (keys %{$p->{$k}{$s}}) {
-                        my $ot = $p->{$k}{$s}{$o}{$self->ns->rdf->type->value};
+                        my $ot = $p->{$k}{$s}{$o}{$ns->rdf->type->value};
                         $tmp{$ot}++;
                     }
                 }

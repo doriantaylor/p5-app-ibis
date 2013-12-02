@@ -203,6 +203,7 @@ sub _get_collection :Private {
                             (E p => {},
                              (E textarea => { name => '= skos:description' },
                               $desc ? $desc->value : ''))),
+                           $self->_do_index($c, $subject),
             )->toString(1);
 
     # XXX forward this maybe?
@@ -224,20 +225,28 @@ sub _get_ibis :Private {
     my ($title) = $m->objects($subject, $rns->rdf->value);
 
     my %attrs;
-    $attrs{typeof} = $rns->abbreviate($type) if $type;
 
-    my $body = $self->_doc($title ? $title->value : '', $uri, undef, \%attrs,
-                (E div => { class => 'aside' },
-                 (E object => { class => 'hiveplot',
-                                data => '/hp',
-                                type => 'image/svg+xml' }, "(Hive Plot)")),
-                 (E div => { class => 'main' },
-                  $self->_do_content($c, $subject),
-                  (E div => {},
-                   $self->_do_connect_form($c, $subject, $type),
-                   $self->_do_create_form($c, $uri, $type)),
-                  $self->_do_toggle),
-            )->toString(1);
+    # XXX DERIVE THIS BETTER
+    my $label;
+    if ($type) {
+        $attrs{typeof} = $rns->abbreviate($type);
+        ($label) = ($attrs{typeof} =~ /:(.*)/);
+        $label .= ': ';
+    }
+
+    my $body = $self->_doc(
+        $label . ($title ? $title->value : ''), $uri, undef, \%attrs,
+        (E div => { class => 'aside' },
+         (E object => { class => 'hiveplot',
+                        data => '/hp',
+                        type => 'image/svg+xml' }, "(Hive Plot)")),
+        (E div => { class => 'main' },
+         $self->_do_content($c, $subject),
+         (E div => {},
+          $self->_do_connect_form($c, $subject, $type),
+          $self->_do_create_form($c, $uri, $type)),
+         $self->_do_toggle),
+    )->toString(1);
 
     # XXX forward this maybe?
     $c->res->body($body);
@@ -407,7 +416,7 @@ sub _menu {
             value => $ns->abbreviate($types[$i]),
         );
         $attr{checked}  = 'checked' if $i == 0;
-        $attr{disabled} = 'disabled' unless @checkbox;
+        #$attr{disabled} = 'disabled' unless @checkbox;
 
         my $class = 'relation ' . lc $labels[$i];
 
@@ -425,9 +434,9 @@ sub _do_toggle {
         (E fieldset => {},
          (E label => {},
           (E input => { type => 'radio', name => 'new-item', value => '',
-                        checked => 'checked' }), ' Connect existing'),
+                        }), ' Connect existing'),
          (E label => {},
-          (E input => { type => 'radio', value => 1,
+          (E input => { type => 'radio', value => 1, checked => 'checked',
                         name => 'new-item'}), ' Create new'));
 }
 
@@ -610,7 +619,7 @@ sub _do_collection_form {
 }
 
 sub _do_index {
-    my ($self, $c) = @_;
+    my ($self, $c, @collections) = @_;
     my $m = $c->model('RDF');
     my $ns = $self->ns;
 
@@ -618,23 +627,48 @@ sub _do_index {
     my @labels = qw(Issue Position Argument);
     my @types  = map { $self->ns->ibis->uri($_) } @labels;
 
+    my %set;
+    if (@collections) {
+        for my $col (@collections) {
+            for my $o ($m->objects($col, $ns->skos->member)) {
+                my ($t) = $m->objects($o, $ns->rdf->type);
+                my ($d) = $m->objects($o, $ns->dct->created);
+                my ($v) = $m->objects($o, $ns->rdf->value);
+                my $x = $set{$t->value} ||= [];
+                push @$x, [$o, $v, $d];
+            }
+        }
+    }
+    else {
+        for my $t (@types) {
+            for my $o ($m->subjects($ns->rdf->type, $t)) {
+                my ($t) = $m->objects($o, $ns->rdf->type);
+                my ($d) = $m->objects($o, $ns->dct->created);
+                my ($v) = $m->objects($o, $ns->rdf->value);
+                my $x = $set{$t->value} ||= [];
+                push @$x, [$o, $v, $d];
+            }
+        }
+    }
+
     my @out;
     for my $i (0..$#labels) {
-        my @s = $m->subjects($ns->rdf->type, $types[$i]);
+        my @triads = @{$set{$types[$i]->value} || []};
+
         my %d = map {
-            my ($x) = $m->objects($_, $ns->dct->created);
-            $_->value => defined $x ? $x->value : undef } @s;
+            $_->[0]->value => defined $_->[2] ? $_->[2]->value : undef
+        } @triads;
 
         my @x;
-        for my $s (sort { $d{$b->value} cmp $d{$a->value} } @s) {
-            my ($v) = $m->objects($s, $ns->rdf->value);
+        for my $x (sort { $d{$b->[0]->value} cmp $d{$a->[0]->value} } @triads) {
+            my ($s, $v) = @{$x}[0,1];
             my $uu = URI->new($s->value);
             push @x, (E li => {}, (E a => { href => '/'. $uu->uuid },
                                    $v ? $v->value : $s->value));
             #push @x, $self->_do_content($c, $s, 2);
         }
-        @x = E ul => {}, @x if @x;
-        push @out, (E div => {}, (E h1 => {}, $labels[$i] . 's'), @x);
+        @x = (E ul => {}, @x) if @x;
+        push @out, (E div => {}, (E h2 => {}, $labels[$i] . 's'), @x);
     }
 
     @out;
