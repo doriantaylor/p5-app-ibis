@@ -1,8 +1,21 @@
 App::IBIS - We have issues.
 
-See http://privatealpha.com/ontology/ibis/1# .
+This is an app initially designed to demo my RDF-KV protocol, but
+it has also turned out to be useful for kicking the tires on my IBIS
+vocabulary. See http://privatealpha.com/ontology/ibis/1# .
 
-Before you begin, get JQuery by running script/get-jquery.
-Also, run the Makefile.PL to fetch dependencies.
+Before you begin, get JQuery by running script/get-jquery, which is a
+happy medium between sourcing it on the fly and bundling it in this
+project.
 
-Run script/app_ibis_server.pl to test the application.
+Also, be sure to run the Makefile.PL to fetch dependencies. Note: 
+Catalyst may complain unless you install Catalyst::Devel via cpan.
+
+You will also need to change the database parameters in app_ibis.conf
+to something sane, and note the latest Redland bindings for Perl are
+not on CPAN. You can either install it through some other mechanism
+(e.g. apt-get or homebrew) or see the RDF::Trine::Store documentation
+for alternative storage mechanisms.
+
+When you're ready, run script/app_ibis_server.pl and connect to
+http://localhost:3000/ .
