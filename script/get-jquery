@@ -1,0 +1,3 @@
+#!/bin/sh
+
+curl http://code.jquery.com/jquery-2.0.3.js > root/asset/jquery.js

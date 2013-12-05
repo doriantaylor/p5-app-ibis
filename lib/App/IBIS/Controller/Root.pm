@@ -169,6 +169,10 @@ sub dump :Local {
     $resp->body($serializer->serialize_model_to_string($c->model('RDF')));
 }
 
+sub _get_concept :Private {
+    my ($self, $c, $subject) = @_;
+}
+
 sub _get_collection :Private {
     my ($self, $c, $subject) = @_;
 

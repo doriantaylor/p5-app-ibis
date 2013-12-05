@@ -1,0 +1,228 @@
+html {
+   width: 100%;
+   height: 100%;
+   overflow-y: scroll;
+   font-family: Roboto, Helvetica Neue, sans-serif;
+   background-color: #333;
+   color: #999;
+}
+
+body {
+   width: 100%;
+   height: 100%;
+   /*width: 70ex;*/
+   margin: 0;
+   padding: 3em auto;
+   -moz-box-shadow: inset 0px 0px 40px #000;
+   -webkit-box-shadow: inset 0px 0px 40px #000;
+   box-shadow: inset 0px 0px 40px #000;
+}
+
+fieldset {
+   border: 1px solid #444;
+   border: none;
+   margin: 0;
+   padding: 0;
+}
+
+fieldset.relation {
+   font-size: 75%;
+   float: left;
+   /*width: 25%;*/
+   width: 33.33%;
+   height: 15em;
+   /*margin: 2%;*/
+   overflow: hidden;
+}
+
+fieldset.relation ul {
+   padding: 0;
+   list-style-type: none;
+}
+
+input[type='text'], input[type='submit'], input[type='reset'], select, button {
+   font-family: inherit;
+   font-size: inherit;
+   background-color: inherit;
+   color: inherit;
+   border: 1px solid #444;
+}
+
+form#toggle-which {
+   padding
+}
+
+form#toggle-which label {
+   display: block;
+   float: left;
+   width: 40%;
+   margin: 5% 2%;
+}
+
+fieldset.interaction {
+   height: 2em;
+   margin: auto;
+   padding: 1em;
+}
+
+select.target, input.new-value {
+   min-width: 75%;
+   max-width: 32ex;
+}
+
+option {
+   font-size: 75%;
+}
+
+button:hover, label:hover {
+   cursor: pointer;
+}
+
+button[disabled] {
+   border-color: #222;
+   color: #222;
+}
+button[disabled]:hover, label[disabled]:hover {
+   cursor: auto;
+}
+
+button.disconnect {
+   font-size: 75%;
+   display: block;
+   float: right;
+   margin: 0 0 0.5em 1em;
+}
+
+form.set-type {
+   margin: auto;
+   text-align: right;
+}
+
+button.set-type {
+   font-size: 75%;
+   vertical-align: middle;
+}
+
+a {
+   text-decoration: none;
+}
+a:link {
+   color: #99a;
+}
+a:visited {
+   color: #a9a;
+}
+a:hover {
+   color: #aab;
+   text-decoration: underline;
+}
+
+div.main {
+   float: left;
+   width: 45%;
+   overflow: visible;
+   margin-left: 5%;
+
+}
+
+div.aside {
+   position: absolute;
+   top: 0;
+   right: 0;
+   display: block;
+   float: right;
+   width: 40%;
+   height: 50%;
+   padding: 3em;
+   overflow: hidden;
+}
+
+object.hiveplot {
+   width: 100%;
+   height: 100%;
+}
+
+dl.predicates {
+   font-size: 80%;
+}
+
+dt {
+   font-weight: bold;
+}
+
+dd {
+   margin-bottom: 0.5em;
+}
+
+dt[about='http://privatealpha.com/ontology/ibis/1#generalizes'] {
+   color: #5f7fff;
+}
+
+dt[about='http://privatealpha.com/ontology/ibis/1#specializes'] {
+   color: #0033ff;
+}
+
+/*
+dt[about='http://privatealpha.com/ontology/ibis/1#replaces'], dt[about='http://privatealpha.com/ontology/ibis/1#replaced-by'] {
+   color: blue;
+}
+*/
+
+dt[about='http://privatealpha.com/ontology/ibis/1#suggests'] {
+   color: #ffcd40;
+}
+dt[about='http://privatealpha.com/ontology/ibis/1#suggested-by'] {
+   color: #ffbc00;
+}
+
+dt[about='http://privatealpha.com/ontology/ibis/1#questions'] {
+   color: #ff9a40;
+}
+dt[about='http://privatealpha.com/ontology/ibis/1#questioned-by'] {
+   color: #ff7800;
+}
+
+dt[about='http://privatealpha.com/ontology/ibis/1#response'] {
+   color: #8a0041;
+}
+dt[about='http://privatealpha.com/ontology/ibis/1#responds-to'] {
+   color: #d50065;
+}
+
+dt[about='http://privatealpha.com/ontology/ibis/1#supports'] {
+   color: #4dde00;
+}
+dt[about='http://privatealpha.com/ontology/ibis/1#supported-by'] {
+   color: #55a62a;
+}
+
+dt[about='http://privatealpha.com/ontology/ibis/1#opposes'] {
+   color: #ec0033;
+}
+dt[about='http://privatealpha.com/ontology/ibis/1#opposed-by'] {
+   color: #b12c49;
+}
+
+body[typeof~='ibis:Issue'], fieldset.issue {
+   background-color: #322;
+}
+
+body[typeof~='ibis:Issue'] h1, fieldset.issue {
+   color: #988;
+}
+
+body[typeof~='ibis:Position'], fieldset.position {
+   background-color: #232;
+}
+
+body[typeof~='ibis:Position'] h1, fieldset.position {
+   color: #898;
+}
+
+body[typeof~='ibis:Argument'], fieldset.argument {
+   background-color: #223;
+}
+
+body[typeof~='ibis:Argument'] h1, fieldset.argument {
+   color: #889;
+}

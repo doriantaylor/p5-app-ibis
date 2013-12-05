@@ -1,0 +1,77 @@
+rect[typeof] {
+   stroke-width: 0.5;
+   stroke: #333;
+   opacity: 1;
+}
+rect[typeof~='ibis:Issue'] {
+   fill: #c99;
+}
+rect[typeof~='ibis:Position'] {
+   fill: #9c9;
+}
+rect[typeof~='ibis:Argument'] {
+   fill: #99c;
+}
+.arc {
+   opacity: 1;
+   fill: none;
+   stroke: black;
+   stroke-width: 3;
+}
+
+path[rel~='ibis:generalizes'] {
+   stroke: #5f7fff;
+}
+
+path[rel~='ibis:specializes'] {
+   stroke: #0033ff;
+}
+
+/*
+path[rel~='ibis:replaces'], path[rel~='ibis:replaced-by'] {
+   stroke: blue;
+}
+*/
+
+path[rel~='ibis:suggests'] {
+   stroke: #ffcd40;
+}
+path[rel~='ibis:suggested-by'] {
+   stroke: #ffbc00;
+}
+
+path[rel~='ibis:questions'] {
+   stroke: #ff9a40;
+}
+path[rel~='ibis:questioned-by'] {
+   stroke: #ff7800;
+}
+
+path[rel~='ibis:response'] {
+   stroke: #8a0041;
+}
+path[rel~='ibis:responds-to'] {
+   stroke: #d50065;
+}
+
+path[rel~='ibis:supports'] {
+   stroke: #4dde00;
+}
+path[rel~='ibis:supported-by'] {
+   stroke: #55a62a;
+}
+
+path[rel~='ibis:opposes'] {
+   stroke: #ec0033;
+}
+path[rel~='ibis:opposed-by'] {
+   stroke: #b12c49;
+}
+
+path.subject {
+   stroke: white;
+}
+
+rect.subject {
+   fill: white;
+}

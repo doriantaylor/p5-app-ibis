@@ -1,1 +1,8 @@
+App::IBIS - We have issues.
+
+See http://privatealpha.com/ontology/ibis/1# .
+
+Before you begin, get JQuery by running script/get-jquery.
+Also, run the Makefile.PL to fetch dependencies.
+
 Run script/app_ibis_server.pl to test the application.
