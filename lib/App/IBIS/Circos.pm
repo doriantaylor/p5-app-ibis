@@ -1,576 +1,452 @@
 package App::IBIS::Circos;
 
+use strict;
+use warnings FATAL => 'all';
+
 use Moose;
 use namespace::autoclean;
 
-# data schleppin'
-use RDF::Trine qw(iri);
+use MooseX::Types -declare => [qw(Angle URIObject)];
+use MooseX::Types::Moose qw(Maybe Defined Str Num HashRef ArrayRef);
+
+use MooseX::Params::Validate;
+
+use List::Util;
+use Math::Trig;
+use POSIX                    qw(fmod);
 use XML::LibXML::LazyBuilder qw(DOM E F P);
 
-# actual workin'
+class_type URIObject, { class => 'URI' };
+coerce URIObject, from Str, via { URI->new($_) };
 
-# iso 8601 can be lexically sorted if it's all the same time zone
-#use DateTime;
-use Math::Trig;
-use List::Util qw(sum min max);
+subtype Angle, as Num,   where { $_ >= 0 && $_ <= 360 };
+coerce  Angle, from Num, via { fmod($_, 360) };
 
-with 'App::IBIS::Role::Schema';
-
-# our data source
-has model => (
-    is       => 'ro',
-    isa      => 'RDF::Trine::Model|App::IBIS::Model::RDF',
-    required => 1,
-);
-
-# uri changr 
-has callback => (
-    is       => 'ro',
-    isa      => 'CodeRef',
-    lazy     => 1,
-    default  => sub { sub { shift } }, # yodawgyodawgyo
-);
-
-has collections => (
+has title => (
     is      => 'ro',
-    isa     => 'ArrayRef',
+    isa     => Str,
     lazy    => 1,
-    default => sub { [] },
+    default => 'Circos Plot',
 );
 
-# # which RDF types we're interested in
-# has types => (
-#     is      => 'ro',
-#     isa     => 'ArrayRef',
-#     lazy    => 1,
-#     default => sub { [map { $NS->ibis->uri($_) } qw(Issue Position Argument)] },
-# );
-
-# offset from centre
-has offset => (
+has ns => (
     is      => 'ro',
-    isa     => 'Num',
+    isa     => 'URI::NamespaceMap',
     lazy    => 1,
-    default => 30,
+    default => sub {
+        URI::NamespaceMap->new({
+            rdf => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        })
+      },
 );
 
-# splay (in degrees) for self-referential types
-has splay => (
+has base => (
+    is     => 'ro',
+    isa    => URIObject,
+    lazy   => 0,
+    coerce => 1,
+);
+
+has css => (
+    is     => 'ro',
+    isa    => URIObject,
+    lazy   => 0,
+    coerce => 1,
+);
+
+has start => (
     is      => 'ro',
-    isa     => 'Num',
+    isa     => Angle,
     lazy    => 1,
-    default => 40,
+    coerce  => 1,
+    default => 0,
 );
 
-# padding between cells
-has padding => (
+has end => (
     is      => 'ro',
-    isa     => 'Num',
+    isa     => Angle,
+    lazy    => 1,
+    coerce  => 1,
+    default => 0,
+);
+
+has rotate => (
+    is      => 'ro',
+    isa     => Angle,
+    lazy    => 1,
+    coerce  => 1,
+    default => 0,
+);
+
+has pad => (
+    is      => 'ro',
+    isa     => Num,
     lazy    => 1,
     default => 1,
 );
 
-# factor to multiply sizes by so there's a bigger target to click on
-has factor => (
+has gap => (
     is      => 'ro',
-    isa     => 'Num',
+    isa     => Num,
     lazy    => 1,
-    default => 3,
+    default => 1,
 );
 
-# subject map
-has _s => (
+has thickness => (
     is      => 'ro',
-    isa     => 'HashRef',
+    isa     => Num,
     lazy    => 1,
-    default => sub { { } },
+    default => 0,
 );
 
-# type map
-has _t => (
+has margin => (
     is      => 'ro',
-    isa     => 'HashRef',
+    isa     => Num,
     lazy    => 1,
-    default => sub { { } },
+    default => 10,
 );
 
-# predicate-object map
-has _po => (
+has size => (
     is      => 'ro',
-    isa     => 'HashRef',
+    isa     => Num,
     lazy    => 1,
-    default => sub { { } },
+    default => 100,
 );
 
-# predicate-subject map
-has _ps => (
+has radius => (
     is      => 'ro',
-    isa     => 'HashRef',
+    isa     => Num,
     lazy    => 1,
-    default => sub { { } },
+    default => 30,
 );
 
-# self-referential map
-has _sr => (
-    is      => 'ro',
-    isa     => 'HashRef',
-    lazy    => 1,
-    default => sub { { } },
-);
+#sub BUILD {
+    # yo do we need to do anything here?
+#}
 
-# time-sequence map
-has _ts => (
-    is      => 'ro',
-    isa     => 'HashRef',
-    lazy    => 1,
-    default => sub { { } },
-);
+=head2 plot %PARAMS
 
-
-sub BUILD {
-    my $self = shift;
-
-    my $ns = $self->ns;
-
-    # Initial scan of graph
-    my $iter = $self->model->get_statements(undef, undef, undef);
-    while (my $stmt = $iter->next) {
-        my ($s, $p, $o) = $stmt->nodes;
-
-        # skip if uninteresting
-        next unless $s->is_resource;
-
-        # hash keys are strings
-        my $sv = $s->uri_value;
-
-        # really uninteresting
-        next unless $sv =~ /^urn:uuid:/i;
-
-        # subject
-        my $ss = $self->_s->{$sv} ||= {};
-
-        my $pv = $p->uri_value;
-        if ($pv =~ $self->re) {
-            # if (my $inv = $PREFER{$pv}) {
-            #     $p = $inv;
-            #     ($s, $o) = ($o, $s);
-
-            #     # overwite this so we don't screw up
-            #     $sv = $s->value;
-            # }
-
-            my $pp = $self->_po->{$pv} ||= {};
-            my $oo = $pp->{$sv}        ||= {};
-            $oo->{$o->value} = 1;
-        }
-        else {
-            # getting all this so far?
-            $ss->{$pv} = $o;
-
-            if ($p->equal($ns->rdf->uri('type'))) {
-                my $ov = $o->value;
-                my $tt = $self->_t->{$ov} ||= {};
-                $tt->{$sv} = $ss;
-            }
-        }
-    }
-
-    # Now we get reverse and self-referential values
-    for my $p (keys %{$self->_po}) {
-        my $po = $self->_po->{$p};
-        my $ps = $self->_ps->{$p} ||= {};
-
-        for my $s (keys %$po) {
-            my $so = $po->{$s};
-            for my $o (keys %$so) {
-
-                my $ss = $self->_s;
-                if ($ss->{$o}) {
-                    # cache A <-> A self-reference test
-                    my $tt = $self->_t;
-                    for my $t (keys %$tt) {
-                        if ($tt->{$t}{$s} && $tt->{$t}{$o}) {
-                            $self->_sr->{$t} = 1;
-                            next;
-                        }
-                    }
-
-                    # got all this?
-                    $ps->{$o} ||= {};
-                    $ps->{$o}{$s} = $ss->{$o};
-                    $po->{$s}{$o} = $ss->{$s};
-                }
-            }
-        }
-    }
-
-    # now we lay out the subjects by creation date
-    my $c = $ns->dct->created->value;
-    for my $t ($self->types) {
-        my $x = $t->value;
-
-        my $tt = $self->_t->{$x};
-        my $po = $self->_po;
-        my $ps = $self->_ps;
-
-        my @out;
-        for my $s (sort { $tt->{$a}{$c}->value cmp
-                              $tt->{$b}{$c}->value } keys %$tt) {
-            my %tmp;
-            for my $p ($po, $ps) {
-                for my $k (keys %$p) {
-                    next unless $p->{$k}{$s};
-                    for my $o (keys %{$p->{$k}{$s}}) {
-                        my $ot = $p->{$k}{$s}{$o}{$ns->rdf->type->value};
-                        $tmp{$ot}++;
-                    }
-                }
-            }
-            # get the max degree
-            my $degree = keys %tmp ? (sort { $b <=> $a } values %tmp)[0] : 0;
-            push @out, [$s, $degree];
-        }
-
-        $self->_ts->{$x} = \@out;
-    }
-
-    # that should be it for setting this bastard up.
-}
-
-sub _plot_arcs {
-    my ($self, $subject, $start, $angle, $srctype, $trgtype) = @_;
-
-    my $map = $self->predicate_map;
-
-    my $a1 = ($start % 360) * pi/180;
-    my $a2 = (($start + $angle) % 360) * pi/180;
-
-    # these are our yardsticks
-    my @src = @{$self->_ts->{$srctype->uri_value} || []};
-    my @trg = @{$self->_ts->{$trgtype->uri_value} || []};
-    return unless scalar @src && scalar @trg;
-
-    # get all viable predicates
-    my @preds = map { $_->[0] }
-        @{$map->{$srctype->uri_value}{$trgtype->uri_value} || [] };
-
-    # hits
-    my (%hs, %ht);
-    for my $p (@preds) {
-        if (my $po = $self->_po->{$p->uri_value}) {
-            for my $i (0..$#src) {
-                my $s = $src[$i][0];
-                $hs{$s} = $i if grep { $po->{$s}{$_->[0]} } @trg;
-            }
-        }
-
-        if (my $ps = $self->_ps->{$p->uri_value}) {
-            for my $i (0..$#trg) {
-                my $o = $trg[$i][0];
-                $ht{$o} = $i if grep { $ps->{$o}{$_->[0]} } @src;
-            }
-        }
-    }
-
-    #require Data::Dumper;
-    #warn Data::Dumper::Dumper(\%hs, \%ht);
-
-    my ($off, $fac, $pad) = ($self->offset, $self->factor, $self->padding);
-
-    my %tloff;
-    my @arcs;
-    for my $i (sort { $a <=> $b } values %hs) {
-        my $s = $src[$i][0];
-        #warn "$s $sdeg";
-
-        my $soff = $off + $pad;
-        if ($i > 0) {
-            $soff += sum(map { $_->[1] * $fac + ($pad * 2) } @src[0..$i-1]);
-        }
-        #warn $soff;
-
-
-        my @pgrp;
-        for my $p (@preds) {
-            next unless my $po = $self->_po->{$p->uri_value};
-
-            #warn $p;
-
-            my @j = sort { $a <=> $b }
-                grep { defined $_ } map { $ht{$_} } keys %{$po->{$s}};
-            for my $j (@j) {
-                my ($o, $odeg) = @{$trg[$j]}; # = $trg[$j][0];
-
-                $tloff{$o} ||= 0;
-
-                # count down from the back
-                my $toff = $off + ($tloff{$o} * $fac) - $pad;
-
-                $toff += sum(map {
-                    $_->[1] * $fac + ($pad * 2) } @trg[0..$j]);
-                #warn $toff;
-
-                #warn "$s $p $o";
-
-                my $x1 = cos($a1) * ($soff + $fac/2);
-                my $y1 = sin($a1) * ($soff + $fac/2);
-
-                # control points will be some arbitrary offset 90
-                # degrees from the axis, translated by the endpoints
-                my $n = $angle < 0 ? -90 : 90;
-
-                my $ca1 = ($start + $n) % 360 * pi/180;
-                my $ca2 = ($start + $angle - $n) % 360 * pi/180;
-
-                my $cx1 = cos($ca1) * $off + $x1;
-                my $cy1 = sin($ca1) * $off + $y1;
-
-                my $x2 = cos($a2) * ($toff - $fac/2);
-                my $y2 = sin($a2) * ($toff - $fac/2);
-
-                my $cx2 = cos($ca2) * $off + $x2;
-                my $cy2 = sin($ca2) * $off + $y2;
-
-                #
-                my $path = sprintf 'M%f,%f C%f,%f %f,%f, %f,%f',
-                    $x1, $y1, $cx1, $cy1, $cx2, $cy2, $x2, $y2;
-
-                my $class = 'arc';
-                if ($subject) {
-                    my $sv = $subject->uri_value;
-                    $class .= ' subject' if $sv eq $s or $sv eq $o;
-                }
-
-                push @pgrp,
-                    (E path => { class => $class,
-                                 about => $s,
-                                 rel => $self->ns->abbreviate($p),
-                                 resource => $o,
-                                 title => $self->labels->{$p->uri_value}[1],
-                                 d => $path });
-                    # (E line => { class => 'arc',
-                    #              about => $s,
-                    #              rel => $NS->abbreviate($p),
-                    #              resource => $o,
-                    #              x1 => $x1, y1 => $y1,
-                    #              x2 => $x2, y2 => $y2 });
-                $soff += $fac;
-                $tloff{$o}--; # -= $fac;
-            }
-
-        }
-        push @arcs, (E g => {}, @pgrp) if @pgrp;
-    }
-
-    @arcs;
-}
-
-sub _plot_axis {
-    my ($self, $subject, $type, $angle) = @_;
-    #warn "derp $angle";
-    $angle %= 360;
-
-    my $t = $type->uri_value;
-
-    my ($off, $fac, $pad) = ($self->offset, $self->factor, $self->padding);
-
-    my @rects;
-    for my $pair (@{$self->_ts->{$t} || []}) {
-        my ($s, $degree) = @$pair;
-
-        # lol @ this
-        my $title = $self->_s->{$s}{$self->ns->rdf->value->value}->value;
-
-        my $href = $self->callback->($s);
-
-        my $class = '';
-        if ($subject) {
-            my $sv = $subject->uri_value;
-            $class .= 'subject' if $sv eq $s;
-        }
-
-        push @rects, (E a => { 'xlink:target' => '_top', target => '_top',
-                               'xlink:href' => $href },
-                      (E rect => {
-                          # XXX CONSTANTS line thickness
-                          class => $class,
-                          about => $s, typeof => $self->ns->abbreviate($type),
-                          x => $off, y => -($fac/2),
-                          width => $degree * $fac + ($pad * 2), height => $fac,
-                          title => $title}));
-        $off += $degree * $fac + ($pad * 2);
-    }
-    return (E g => { transform => "rotate($angle)" }, @rects);
-}
+=cut
 
 sub plot {
-    my ($self, $subject) = @_;
+    my ($self, %p) = MooseX::Params::Validate::validated_hash(
+        \@_,
+        nodes  => { isa => HashRef  },
+        edges  => { isa => ArrayRef },
+        active => { isa => Maybe[Str], optional => 1 },
+    );
 
-    #warn "lol $subject" if $subject;
+    # derive global geometric properties
 
-    my @arcs;
+    # derive inner radius from size/2 - margin - stack depth
 
-    #warn Data::Dumper::Dumper($self->_sr);
+    # stack depth is some function or other applied to the maximum
+    # amount of stuff sandwiched between the inner and outer radii.
 
-    my @types = $self->types;
-    for my $i (0..$#types) {
-        my $type = $types[$i];
-        my $next = $types[($i + 1) % @types];
+    # you know what? it would be totally sexy just to declare a side
+    # length and a margin and derive the rest, but that's a lot more
+    # work than just defining a radius and letting some poor schmuck
+    # (i.e. me) figure out the side length.
 
-        my $angle  = 360/@types;
-        my $offset = $i*$angle;
+    # once we know the scheme by which things 
 
-        my $tv = $type->uri_value;
+    # First we figure out what this thing looks like as a rectangle:
+    # how long and how thick it is. How do we do that? Measure the
+    # weighted degree of each node. How do we do that? Find each edge
+    # where the node is either a source or a target and sum up the
+    # weights.
 
-        if ($self->_sr->{$tv}) {
-            #warn "wtf $tv";
+    # OK well we aren't going to do weights for the moment.
 
-            my $splay = $self->splay/2;
-            push @arcs, $self->_plot_arcs
-                ($subject, $splay,  $splay * -2, ($type) x 2);
-            push @arcs, $self->_plot_arcs
-                ($subject, -$splay, $splay * 2,  ($type) x 2);
+    # Neither should we do multiple topological sorting criteria
+    # because we have no idea how it will look.
 
-            $offset += $splay;
-            $angle  -= $splay;
-        }
-        elsif ($self->_sr->{$next->uri_value}) {
-            # shave half the splay off the angle
-            $angle -= $self->splay/2;
-        }
-        else {
-            # noop
-        }
+    # Resolution: *show* the topological sorting criteria but don't
+    # try to sort by it yet (besides we don't even have any data for
+    # dct:subject->skos:Concept relations yet).
 
-        #warn "$type $next";
-        push @arcs, $self->_plot_arcs
-            ($subject, $offset + $angle, -$angle, $next, $type);
-        push @arcs, $self->_plot_arcs
-            ($subject, $offset, $angle, $type, $next);
+    # Sort by: type, then date. If the dates are equal (which they
+    # almost certainly won't be), sort by label. If the labels are
+    # identical or one is missing, sort by URL. If the URLs are
+    # identical or one is missing, sort by ID, which are required to
+    # be both defined and unique (just not necessarily meaningful).
 
+    # this is a way to do it
+    my %edges;
+    for my $edge (@{$p{edges}}) {
+        my ($s, $o) = @{$edge}{qw(source target)};
 
-        #$self->_plot_arcs(20, -40, ($NS->ibis->Issue) x 2),
-        #$self->_plot_arcs(-20, 40, ($NS->ibis->Issue) x 2),
+        # skip over self-refs
+        next if $s eq $o;
+        # skip over danglers
+        next unless $p{nodes}{$s} and $p{nodes}{$o};
+
+        my $t = $edge->{type};
+        $t = '' unless defined $t;
+
+        my $x = $edges{$s} ||= {};
+        my $y = $x->{$t}   ||= {};
+        my $z = $y->{$o}   ||= [];
+        push @$z, $edge;
+
+        my $weight = $edge->{weight} || 1;
+        $p{nodes}{$s}{degree} += $weight;
+        $p{nodes}{$o}{degree} += $weight;
     }
 
-    my @axes;
-    for my $i (0..$#types) {
-        my $type = $types[$i];
+    # XXX make this a sort parameter
+    my @order = qw(Issue Argument Position);
+    my %type = map {
+        'http://privatealpha.com/ontology/ibis/1#' . $order[$_] => $_
+    } (0..$#order);
 
-        my $angle  = 360/@types;
-        my $offset = $i*$angle;
+    # skip everything if keys %{$p{nodes}} == 0
 
-        my $tv = $type->uri_value;
+    my @seq = sort {
+        my ($x, $y) = ($p{nodes}{$a}, $p{nodes}{$b});
+        $type{$x->{type}} <=> $type{$y->{type}}
+            || ($x->{date} || '') cmp ($y->{date} || '')
+    } keys %{$p{nodes}};
 
-        if ($self->_sr->{$tv}) {
-            my $splay = $self->splay/2;
-            push @axes, $self->_plot_axis($subject, $type, $offset - $splay);
-            $offset += $splay;
-        }
-        else {
-            # noop
-        }
+    # skip all this crap if @seq == 0
 
-        push @axes, $self->_plot_axis($subject, $type, $offset);
-    }
+    #warn Data::Dumper::Dumper(
+    #[map { $p{nodes}{$_}{type} . ' ' . $p{nodes}{$_}{date} } @seq]);
 
-    # lol one more time for the bounding box
-    my ($xmin, $ymin, $xmax, $ymax) = ((0) x 4);
-    for my $i (0..$#types) {
-        my $type = $types[$i];
+    # degree sum
+    my $dsum  = List::Util::sum
+        (map { $_ ? $p{nodes}{$_}{degree} || 0 : 0 } @seq);
+    # node count
+    my $nodes = scalar @seq;
 
-        my $angle = 360/@types;
-        my $offset = $i*$angle;
+    my $r     = $self->radius;
+    my $gap   = 2*asin($self->gap/(2*$r)); # chord -> angle in radians
+    # warn $gap * $r;
+    my $gaps  = $nodes * $gap;
 
-        my $tv = $type->uri_value;
-        if ($self->_sr->{$tv}) {
-            my $splay = $self->splay/2;
-            my ($x, $y) = $self->_tangent_for($type, $offset - $splay);
+    # OK we have to figure out how many degrees (of arc) is one degree
+    # (of graph).
 
-            $xmin = $x if $xmin > $x;
-            $ymin = $y if $ymin > $y;
-            $xmax = $x if $xmax < $x;
-            $ymax = $y if $ymax < $y;
+    my $arcd = fmod($self->end - $self->start, 360); # arc length in degrees
+    my $arcr = $arcd * pi/180; # arc length in radians
+    #warn sprintf("%f -%f = %f (%f)\n", $self->end, $self->start, $arcd, $arcr);
+    #warn $arcr / $gap;
+    #warn $gap * ($dsum+$nodes) * 180 / pi;
+    #warn 2 * pi / $gap;
 
-            #warn "$x $y";
-            $offset += $splay;
-        }
-        my ($x, $y) = $self->_tangent_for($type, $offset);
-        $xmin = $x if $xmin > $x;
-        $ymin = $y if $ymin > $y;
-        $xmax = $x if $xmax < $x;
-        $ymax = $y if $ymax < $y;
-    }
+    my $dlen = $gap; # set degree length to gap initally
+    my $plen = $gap; # set padding length too
 
-    my $w = $xmax - $xmin;
-    my $h = $ymax - $ymin;
-
-    return DOM F(
-        (P 'xml-stylesheet', { type => 'text/css', href => '/asset/svg.css' }),
-        (E svg => {
-        xmlns => 'http://www.w3.org/2000/svg',
-#        viewBox => "$xmin $ymin $xmax $ymax",
-        viewBox => "0 0 $w $h",
-        preserveAspectRatio => 'xMidYMid meet', %{$self->xmlns} },
-            #(map { ("xmlns:$_" => $self->xmlns->{$_}) } keys %{$self->xmlns}) },
-         (E title => {}, 'All Issues, Positions, Arguments'),
-         #(E style => { type => 'text/css' }, $CSS),
-         #(E rect => {
-         #    width => '100%', height => '100%', fill => '#333' }),
-         (E g => {
-             transform => sprintf('translate(%f, %f)',
-                                  -$xmin, -$ymin) }, @arcs, @axes)));
-
-}
-
-sub _tangent_for {
-    my ($self, $type, $angle) = @_;
-    $angle %= 360;
-    my $a1 = $angle * pi/180;
-
-    my ($off, $fac, $pad) = ($self->offset, $self->factor, $self->padding);
-
-    my $len = $off +
-        (sum(map { $_->[1] * $fac + ($pad * 2) } @{$self->_ts->{$type->value}}) || 0);
-
-    my $x  = cos($a1) * $len;
-    my $y  = sin($a1) * $len;
-
-    my $t1 = ($angle + 90) % 360 * pi/180;
-    my $t2 = ($angle - 90) % 360 * pi/180;
-
-    # XXX remember $off is what we're using as a tangent for the arc
-    # control points.
-    my $tx1 = cos($t1) * $off + $x;
-    my $ty1 = sin($t1) * $off + $y;
-
-    my $tx2 = cos($t2) * $off + $x;
-    my $ty2 = sin($t2) * $off + $y;
-
-    return _compare_bbox($angle, [$x, $tx1, $tx2], [$y, $ty1, $ty2]);
-}
-
-sub _compare_bbox {
-    my ($angle, $xs, $ys) = @_;
-
-    $angle %= 360;
-
-    if ($angle <= 90) {
-        # max x max y
-        return (max(@$xs), max(@$ys));
-    }
-    elsif ($angle <= 180) {
-        # min x max y
-        return (min(@$xs), max(@$ys));
-    }
-    elsif ($angle <= 270) {
-        # min x min y
-        return (min(@$xs), min(@$ys));
+    my $dsumr = $dsum * $dlen; # degree sum expressed in gap radians
+    if ($dsumr > $arcr) {
+        # the degree sum * gap length is longer than the arc length,
+        # so do away with the idea of padding and gaps entirely.
+        $gap  = 0;
+        $plen = 0;
+        $dlen = $arcr / $dsum;
     }
     else {
-        # max x min y
-        return (max(@$xs), min(@$ys));
+        # otherwise there is padding and gaps, but how big are they?
+
+        my $glen = $nodes * $gap;
+        my $rest = $arcr - $dsumr;
+
+        if ($rest > 2 * $glen) {
+            # pad length depends on degree length
+            $dlen = $plen = ($arcr - $glen) / ($nodes + $dsum);
+        }
+        else {
+            # split the remaining length between padding and gap
+            $gap = $plen = $rest / (2 * $nodes);
+        }
     }
+
+    #warn "degree = $dlen; pad = $plen; gap = $gap";
+
+    my @paths;
+    my $angle = fmod($self->start + $self->rotate, 360); # angle in DEGREES
+    for my $i (0..$#seq) {
+        my $id = $seq[$i];
+        my $rec = $p{nodes}{$id};
+        # XXX the degree-age here should be the total sweep from the params
+        my $deg = ($rec->{degree} ||= 0) * $dlen;
+
+        # set this so we can come back to it
+        $rec->{angle} = $angle;
+
+        my $arad = deg2rad($angle);
+        my $hgap = $gap  / 2;
+        my $hpad = $plen / 2;
+
+        my $start = $arad + $hgap;
+        $rec->{soff} = $start + $hpad;
+
+        my $x1 = cos($start);
+        my $y1 = sin($start);
+
+        my $end = $start + $deg + $plen;
+        $rec->{eoff} = $rec->{soff} + $deg;
+
+        my $x2 = cos($end);
+        my $y2 = sin($end);
+
+        my $r2 = $r + $self->thickness;
+
+        my $points = sprintf(
+            'M%g,%g A%g,%g %g 0,1 %g,%g L %g,%g A%g,%g, %g 0,0 %g,%g z',
+            $x1*$r,$y1*$r, $r, $r, $angle, $x2*$r, $y2*$r,
+            $x2*$r2, $y2*$r2, $r2, $r2, $angle + $deg, $x1*$r2, $y1*$r2,
+        );
+        #warn $points;
+        push @paths, E a => {
+            'target'       => '_parent',
+            'xlink:target' => '_parent',
+            'xlink:href'   => $id,
+            'xlink:title'  => $rec->{label} || '',
+        },
+            E path => {
+                d => $points, class => 'node',
+                #stroke => 'none',
+                #fill   => sprintf('#%02x%02x%02x', ($i * 3) x 3),
+                about  => $id,
+                typeof => $self->ns->abbreviate($rec->{type}) || $rec->{type},
+        };
+
+        $angle += rad2deg($deg + $plen + $gap);
+    }
+
+    # sort edges by type and then by source/target position
+
+    my @lines;
+    for my $s (@seq) {
+        my $x = $edges{$s};
+        next unless defined $x;
+
+        #warn $s;
+
+        # sort types by source clustering
+        my %t;
+        for my $t (keys %$x) {
+            my $y = $x->{$t};
+            for my $o (keys %$y) {
+                $t{$t} += scalar @{$y->{$o}};
+            }
+        }
+
+        for my $type (sort { $t{$b} <=> $t{$a} } keys %t) {
+            my @g;
+            my $y = $x->{$type};
+            # XXX sort this more intelligently
+            for my $o (grep { $y->{$_} } reverse @seq) {
+                for my $edge (@{$y->{$o}}) {
+                    my $src = $p{nodes}{$s};
+                    my $trg = $p{nodes}{$o};
+
+                    my $w = $dlen * ($edge->{weight} || 1);
+
+                    my $soff = $src->{soff}; #+ $dlen/2;
+                    my $eoff = $trg->{eoff}; #- $dlen/2;
+
+                    my $sx = cos($soff);
+                    my $sy = sin($soff);
+
+                    my $tx = cos($eoff);
+                    my $ty = sin($eoff);
+
+                    my $pf = join(' ',
+                                  'M%g,%g',               # moveto
+                                  'Q%g,%g %g,%g',         # q-curve over
+                                  'L%g,%g %g,%g',         # arrowhead
+                                  'Q%g,%g %g,%g',         # q-curve back
+                                  'A%g,%g, %g 0,0 %g,%g', # arc
+                                  'z'                     # close path
+                              );
+
+                    my $shortr = $r-$w*sin(pi/4)*$r; # 45 degree arrowhead
+                    my $ddeg   = -rad2deg($w);
+                    # first point
+                    my $th = 0; #$self->thickness;
+                    my $x1 = $sx*($r + $th);
+                    my $y1 = $sy*($r + $th);
+
+                    # central point 1
+                    my $cp = ($eoff - $soff)/2;
+                    my $x2 = cos($soff + $cp) * $w;
+                    my $y2 = sin($soff + $cp) * $w;
+
+                    # q-curve stop 1
+                    my $x3 = $tx * $shortr;
+                    my $y3 = $ty * $shortr;
+
+                    # arrowhead
+                    my $x4 = cos($eoff-$w/2) * $r;
+                    my $y4 = sin($eoff-$w/2) * $r;
+                    my $x5 = cos($eoff-$w) * $shortr;
+                    my $y5 = sin($eoff-$w) * $shortr;
+
+                    # central point 2
+                    my $x6 = cos($eoff - $cp) * $dlen;
+                    my $y6 = sin($eoff - $cp) * $dlen;
+
+                    # q-curve stop 2
+                    my $x7 = cos($soff + $w) * ($r + $th);
+                    my $y7 = sin($soff + $w) * ($r + $th);
+
+                    my $points = sprintf
+                        ($pf,                     # format string
+                         $x1, $y1,                # moveto
+                         $x2, $y2, $x3, $y3,      # q-curve over
+                         $x4, $y4, $x5, $y5,      # arrowhead
+                         $x6, $y6, $x7, $y7,      # q-curve back
+                         ($r + $th) x 2, $ddeg, $x1, $y1, # arc
+                     );
+
+                    my %p = (
+                        d        => $points,
+                        #fill     => 'black',
+                        #stroke   => 'none',
+                        #opacity  => '0.5',
+                        about    => $s,
+                        resource => $o,
+                        rel      => $self->ns->abbreviate($type),
+                    );
+                    $p{'title'} = $edge->{label}
+                        if defined $edge->{label};
+
+                    push @g, E path => \%p;
+
+                    $src->{soff} += $w;
+                    $trg->{eoff} -= $w;
+                }
+            }
+            push @lines, (E g => {}, @g);
+        }
+    }
+
+    # something in here causes a syntax error
+    my %ns = (map {
+        ("xmlns:$_" => $self->ns->namespace_uri($_)->as_string)
+    } ($self->ns->list_prefixes));
+    $ns{'xml:base'} = $self->base->as_string if $self->base;
+    my $css = P 'xml-stylesheet',
+            { type => 'text/css', href => $self->css->as_string }
+                if $self->css;
+    my $xl = $self->radius + $self->thickness + $self->margin;
+    my $svg = (E svg => {
+        %ns,
+        xmlns         => 'http://www.w3.org/2000/svg',
+        'xmlns:xlink' => 'http://www.w3.org/1999/xlink',
+        viewBox => sprintf("0 0 %g %g", ($xl * 2) x 2),
+        preserveAspectRatio => 'xMinYMid meet',
+    },
+               (E title => {}, $self->title),
+               (E g => { transform => sprintf('translate(%g, %g)', ($xl) x 2) },
+                (E g => { id => 'edges' }, @lines),
+                (E g => { id => 'nodes' }, @paths))
+           );
+
+    # aaaand punt out SVG
+    return $css ? DOM F($css, $svg) : DOM $svg;
 }
 
 __PACKAGE__->meta->make_immutable;

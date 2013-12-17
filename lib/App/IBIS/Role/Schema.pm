@@ -8,7 +8,7 @@ use Moose::Role;
 use namespace::autoclean;
 
 use URI;
-#use URI::NamespaceMap;
+use URI::NamespaceMap;
 use RDF::Trine::NamespaceMap;
 
 #use RDF::Trine qw(iri blank literal);
@@ -172,13 +172,26 @@ has ns => (
     default => sub { $NS },
 );
 
-sub xmlns {
+sub _ns () {
     my %out;
     for my $prefix ($NS->list_prefixes) {
-        $out{"xmlns:$prefix"} = $NS->namespace_uri($prefix)->uri->uri_value;
+        $out{$prefix} = $NS->namespace_uri($prefix)->uri->uri_value;
     }
     \%out;
 }
+
+sub uns {
+    my $out = _ns;
+    URI::NamespaceMap->new($out);
+}
+
+sub xmlns {
+    my $out = _ns;
+    #warn $out;
+    return { map { ("xmlns:$_" => $out->{$_}) } keys %$out };
+}
+
+
 
 has re => (
     is      => 'ro',

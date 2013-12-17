@@ -8,7 +8,7 @@ use namespace::autoclean;
 
 BEGIN {
     extends 'App::IBIS::Base::Controller';
-    with 'App::IBIS::Role::Schema';
+    with    'App::IBIS::Role::Schema';
 }
 
 
@@ -23,7 +23,10 @@ use XML::LibXML::LazyBuilder qw(DOM E DTD F);
 use RDF::KV;
 use DateTime;
 
+use List::MoreUtils qw(any);
+
 use App::IBIS::HivePlot;
+use App::IBIS::Circos;
 
 my $UUID_RE = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
 
@@ -76,6 +79,123 @@ sub index :Path :Args(0) {
     $resp->body($self->_doc('Welcome to App::IBIS: We Have Issues.',
                             $req->base, undef, {},
                             $self->_do_index($c))->toString(1));
+}
+
+
+#[rdf => [qw(type value)]], [dct => [qw(created)]], [ibis => [qw(generalizes specializes 
+
+sub ci :Local {
+    my ($self, $c) = @_;
+
+    my $req = $c->req;
+    my $ns  = $self->ns;
+    my $b   = $req->base;
+    my $q   = $req->query_parameters;
+    my $ref = $q->{referrer} || $q->{referer} || $req->referer;
+    my $col = $q->{collection} || [];
+    $col = ref $col ? $col : [$col];
+
+    my $circos = App::IBIS::Circos->new(
+        start     => 0,    # initial degree offset
+        end       => 270,     # terminal degree offset
+        rotate    => 45,     # offset to previous two values
+        gap       => 2,     # units of whitespace between arc slices
+        thickness => 50,    # thickness of arc slices
+        margin    => 20,    # gap between outer edge and viewbox
+        size      => 200,   # overall width/height of the viewbox
+        radius    => 270,
+        base => $b,
+        css  => $c->uri_for('/asset/circos.css'),
+        ns   => $self->uns,
+    );
+
+    my (%nodes, @edges);
+
+    my $lab = $self->labels;
+    my $inv = $self->inverse;
+    my $m   = $c->model('RDF');
+
+    #warn join(' ', keys %$lab);
+
+    my %dispatch = (
+        #$ns->
+    );
+
+    # scan the entire thing
+    my $iter = $m->get_statements;
+    while (my $stmt = $iter->next) {
+        my ($s, $p, $o) = $stmt->nodes;
+        next unless $s->is_resource;
+
+        my $uu = URI->new($s->uri_value);
+        next unless $uu->isa('URI::urn::uuid');
+
+        my $su = URI->new_abs($uu->uuid, $b);
+
+        if (any { $p->value eq $_ } keys %$lab) {
+            next unless $o->is_resource;
+            my $ou = URI->new($o->uri_value);
+            next unless $ou->isa('URI::urn::uuid');
+
+            $ou = URI->new_abs($ou->uuid, $b);
+
+            my $pv = $p->uri_value;
+            my $pl = $lab->{$pv}[1];
+
+            my @p = qw(specializes endorsed-by replaced-by questioned-by
+                       suggested-by response supported-by opposed-by);
+
+            if (any { $p->equal($ns->ibis->uri($_)) } @p) {
+                $p = $inv->{$pv}[0];
+                $pv = $p->uri_value;
+                $pl = $lab->{$pv}[1];
+                ($s, $o)   = ($o, $s);
+                ($su, $ou) = ($ou, $su);
+            }
+            push @edges,
+                    { source => $su, target => $ou, type => $pv, label => $pl };
+        }
+        else {
+            my $x = $nodes{$su} ||= {};
+            if ($p->equal($ns->rdf->type)) {
+                next unless any { $o->equal($ns->ibis->uri($_)) }
+                    qw(Issue Position Argument);
+                $x->{type} = $o->value;
+            }
+            elsif ($o->is_literal) {
+                my $v = $o->literal_value;
+                if ($p->equal($ns->rdf->value)) {
+                    $x->{label} = $v;
+                }
+                elsif ($p->equal($ns->dct->created)) {
+                    $x->{date} = $v;
+                }
+                else {
+                    # noop
+                }
+            }
+            else {
+                # noop, we don't do blanks here
+            }
+        }
+
+
+        # now we do a dispatch table based on what the thing is
+
+        #$c->log->debug($su);
+    }
+
+    #$c->log->debug(Data::Dumper::Dumper(\%nodes));
+
+    my $doc = $circos->plot(
+        nodes  => \%nodes,
+        edges  => \@edges,
+        active => $ref,
+    );
+
+
+    $c->res->content_type('image/svg+xml');
+    $c->res->body($doc->toString(1));
 }
 
 sub hp :Local {
@@ -242,7 +362,7 @@ sub _get_ibis :Private {
         $label . ($title ? $title->value : ''), $uri, undef, \%attrs,
         (E div => { class => 'aside' },
          (E object => { class => 'hiveplot',
-                        data => '/hp',
+                        data => '/ci',
                         type => 'image/svg+xml' }, "(Hive Plot)")),
         (E div => { class => 'main' },
          $self->_do_content($c, $subject),
