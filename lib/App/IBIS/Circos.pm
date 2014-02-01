@@ -133,7 +133,7 @@ sub plot {
         \@_,
         nodes  => { isa => HashRef  },
         edges  => { isa => ArrayRef },
-        active => { isa => Maybe[Str], optional => 1 },
+        active => { isa => Maybe[Str|URIObject], optional => 1 },
     );
 
     # derive global geometric properties
@@ -297,6 +297,10 @@ sub plot {
             $x1*$r,$y1*$r, $r, $r, $angle, $x2*$r, $y2*$r,
             $x2*$r2, $y2*$r2, $r2, $r2, $angle + $deg, $x1*$r2, $y1*$r2,
         );
+
+        my @css = qw(node);
+        push @css, 'subject' if $p{active} and $id eq $p{active};
+
         #warn $points;
         push @paths, E a => {
             'target'       => '_parent',
@@ -305,7 +309,8 @@ sub plot {
             'xlink:title'  => $rec->{label} || '',
         },
             E path => {
-                d => $points, class => 'node',
+                d => $points,
+                class => join(' ', @css),
                 #stroke => 'none',
                 #fill   => sprintf('#%02x%02x%02x', ($i * 3) x 3),
                 about  => $id,
@@ -401,16 +406,22 @@ sub plot {
                          ($r + $th) x 2, $ddeg, $x1, $y1, # arc
                      );
 
+                    my @css;
+                    push @css, 'subject' if $p{active}
+                        and ($s eq $p{active} or $o eq $p{active});
+
                     my %p = (
                         d        => $points,
                         #fill     => 'black',
                         #stroke   => 'none',
                         #opacity  => '0.5',
+                        #class    => join(' ', @css),
                         about    => $s,
                         resource => $o,
                         rel      => $self->ns->abbreviate($type),
                     );
-                    $p{'title'} = $edge->{label}
+                    $p{class} = join ' ', @css if @css;
+                    $p{title} = $edge->{label}
                         if defined $edge->{label};
 
                     push @g, E path => \%p;

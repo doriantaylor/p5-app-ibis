@@ -18,6 +18,7 @@ inc/Module/Install/WriteAll.pm
 lib/App/IBIS.pm
 lib/App/IBIS/Base/Controller.pm
 lib/App/IBIS/Controller/Root.pm
+lib/App/IBIS/Circos.pm
 lib/App/IBIS/HivePlot.pm
 lib/App/IBIS/Model/RDF.pm
 lib/App/IBIS/Role/Schema.pm

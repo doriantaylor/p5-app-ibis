@@ -88,7 +88,7 @@ path[rel~='ibis:opposed-by'] {
 }
 
 path.subject {
-   fill: white;
+   fill: white !important;
 }
 
 rect.subject {

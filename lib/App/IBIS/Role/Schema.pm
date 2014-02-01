@@ -172,21 +172,26 @@ has ns => (
     default => sub { $NS },
 );
 
-sub _ns () {
+sub _ns {
+    my $self = shift;
     my %out;
-    for my $prefix ($NS->list_prefixes) {
-        $out{$prefix} = $NS->namespace_uri($prefix)->uri->uri_value;
+    # not sure why we need this
+    my $ns = $self->ns;
+    for my $prefix ($ns->list_prefixes) {
+        $out{$prefix} = $ns->namespace_uri($prefix)->uri->uri_value;
     }
     \%out;
 }
 
 sub uns {
-    my $out = _ns;
+    my $self = shift;
+    my $out = $self->_ns;
     URI::NamespaceMap->new($out);
 }
 
 sub xmlns {
-    my $out = _ns;
+    my $self = shift;
+    my $out = $self->_ns;
     #warn $out;
     return { map { ("xmlns:$_" => $out->{$_}) } keys %$out };
 }

@@ -95,10 +95,21 @@ sub ci :Local {
     my $col = $q->{collection} || [];
     $col = ref $col ? $col : [$col];
 
+    my $s;
+    if ($ref) {
+        $ref = $ref->[0] if ref $ref eq 'ARRAY'; # lol got all that?
+        $ref = URI->new_abs($ref, $b);
+
+        if (my ($uuid) = ($ref->path =~ $UUID_RE)) {
+            $s = $c->uri_for($uuid);
+            #$s = iri('urn:uuid:' . lc $uuid);
+        }
+    }
+
     my $circos = App::IBIS::Circos->new(
         start     => 0,    # initial degree offset
-        end       => 270,     # terminal degree offset
-        rotate    => 45,     # offset to previous two values
+        end       => 240,     # terminal degree offset
+        rotate    => 60,     # offset to previous two values
         gap       => 2,     # units of whitespace between arc slices
         thickness => 50,    # thickness of arc slices
         margin    => 20,    # gap between outer edge and viewbox
@@ -114,6 +125,107 @@ sub ci :Local {
     my $lab = $self->labels;
     my $inv = $self->inverse;
     my $m   = $c->model('RDF');
+
+    # XXX we could do this all by SPARQL if it wasn't so damn slow
+
+    # constrain by collections
+
+    # first check to see if the collections specified in the URI query
+    # parameters are actually in the database
+
+    my @collect;
+    # well, first-first we sanitize
+    for my $u (@$col) {
+        $u = $c->uri_for($u);
+        if (my ($uu) = ($u->path =~ $UUID_RE)) {
+            $u = URI->new("urn:uuid:$uu");
+        }
+
+        # trine-ify this >:|
+        $u = iri("$u");
+
+        # now we check if it's there
+        my ($label) = $m->objects($u, $ns->skos->prefLabel);
+        next unless $label;
+
+        push @collect, [$u, $label];
+    }
+
+    # we want to show all the subjects in the given collection(s),
+    # plus all the objects they connect to, whether or not they are in
+    # that collection. but only if there is a specified collection.
+    # otherwise show everything.
+
+    my @t  = map { $ns->ibis->uri($_) } qw(Issue Position Argument);
+
+    # forward
+    my @fp = map { $ns->ibis->uri($_) } qw(generalizes replaces questions
+                                           suggests responds-to supports
+                                           opposes);
+
+    # reverse
+    my @rp = map { $ns->ibis->uri($_) } qw(specializes replaced-by
+                                           questioned-by suggested-by
+                                           response supported-by opposed-by);
+
+    my %resources;
+    # XXX because i'm too lazy to make this a proper function/method/whatever
+    my $edginator = sub {
+        for my $p (@fp) {
+            my $iter = $m->get_statements(undef, $p, undef);
+            while (my $stmt = $iter->next) {
+                my ($s, $p, $o) = $stmt->nodes;
+
+                $resources{$s->value} ||= $s;
+                $resources{$o->value} ||= $o;
+
+                #push @edges, { 
+            }
+        }
+
+        # do this separately so we can reverse the edges
+        for my $p (@rp) {
+            my $iter = $m->get_statements(undef, $p, undef);
+            while (my $stmt = $iter->next) {
+                my ($s, $p, $o) = $stmt->nodes;
+
+                $resources{$s->value} ||= $s;
+                $resources{$o->value} ||= $o;
+
+                ($s, $o) = ($o, $s);
+                my $pv = $p->uri_value;
+            }
+        }
+    };
+
+    if (@collect) {
+        for my $x (@collect) {
+            my $cc = $x->[0];
+            $c->log->debug($x->[1]);
+            my @s = $m->objects($cc, $ns->skos->member);
+            map { $resources{$_->value} ||= $_ } @s;
+
+            #for my $s (@s) {
+            #    my $iter = $m->bounded_description($s);
+            #    $c->log->debug($iter->as_string);
+            #}
+
+            for my $p (@fp, @rp) {
+                for my $s (@s) {
+                    my @o = ($m->objects($s, $p), $m->subjects($p, $s));
+                    map { $resources{$_->value} ||= $_ } @o;
+
+                    # might as well do the edges here because, well,
+                    # it's them.
+                }
+            }
+        }
+    }
+    else {
+
+    }
+
+    $c->log->debug(join ' ', values %resources);
 
     #warn join(' ', keys %$lab);
 
@@ -142,18 +254,19 @@ sub ci :Local {
             my $pv = $p->uri_value;
             my $pl = $lab->{$pv}[1];
 
-            my @p = qw(specializes endorsed-by replaced-by questioned-by
-                       suggested-by response supported-by opposed-by);
-
-            if (any { $p->equal($ns->ibis->uri($_)) } @p) {
+            if (any { $p->equal($_) } @rp) {
                 $p = $inv->{$pv}[0];
                 $pv = $p->uri_value;
                 $pl = $lab->{$pv}[1];
                 ($s, $o)   = ($o, $s);
                 ($su, $ou) = ($ou, $su);
             }
-            push @edges,
-                    { source => $su, target => $ou, type => $pv, label => $pl };
+            push @edges, {
+                source => $su,
+                target => $ou,
+                type   => $pv,
+                label  => $pl,
+            };
         }
         else {
             my $x = $nodes{$su} ||= {};
@@ -179,18 +292,21 @@ sub ci :Local {
             }
         }
 
-
         # now we do a dispatch table based on what the thing is
 
         #$c->log->debug($su);
     }
+
+    %nodes = map {
+        $_ => $nodes{$_}
+    } grep { defined $nodes{$_}{type} } keys %nodes;
 
     #$c->log->debug(Data::Dumper::Dumper(\%nodes));
 
     my $doc = $circos->plot(
         nodes  => \%nodes,
         edges  => \@edges,
-        active => $ref,
+        active => $s,
     );
 
 
@@ -336,7 +452,7 @@ sub _get_collection :Private {
 
 sub _get_ibis :Private {
     my ($self, $c, $subject) = @_;
-
+    
     my $uri = $c->req->uri;
 
     my $m = $c->model('RDF');
@@ -360,16 +476,17 @@ sub _get_ibis :Private {
 
     my $body = $self->_doc(
         $label . ($title ? $title->value : ''), $uri, undef, \%attrs,
-        (E div => { class => 'aside' },
-         (E object => { class => 'hiveplot',
-                        data => '/ci',
-                        type => 'image/svg+xml' }, "(Hive Plot)")),
-        (E div => { class => 'main' },
+        (E main => {},
+         (E figure => { class => 'aside' },
+          (E object => { class => 'hiveplot',
+                         data => '/ci',
+                         type => 'image/svg+xml' }, "(Hive Plot)")),
+        (E article => {},
          $self->_do_content($c, $subject),
-         (E div => {},
+         (E section => {},
           $self->_do_connect_form($c, $subject, $type),
           $self->_do_create_form($c, $uri, $type)),
-         $self->_do_toggle),
+         $self->_do_toggle)),
     )->toString(1);
 
     # XXX forward this maybe?
@@ -480,7 +597,9 @@ sub _select {
 
         # XXX this will crash
         my $rdfv = $self->ns->rdf->value;
-        my @pairs = sort { $a->[1]->value cmp $b->[1]->value } map {
+        my @pairs = sort {
+            ($a->[1] ? $a->[1]->value : '') cmp ($b->[1] ? $b->[1]->value : '')
+        } map {
             my $s = iri($_); [$s, $model->objects($s, $rdfv)]
         } keys %{$map->{$v} || {}};
 
@@ -634,11 +753,14 @@ sub _do_content {
                                                value => $uri });
             }
 
-            push @dl, (E dd => {},
+            my $tv = $text ? $text->value : $uri;
+
+            push @dl, (E dd => { about  => $o->value,
+                                 typeof => $ns->abbreviate($type) },
                        (E form => { method => 'POST', action => '',
                                     'accept-charset' => 'utf-8' },
                         (E div => {}, @baleet,
-                         (E a => { href => $uri }, $text->value))));
+                         (E a => { href => $uri }, $tv))));
         }
     }
 
@@ -654,12 +776,12 @@ sub _do_content {
     my $rank = $demote || 1;
 
     my $v = $ns->rdf->value->value;
-    E div => {},
+    E section => {},
         (E "h$rank" => {}, $lit{$v} ? $lit{$v}[0]->value : $subject->value),
             (E form => { class => 'set-type',
                          method => 'POST', 'accept-charset' => 'utf-8',
                          action => '' },
-             (E div => {}, @buttons,
+             (E section => {}, @buttons,
               $self->_do_collection_form($c, $subject))),
                   @dl ? (E dl => {
                       class => 'predicates' }, @dl) : ();
