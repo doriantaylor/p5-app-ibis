@@ -1,3 +1,5 @@
+@import url('/asset/font-awesome.css');
+
 html {
    width: 100%;
    min-height: 100%;
@@ -41,7 +43,8 @@ fieldset.relation {
    float: left;
    /*width: 25%;*/
    width: 33.33%;
-   height: 15em;
+   /*height: 15em; */
+   height: 12em;
    /*margin: 2%;*/
    overflow: hidden;
 }
@@ -60,14 +63,16 @@ input[type='text'], input[type='submit'], input[type='reset'], select, button {
 }
 
 form#toggle-which {
-   padding
+   padding: 0.25em;
 }
 
 form#toggle-which label {
-   display: block;
-   float: left;
+   display: inline-block;
+   /*float: left;*/
    width: 40%;
-   margin: 5% 2%;
+   margin: 0 2%;
+   font-size: 80%;
+   font-weight: bold;
 }
 
 fieldset.interaction {
@@ -99,9 +104,11 @@ button[disabled]:hover, label[disabled]:hover {
 
 button.disconnect {
    font-size: 75%;
-   display: block;
+   display: inline-block;
    float: right;
    margin: 0 0 0.5em 1em;
+   padding: 0.25em;
+   border-radius: 0.25em;
 }
 
 form.set-type {
@@ -179,6 +186,7 @@ dt {
 }
 
 dd {
+   margin-left: 0.5em;
    padding: 0.2em;
    margin-bottom: 0.5em;
 }
@@ -276,4 +284,76 @@ dd[typeof~='ibis:Position'] a {
 }
 dd[typeof~='ibis:Argument'] a {
    color: #99c;
+}
+
+input, select, option, textarea, button {
+   background-color: transparent;
+}
+
+textarea.heading {
+   border: none;
+   color: inherit;
+   font-family: inherit;
+   font-size: inherit;
+   font-weight: inherit;
+   font-style: inherit;
+   width: 100%;
+   resize: none;
+   overflow: visible;
+   height: 5em;
+}
+
+aside.collection {
+   display: none;
+   
+}
+
+div.class-selector {
+   display: inline-block;
+   float: left;
+}
+
+div.class-selector > button {
+   display: block;
+   margin: 0.5em 0;
+   line-height: 1.5em;
+   -moz-border-radius: 0.5em;
+   border-radius: 0.5em;
+}
+
+article {
+   -moz-border-radius: 1em;
+   border-radius: 1em;
+   position: absolute;
+   top: 0em;
+   right: 0em;
+   bottom: 0em;
+   max-width: 70ex;
+   margin: 1em;
+   padding: 0 1em;
+   overflow-y: auto;
+}
+
+article h1 {
+   padding-left: 2.5em;
+}
+
+body[typeof~='ibis:Issue'] article {
+   background-color: #443333;
+}
+body[typeof~='ibis:Position'] article {
+   background-color: #334433;
+}
+body[typeof~='ibis:Argument'] article {
+   background-color: #333344;
+}
+
+button.update {
+   display: inline-block;
+   width: 1.5em;
+   padding: 0.25em;
+   border-radius: 0.25em;
+   position: absolute;
+   top: 4em;
+   right: 1.5em;
 }

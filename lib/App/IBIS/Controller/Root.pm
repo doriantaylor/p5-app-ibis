@@ -452,7 +452,7 @@ sub _get_collection :Private {
 
 sub _get_ibis :Private {
     my ($self, $c, $subject) = @_;
-    
+
     my $uri = $c->req->uri;
 
     my $m = $c->model('RDF');
@@ -636,10 +636,16 @@ sub _menu {
 
     my $map = $self->predicate_map;
 
+    # XXX TEMPORARY
+    my @rep = map { $ns->ibis->uri($_) } qw(replaces replaced-by);
+
     for my $i (0..$#labels) {
         my $v = $type->uri_value;
         my @checkbox;
         for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
+            # XXX TEMPORARY
+            next if grep { $_->equal($item->[0]) } @rep;
+
             my $name = $ns->abbreviate($item->[0]) . ' : $';
             $name = '! ' . $name if $flag;
             push @checkbox, (E li => {},
@@ -745,8 +751,8 @@ sub _do_content {
             my $uri = '/' . URI->new($o->value)->uuid;
 
             my @baleet = (E button => {
-                class => 'disconnect',
-                name => "- $pred :", value => $uri }, 'Disconnect');
+                class => 'disconnect fa fa-unlink',
+                name => "- $pred :", value => $uri }, ''); # disconnect
             if ($inv) {
                 unshift @baleet, (E input => { type => 'hidden',
                                                name => "-! $inv :",
@@ -764,28 +770,38 @@ sub _do_content {
         }
     }
 
+    my %c = (
+        Issue    => 'fa-exclamation-triangle',
+        Position => 'fa-gavel',
+        Argument => 'fa-comments',
+    );
+
     # XXX 
     my @buttons = map {
         my $t = "ibis:$_";
-        my %attrs = (class => 'set-type', name => '= rdf:type :', value => $t);
+        my %attrs = (class => "set-type fa $c{$_}", title => $_,
+                     name => '= rdf:type :', value => $t);
         $attrs{disabled} = 'disabled' if grep { $ns->uri($t)->equal($_) }
             @{$res{$ns->rdf->type->value} ||[]};
-        (E button => \%attrs, $_)
+        (E button => \%attrs, '')
     } (qw(Issue Position Argument));
 
     my $rank = $demote || 1;
 
     my $v = $ns->rdf->value->value;
+    my $text = $lit{$v} ? $lit{$v}[0]->value : '';
+
     E section => {},
-        (E "h$rank" => {}, $lit{$v} ? $lit{$v}[0]->value : $subject->value),
-            (E form => { class => 'set-type',
-                         method => 'POST', 'accept-charset' => 'utf-8',
-                         action => '' },
-             (E section => {}, @buttons,
-              $self->_do_collection_form($c, $subject))),
+        (E form => { class => 'set-type',
+                     method => 'POST', 'accept-charset' => 'utf-8',
+                     action => '' },
+         (E div => { class => 'class-selector' }, @buttons),
+         (E "h$rank" => { class => 'heading' },
+          (E textarea => { class => 'heading', name => '= rdf:value' }, $text),
+          (E button => { class => 'update fa fa-repeat' }, ''))),
+              $self->_do_collection_form($c, $subject),
                   @dl ? (E dl => {
                       class => 'predicates' }, @dl) : ();
-
 }
 
 sub _do_collection_form {
@@ -840,7 +856,7 @@ sub _do_collection_form {
 
             push @out, (E form => \%boilerplate,
                         (E select => { name => '! skos:member :' }, @opts),
-                        (E button => {}, 'Attach'));
+                        (E button => { class => 'fa fa-link' }, '')); # Attach
         }
     }
 
@@ -857,11 +873,13 @@ sub _do_collection_form {
                         name => '! skos:member :',
                        value => $newuuid }),
           (E div => {},
+           (E button => { class => 'fa fa-plus' }, ''),
            (E input => {
+               type => 'text',
                name => "= $newuuid skos:prefLabel" }),
-           (E button => {}, 'Create & Attach'))));
+       ))); # Create & Attach
 
-    (E div => {}, @out);
+    (E aside => { class => 'collection' }, @out);
 }
 
 sub _do_index {
@@ -942,7 +960,8 @@ sub _do_connect_form {
                 method => 'post', 'accept-charset' => 'utf-8', action => '' },
         (E fieldset => {}, $self->_menu($c, $type),
          (E fieldset => { class => 'interaction' },
-          $self->_select($c, $subject), (E button => {}, 'Connect')));
+          $self->_select($c, $subject),
+          (E button => { class => 'fa fa-link'}, ''))); # Connect
 }
 
 sub _do_create_form {
@@ -977,7 +996,7 @@ sub _do_create_form {
          (E fieldset => { class => 'interaction' },
           (E input => { class => 'new-value',
                         type => 'text', name => '= rdf:value' }),
-           (E button => {}, 'Create')));
+           (E button => { class => 'fa fa-plus' }, ''))); # Create
 }
 
 sub _doc {
