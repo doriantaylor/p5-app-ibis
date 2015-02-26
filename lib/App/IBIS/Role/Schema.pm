@@ -99,6 +99,8 @@ my %MAP = (
             [$NS->ibis->uri('responds-to'),     'Responds to'],
         ],
         position => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
         ],
         argument => [
             [$NS->ibis->uri('supported-by'),   'Supported by'],
@@ -115,6 +117,8 @@ my %MAP = (
             [$NS->ibis->opposes,                    'Opposes'],
         ],
         argument => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
         ],
     },
 );
@@ -165,6 +169,13 @@ my @SEQ;
 
 =cut
 
+# dat *foo{THING}
+unless (*RDF::Trine::NamespaceMap::list_prefixes{CODE}) {
+    *RDF::Trine::NamespaceMap::list_prefixes = sub {
+        keys %{$_[0]};
+    };
+}
+
 has ns => (
     is      => 'ro',
     isa     => 'RDF::Trine::NamespaceMap',
@@ -177,15 +188,21 @@ sub _ns {
     my %out;
     # not sure why we need this
     my $ns = $self->ns;
+    # warn Data::Dumper::Dumper([$ns->list_prefixes]);
     for my $prefix ($ns->list_prefixes) {
         $out{$prefix} = $ns->namespace_uri($prefix)->uri->uri_value;
     }
+    # XXX BREAK INTERFACE
+    # while (my ($k, $v) = each %$ns) {
+    #     $out{$k} = $v->uri->uri_value;
+    # }
     \%out;
 }
 
 sub uns {
     my $self = shift;
     my $out = $self->_ns;
+    #warn Data::Dumper::Dumper($out);
     URI::NamespaceMap->new($out);
 }
 

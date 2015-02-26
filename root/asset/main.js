@@ -1,3 +1,7 @@
+var NS = {
+    'ibis': 'http://privatealpha.com/ontology/ibis/1#'
+}
+
 var OTHER = {
     'rdf-type':   'rdf:type :',
     'rdf:type :': 'rdf-type'
@@ -17,11 +21,16 @@ function switchForm (isNew) {
     //alert(which.val());
 }
 
-function toggleForm (value, name) {
+//function toggleForm (value, name) {
+function toggleForm (input) {
+    var name  = input.name;
+    var value = input.value;
+    var form  = $(input.form);
+    console.log(form);
     //alert(value);
     var other = OTHER[name];
 
-    /* disable all the other */
+    /* disable all the other controls */
 
     if (other) {
         /* set the value and let  */
@@ -43,6 +52,7 @@ function toggleForm (value, name) {
     }
 }
 
+//function toggleSelect (
 
 
 $(document).ready(function () {
@@ -55,5 +65,5 @@ $(document).ready(function () {
 
     $("input[name='new-item']").change(function () { switchForm(this.value) });
     $(".type-toggle").change(function () {
-        toggleForm(this.value, this.name) });
+        toggleForm(this) });
 });

@@ -102,6 +102,8 @@ my %MAP = (
             [$NS->ibis->uri('responds-to'),     'Responds to'],
         ],
         position => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
         ],
         argument => [
             [$NS->ibis->uri('supported-by'),   'Supported by'],
@@ -118,6 +120,8 @@ my %MAP = (
             [$NS->ibis->opposes,                    'Opposes'],
         ],
         argument => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
         ],
     },
 );

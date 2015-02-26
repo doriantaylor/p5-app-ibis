@@ -106,6 +106,8 @@ sub ci :Local {
         }
     }
 
+    #$c->log->debug(Data::Dumper::Dumper($self->_ns));
+
     my $circos = App::IBIS::Circos->new(
         start     => 0,    # initial degree offset
         end       => 240,     # terminal degree offset
@@ -359,8 +361,15 @@ sub uuid :Regexp('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})') {
     my $method = $req->method;
     if ($method eq 'POST') {
         # check for input
-        $self->_post_uuid($c, $uuid, $req->body_parameters);
-        $resp->redirect($path);
+        eval {
+            $self->_post_uuid($c, $uuid, $req->body_parameters);
+        };
+        if ($@) {
+            $c->res->body("wat $@");
+        }
+        else {
+            $resp->redirect($path);
+        }
     }
     elsif ($method eq 'GET' or $method eq 'HEAD') {
         # do this for now until we can handle html properly
@@ -483,6 +492,7 @@ sub _get_ibis :Private {
                          type => 'image/svg+xml' }, "(Hive Plot)")),
         (E article => {},
          $self->_do_content($c, $subject),
+         (E hr => { class => 'separator' }),
          (E section => {},
           $self->_do_connect_form($c, $subject, $type),
           $self->_do_create_form($c, $uri, $type)),
@@ -532,18 +542,27 @@ sub _post_uuid {
 
     my $patch = $kv->process($content);
     #warn Data::Dumper::Dumper($patch);
+
     my $m = $c->model('RDF');
-    $c->log->debug("Size: " .$m->size);
+    $c->log->debug("Initial size: " .$m->size);
     # add a timestamp
+    # eval { $m->count_statements($subject, undef, undef) };
+    # if ($@) {
+    #     $c->log->debug($@);
+    #     return;
+    # }
     unless ($m->count_statements($subject, undef, undef)) {
         my $now = literal(DateTime->now . 'Z', undef, $rns->xsd->dateTime);
         $patch->add_this($subject, $rns->dct->created, $now);
     }
 
-    $patch->apply($m);
+    eval { $patch->apply($m) };
+    if ($@) {
+        $c->log->error("cannot apply patch: $@");
+    }
 
     $m->_store->_model->sync;
-    $c->log->debug("Size: " .$m->size);
+    $c->log->debug("New size: " .$m->size);
 
 }
 
@@ -733,17 +752,16 @@ sub _do_content {
         }
     }
 
-    my @dl;
+    my @asides;
     my %p = map { $_ => 1 } (keys %in, keys %res);
 
 
     for my $k ($self->predicate_seq) {
-        push @dl, (E dt => { about => $k, property => 'rdfs:label'},
-                   $labels->{$k}[1]) if $res{$k};
 
         my $pred = $ns->abbreviate(iri($k));
         my $inv  = $inverse->{$k} ? $ns->abbreviate($inverse->{$k}[0]) : undef;
 
+        my @li;
         for my $o (@{$res{$k} || []}) {
             my ($type) = $m->objects($o, $ns->rdf->type);
             my ($text) = $m->objects($o, $ns->rdf->value);
@@ -761,13 +779,21 @@ sub _do_content {
 
             my $tv = $text ? $text->value : $uri;
 
-            push @dl, (E dd => { about  => $o->value,
+            push @li, (E li => { about  => $o->value,
                                  typeof => $ns->abbreviate($type) },
                        (E form => { method => 'POST', action => '',
                                     'accept-charset' => 'utf-8' },
                         (E div => {}, @baleet,
                          (E a => { href => $uri }, $tv))));
         }
+
+        if ($res{$k} && @li) {
+            push @asides,
+                (E aside => { class => 'predicate' },
+                 (E h3 => { about => $k, property => 'rdfs:label'},
+                  $labels->{$k}[1]), (E ul => {}, @li));
+        }
+
     }
 
     my %c = (
@@ -799,9 +825,7 @@ sub _do_content {
          (E "h$rank" => { class => 'heading' },
           (E textarea => { class => 'heading', name => '= rdf:value' }, $text),
           (E button => { class => 'update fa fa-repeat' }, ''))),
-              $self->_do_collection_form($c, $subject),
-                  @dl ? (E dl => {
-                      class => 'predicates' }, @dl) : ();
+              $self->_do_collection_form($c, $subject), @asides;
 }
 
 sub _do_collection_form {

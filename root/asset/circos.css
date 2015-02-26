@@ -12,20 +12,29 @@
 #nodes path[typeof~='ibis:Issue'] {
    fill: #c99;
 }
+#nodes path[typeof~='ibis:Issue'].subject {
+   fill: #ffd8d8;
+}
 #nodes path[typeof~='ibis:Position'] {
    fill: #9c9;
+}
+#nodes path[typeof~='ibis:Position'].subject {
+   fill: #d8ffd8;
 }
 #nodes path[typeof~='ibis:Argument'] {
    fill: #99c;
 }
+#nodes path[typeof~='ibis:Argument'].subject {
+   fill: #d8d8ff;
+}
 #nodes path[typeof~='ibis:Issue']:hover {
-   fill: #c99;
+   fill: #ffd8d8;
 }
 #nodes path[typeof~='ibis:Position']:hover {
-   fill: #9c9;
+   fill: #d8ffd8;
 }
 #nodes path[typeof~='ibis:Argument']:hover {
-   fill: #99c;
+   fill: #d8d8ff;
 }
 .arc {
    opacity: 1;
@@ -41,9 +50,15 @@
 path[rel~='ibis:generalizes'] {
    fill: #5f7fff;
 }
+path[rel~='ibis:generalizes'].subject {
+   fill: #abbcff;
+}
 
 path[rel~='ibis:specializes'] {
    fill: #0033ff;
+}
+path[rel~='ibis:specializes'].subject {
+   fill: #4c70ff;
 }
 
 /*
@@ -55,41 +70,77 @@ path[rel~='ibis:replaces'], path[rel~='ibis:replaced-by'] {
 path[rel~='ibis:suggests'] {
    fill: #ffcd40;
 }
+path[rel~='ibis:suggests'].subject {
+   fill: #ffe08c;
+}
+
 path[rel~='ibis:suggested-by'] {
    fill: #ffbc00;
+}
+path[rel~='ibis:suggested-by'].subject {
+   fill: #ffcf4c;
 }
 
 path[rel~='ibis:questions'] {
    fill: #ff9a40;
 }
+path[rel~='ibis:questions'].subject {
+   fill: #ffc18c;
+}
+
 path[rel~='ibis:questioned-by'] {
    fill: #ff7800;
+}
+path[rel~='ibis:questioned-by'].subject {
+   fill: #ff9f4c;
 }
 
 path[rel~='ibis:response'] {
    fill: #8a0041;
 }
+path[rel~='ibis:response'].subject {
+   fill: #d64086;
+}
+
 path[rel~='ibis:responds-to'] {
    fill: #d50065;
+}
+path[rel~='ibis:responds-to'].subject {
+   fill: #ff4c9f;
 }
 
 path[rel~='ibis:supports'] {
    fill: #4dde00;
 }
+path[rel~='ibis:supports'].subject {
+   fill: #8aff4c;
+}
 path[rel~='ibis:supported-by'] {
    fill: #55a62a;
+}
+path[rel~='ibis:supported-by'].subject {
+   fill: #acf286;
 }
 
 path[rel~='ibis:opposes'] {
    fill: #ec0033;
 }
+path[rel~='ibis:opposes'].subject {
+   fill: #ff4c70;
+}
 path[rel~='ibis:opposed-by'] {
    fill: #b12c49;
 }
+path[rel~='ibis:opposed-by'].subject {
+   fill: #fd8ba3;
+}
+
 
 path.subject {
-   fill: white !important;
+   /* fill: white !important; */
+   opacity: 0.8 !important;
 }
+
 
 rect.subject {
    fill: white;

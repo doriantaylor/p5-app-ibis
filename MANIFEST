@@ -17,8 +17,8 @@ inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/App/IBIS.pm
 lib/App/IBIS/Base/Controller.pm
-lib/App/IBIS/Controller/Root.pm
 lib/App/IBIS/Circos.pm
+lib/App/IBIS/Controller/Root.pm
 lib/App/IBIS/HivePlot.pm
 lib/App/IBIS/Model/RDF.pm
 lib/App/IBIS/Role/Schema.pm
@@ -27,6 +27,13 @@ MANIFEST			This list of files
 META.yml
 README
 root/asset/chevron-r.svg
+root/asset/circos.css
+root/asset/font-awesome.css
+root/asset/font-awesome/fontawesome-webfont.eot
+root/asset/font-awesome/fontawesome-webfont.svg
+root/asset/font-awesome/fontawesome-webfont.ttf
+root/asset/font-awesome/fontawesome-webfont.woff
+root/asset/font-awesome/FontAwesome.otf
 root/asset/jquery-2.0.3.js
 root/asset/jquery.js
 root/asset/main.css
@@ -38,6 +45,7 @@ script/app_ibis_create.pl
 script/app_ibis_fastcgi.pl
 script/app_ibis_server.pl
 script/app_ibis_test.pl
+script/get-jquery
 t/01app.t
 t/02pod.t
 t/03podcoverage.t

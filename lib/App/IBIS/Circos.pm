@@ -292,10 +292,12 @@ sub plot {
 
         my $r2 = $r + $self->thickness;
 
+        my $large = int(@seq == 1);
+
         my $points = sprintf(
-            'M%g,%g A%g,%g %g 0,1 %g,%g L %g,%g A%g,%g, %g 0,0 %g,%g z',
-            $x1*$r,$y1*$r, $r, $r, $angle, $x2*$r, $y2*$r,
-            $x2*$r2, $y2*$r2, $r2, $r2, $angle + $deg, $x1*$r2, $y1*$r2,
+            'M%g,%g A%g,%g %g %d,1 %g,%g L %g,%g A%g,%g, %g %d,0 %g,%g z',
+            $x1*$r, $y1*$r, $r, $r, $angle, $large, $x2*$r, $y2*$r,
+            $x2*$r2, $y2*$r2, $r2, $r2, $angle + $deg, $large, $x1*$r2, $y1*$r2,
         );
 
         my @css = qw(node);
@@ -418,8 +420,15 @@ sub plot {
                         #class    => join(' ', @css),
                         about    => $s,
                         resource => $o,
-                        rel      => $self->ns->abbreviate($type),
                     );
+
+                    if (my $rel = $self->ns->abbreviate($type)) {
+                        $p{rel} = $rel;
+                    }
+                    else {
+                        #warn $type;
+                    }
+
                     $p{class} = join ' ', @css if @css;
                     $p{title} = $edge->{label}
                         if defined $edge->{label};

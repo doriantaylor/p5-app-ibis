@@ -177,26 +177,56 @@ object.hiveplot {
    height: 100%;
 }
 
-dl.predicates {
+aside.predicate {
+   display: block;
+   background-color: black;
+   padding: 0.5em;
+   -moz-border-radius: 1em;
+   border-radius: 1em;
+   margin-bottom: 0.5em;
+}
+
+dl.predicates, aside.predicate {
    font-size: 80%;
+}
+
+aside.predicate h3 {
+   margin: 0 0 0.5em 0.25em;
+}
+
+aside.predicate ul {
+   margin: 0;
+   padding-left: 1em;
+}
+
+aside.predicate li {
+   list-style-type: none;
 }
 
 dt {
    font-weight: bold;
 }
 
-dd {
+dd, aside.predicate li {
    margin-left: 0.5em;
    padding: 0.2em;
    margin-bottom: 0.5em;
 }
 
-dt[about='http://privatealpha.com/ontology/ibis/1#generalizes'] {
-   color: #5f7fff;
+*[property='rdfs:label'] {
+   color: #ddd;
+   padding: 0.1em 0.3em;
+   display: inline-block;
+   -moz-border-radius: 0.4em;
+   border-radius: 0.4em;
 }
 
-dt[about='http://privatealpha.com/ontology/ibis/1#specializes'] {
-   color: #0033ff;
+*[about='http://privatealpha.com/ontology/ibis/1#generalizes'] {
+   background-color: #5f7fff;
+}
+
+*[about='http://privatealpha.com/ontology/ibis/1#specializes'] {
+   background-color: #0033ff;
 }
 
 /*
@@ -205,42 +235,44 @@ dt[about='http://privatealpha.com/ontology/ibis/1#replaces'], dt[about='http://p
 }
 */
 
-dt[about='http://privatealpha.com/ontology/ibis/1#suggests'] {
-   color: #ffcd40;
+*[about='http://privatealpha.com/ontology/ibis/1#suggests'] {
+   color: #666;
+   background-color: #ffcd40;
 }
-dt[about='http://privatealpha.com/ontology/ibis/1#suggested-by'] {
-   color: #ffbc00;
-}
-
-dt[about='http://privatealpha.com/ontology/ibis/1#questions'] {
-   color: #ff9a40;
-}
-dt[about='http://privatealpha.com/ontology/ibis/1#questioned-by'] {
-   color: #ff7800;
+*[about='http://privatealpha.com/ontology/ibis/1#suggested-by'] {
+   color: #888;
+   background-color: #ffbc00;
 }
 
-dt[about='http://privatealpha.com/ontology/ibis/1#response'] {
-   color: #8a0041;
+*[about='http://privatealpha.com/ontology/ibis/1#questions'] {
+   background-color: #ff9a40;
 }
-dt[about='http://privatealpha.com/ontology/ibis/1#responds-to'] {
-   color: #d50065;
-}
-
-dt[about='http://privatealpha.com/ontology/ibis/1#supports'] {
-   color: #4dde00;
-}
-dt[about='http://privatealpha.com/ontology/ibis/1#supported-by'] {
-   color: #55a62a;
+*[about='http://privatealpha.com/ontology/ibis/1#questioned-by'] {
+   background-color: #ff7800;
 }
 
-dt[about='http://privatealpha.com/ontology/ibis/1#opposes'] {
-   color: #ec0033;
+*[about='http://privatealpha.com/ontology/ibis/1#response'] {
+   background-color: #8a0041;
 }
-dt[about='http://privatealpha.com/ontology/ibis/1#opposed-by'] {
-   color: #b12c49;
+*[about='http://privatealpha.com/ontology/ibis/1#responds-to'] {
+   background-color: #d50065;
 }
 
-body[typeof~='ibis:Issue'], fieldset.issue {
+*[about='http://privatealpha.com/ontology/ibis/1#supports'] {
+   background-color: #4dde00;
+}
+*[about='http://privatealpha.com/ontology/ibis/1#supported-by'] {
+   background-color: #55a62a;
+}
+
+*[about='http://privatealpha.com/ontology/ibis/1#opposes'] {
+   background-color: #ec0033;
+}
+*[about='http://privatealpha.com/ontology/ibis/1#opposed-by'] {
+   background-color: #b12c49;
+}
+
+body[typeof~='ibis:Issue'], fieldset.issue, body[typeof~='ibis:Issue'] aside.predicate {
    background-color: #322;
 }
 
@@ -248,7 +280,7 @@ body[typeof~='ibis:Issue'] h1, fieldset.issue {
    color: #988;
 }
 
-body[typeof~='ibis:Position'], fieldset.position {
+body[typeof~='ibis:Position'], fieldset.position, body[typeof~='ibis:Position'] aside.predicate  {
    background-color: #232;
 }
 
@@ -256,11 +288,11 @@ body[typeof~='ibis:Position'] h1, fieldset.position {
    color: #898;
 }
 
-body[typeof~='ibis:Argument'], fieldset.argument {
+body[typeof~='ibis:Argument'], fieldset.argument, body[typeof~='ibis:Argument'] aside.predicate {
    background-color: #223;
 }
 
-body[typeof~='ibis:Argument'] h1, fieldset.argument {
+body[typeof~='ibis:Argument'] h1, fieldset.argument  {
    color: #889;
 }
 
@@ -276,13 +308,13 @@ dd[typeof~='ibis:Argument'] {
 }
 */
 
-dd[typeof~='ibis:Issue'] a {
+li[typeof~='ibis:Issue'] a {
    color: #c99;
 }
-dd[typeof~='ibis:Position'] a {
+li[typeof~='ibis:Position'] a {
    color: #9c9;
 }
-dd[typeof~='ibis:Argument'] a {
+li[typeof~='ibis:Argument'] a {
    color: #99c;
 }
 
@@ -356,4 +388,9 @@ button.update {
    position: absolute;
    top: 4em;
    right: 1.5em;
+}
+
+hr.separator {
+   border: none;
+   margin: 1em;
 }
