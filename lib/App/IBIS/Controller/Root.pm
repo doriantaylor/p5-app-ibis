@@ -395,12 +395,31 @@ sub uuid :Regexp('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})') {
                                     $self->_do_404($new))->toString(1));
         }
     }
+    elsif ($method eq 'DELETE') {
+        $c->forward('_delete_uuid', [$uuid]);
+    }
     else {
         $resp->status('405');
         $resp->content_type('text/plain');
         # XXX something wittier perhaps
         $resp->body('Method not allowed.');
     }
+}
+
+sub _delete_uuid :Private {
+    my ($self, $c, $uuid) = @_;
+    my $m = $c->model('RDF');
+
+    $m->begin_bulk_ops;
+    $m->remove_statements($uuid, undef, undef);
+    $m->remove_statements(undef, undef, $uuid);
+    $m->end_bulk_ops;
+
+    my $resp = $c->response;
+    $resp->status('204');
+    $resp->content_type('text/plain');
+    $resp->body('');
+    return;
 }
 
 sub dump :Local {

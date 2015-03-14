@@ -263,6 +263,18 @@ sub plot {
 
     #warn "degree = $dlen; pad = $plen; gap = $gap";
 
+    # get neighbours
+    my %neighbours;
+    if ($p{active}) {
+        for my $edge (@{$p{edges}}) {
+            $neighbours{$edge->{source}} = 1 if $edge->{target} eq $p{active};
+            $neighbours{$edge->{target}} = 1 if $edge->{source} eq $p{active};
+        }
+    }
+
+    #require Data::Dumper;
+    #warn Data::Dumper::Dumper(\%targets);
+
     my @paths;
     my $angle = fmod($self->start + $self->rotate, 360); # angle in DEGREES
     for my $i (0..$#seq) {
@@ -300,8 +312,17 @@ sub plot {
             $x2*$r2, $y2*$r2, $r2, $r2, $angle + $deg, $large, $x1*$r2, $y1*$r2,
         );
 
+        # add css hooks for highlighting
         my @css = qw(node);
-        push @css, 'subject' if $p{active} and $id eq $p{active};
+        if ($p{active} and $id eq $p{active}) {
+            push @css, 'subject';
+        }
+        elsif ($neighbours{$id}) {
+            push @css, 'neighbour';
+        }
+        else {
+            # noop
+        }
 
         #warn $points;
         push @paths, E a => {

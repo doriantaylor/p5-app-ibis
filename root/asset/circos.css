@@ -15,6 +15,14 @@
 #nodes path[typeof~='ibis:Issue'].subject {
    fill: #ffd8d8;
 }
+
+/*
+#nodes path[typeof~='ibis:Issue'].neighbour {
+   fill: #e5dada;
+}
+*/
+
+
 #nodes path[typeof~='ibis:Position'] {
    fill: #9c9;
 }
@@ -136,11 +144,10 @@ path[rel~='ibis:opposed-by'].subject {
 }
 
 
-path.subject {
+path.subject, path.neighbour {
    /* fill: white !important; */
-   opacity: 0.8 !important;
+   opacity: 1 !important;
 }
-
 
 rect.subject {
    fill: white;

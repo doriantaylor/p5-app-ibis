@@ -170,6 +170,9 @@ figure {
    height: 100%;
    z-index: 1;
 }
+figure.aside {
+   max-width: 65%;
+}
 
 object.hiveplot {
    display: block;
