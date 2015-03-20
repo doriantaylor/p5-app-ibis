@@ -22,6 +22,7 @@ use constant IBIS => RDF::Trine::Namespace->new
 use XML::LibXML::LazyBuilder qw(DOM E DTD F);
 use RDF::KV;
 use DateTime;
+use DateTime::Format::W3CDTF;
 
 use List::MoreUtils qw(any);
 
@@ -431,6 +432,102 @@ sub dump :Local {
     my $serializer = RDF::Trine::Serializer->new
         ('turtle', namespaces => $self->ns);
     $resp->body($serializer->serialize_model_to_string($c->model('RDF')));
+}
+
+sub _date_seq {
+    my @literals = grep { $_->is_literal && $_->has_datatype
+                              && $_->literal_datatype =~ /date(Time)?$/ } @_;
+    my $dtf = DateTime::Format::W3CDTF->new;
+    my @out;
+    for my $literal (@literals) {
+        my $dt = eval { $dtf->parse_datetime($literal->literal_value) };
+        next if $@;
+        push @out, $dt;
+    }
+    @out = sort { DateTime->compare($a, $b) } @out;
+
+    wantarray ? @out : \@out;
+}
+
+sub feed :Local {
+    my ($self, $c) = @_;
+
+    my $ns = $self->ns;
+    my $m  = $c->model('RDF');
+
+    # specify relevant types
+    my @t  = map { $ns->ibis->uri($_) } qw(Issue Position Argument);
+
+    # get unique subjects
+    my %s = map { $_->uri_value => { id => $_ } }
+        grep { $_->is_resource } map { $m->subjects($ns->rdf->type, $_) } @t;
+
+    # this is dumb because it does all the work before sending the
+    # cache response but whatever
+
+    for my $v (values %s) {
+        my $s = $v->{id};
+        ($v->{title})   = $m->objects($s, $ns->rdf->value);
+        ($v->{author})  = $m->objects($s, $ns->dct->creator);
+        ($v->{created}) = _date_seq($m->objects($s, $ns->dct->created));
+        $v->{modified}  = _date_seq($m->objects($s, $ns->dct->modified));
+    }
+
+    # look for if-modified-since header
+    my @entries;
+    if (my $ims = $c->req->headers->if_modified_since) {
+        $ims = DateTime->from_epoch(epoch => $ims);
+        $c->log->debug("Found If-Modified-Since: $ims");
+
+        for my $k (keys %s) {
+            # mtime is either latest mtime or ctime
+            my $mtime = @{$s{$k}{modified}}
+                ? $s{$k}{modified}[-1] : $s{$k}{created};
+            delete $s{$k} if $mtime and $ims >= $mtime;
+        }
+    }
+    @entries = sort { DateTime->compare(
+        (@{$a->{modified}} ? $a->{modified}[-1] : $a->{created}),
+        (@{$b->{modified}} ? $b->{modified}[-1] : $b->{created})) } values %s;
+
+    my $resp = $c->res;
+
+    if (@entries) {
+        require Data::Dumper;
+        $resp->status(200);
+        $resp->content_type('application/xml');
+        my $lm = @{$entries[-1]{modified}} ?
+            $entries[-1]{modified}[-1] : $entries[-1]{created};
+        $resp->headers->last_modified($lm->epoch);
+
+        my $dtf = DateTime::Format::W3CDTF->new;
+
+        my @out;
+        for my $entry (@entries) {
+            my $published = $entry->{created};
+            my $updated   = @{$entry->{modified}} ?
+                $entry->{modified}[-1] : $published;
+            my $uuid = URI->new($entry->{id}->uri_value);
+            my $link = $c->req->base . $uuid->uuid;
+            push @out, (E entry => {},
+                        (E title => {}, $entry->{title}->literal_value),
+                        (E link => { rel => 'alternate',
+                                     type => 'text/html',
+                                     href => $link }),
+                        (E id => {}, $uuid->as_string),
+                        (E updated => {}, $dtf->format_datetime($updated)),
+                        (E published => {}, $dtf->format_datetime($published)));
+        }
+
+        my $doc = DOM (E feed => { xmlns => 'http://www.w3.org/2005/Atom' },
+                       (E title => {}, 'New Issues, Positions and Arguments'),
+                       (E updated => {}, $dtf->format_datetime($lm)), @out);
+
+        $resp->body($doc->toString(1));
+    }
+    else {
+        $resp->status(304);
+    }
 }
 
 sub _get_concept :Private {
