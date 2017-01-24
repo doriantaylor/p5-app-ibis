@@ -91,6 +91,8 @@ my %MAP = (
             [$NS->ibis->response,                  'Response'],
         ],
         argument => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
         ],
@@ -112,6 +114,8 @@ my %MAP = (
     },
     argument => {
         issue => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],

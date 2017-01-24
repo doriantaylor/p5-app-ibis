@@ -24,13 +24,32 @@ use Catalyst qw/
     -Debug
     ConfigLoader
     Static::Simple
+    StackTrace
 /;
 #    +CatalystX::Profile
 #/;
 
 extends 'Catalyst';
 
-our $VERSION = '0.01';
+use Graphics::ColorObject;
+
+our $VERSION = '0.02';
+
+after setup_finalize => sub {
+    my $app = shift;
+    my $p = $app->config->{palette};
+    for my $t (keys %{$p->{types}}) {
+        if ($t =~ /:/) {
+            my $hex = $p->{types}{$t};
+            # expand 3x to 6x
+            #$hex =~ s/^#?([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/#$1$1$2$2$3$3/;
+            #my $co = Graphics::ColorObject->new_RGBhex($hex);
+            my $co = Graphics::ColorObject->new($hex);
+            warn "$t: " . join ', ', @{$co->as_LCHab};
+        }
+    }
+    #warn Data::Dumper::Dumper($app->config->{palette});
+};
 
 # Configure the application.
 #

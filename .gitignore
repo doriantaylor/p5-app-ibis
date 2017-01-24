@@ -2,6 +2,8 @@ syntax: glob
 blib*
 Makefile
 Makefile.old
+Makefile.bak
+MANIFEST.bak
 Build
 Build.bat
 _build*
@@ -16,4 +18,6 @@ inc/*
 META.yml
 MYMETA.yml
 MYMETA.json
-nytprof/*
+nytprof*
+*.db
+*.orig

@@ -77,9 +77,14 @@ sub index :Path :Args(0) {
 
     my $req  = $c->req;
     my $resp = $c->res;
-    $resp->body($self->_doc('Welcome to App::IBIS: We Have Issues.',
+    my $doc = $self->_doc('Welcome to App::IBIS: We Have Issues.',
                             $req->base, undef, {},
-                            $self->_do_index($c))->toString(1));
+                            $self->_do_index($c));
+    my $body = $doc->toString(1);
+    $c->res->content_length(length $body);
+    utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
+
+    $resp->body($body);
 }
 
 
@@ -347,13 +352,14 @@ sub hp :Local {
     $c->res->body($hp->plot($s)->toString(1));
 }
 
-sub uuid :Regexp('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})') {
-    my ($self, $c) = @_;
+#sub uuid :Regexp('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})') {
+sub uuid :Private {
+    my ($self, $c, $uuid) = @_;
 
     my $req  = $c->req;
     my $resp = $c->res;
 
-    my $uuid = $c->req->captures->[0];
+#my $uuid = $c->req->captures->[0];
 
     my $path = '/' . lc $uuid;
     $uuid = RDF::Trine::Node::Resource->new('urn:uuid:' . lc $uuid);
@@ -389,6 +395,7 @@ sub uuid :Regexp('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})') {
         else {
             # 404
             my $new = $uuid->uri_value;
+            $c->log->debug("failed to identify $new");
             $new =~ s!urn:uuid:!/!;
             $resp->status(404);
             $resp->body($self->_doc('Nothing here. Make something?',
@@ -589,6 +596,8 @@ sub _get_ibis :Private {
     my ($type)  = $m->objects($subject, $rns->rdf->type);
     my ($title) = $m->objects($subject, $rns->rdf->value);
 
+    $c->log->debug($title->value);
+
     my %attrs;
 
     # XXX DERIVE THIS BETTER
@@ -599,7 +608,7 @@ sub _get_ibis :Private {
         $label .= ': ';
     }
 
-    my $body = $self->_doc(
+    my $doc = $self->_doc(
         $label . ($title ? $title->value : ''), $uri, undef, \%attrs,
         (E main => {},
          (E figure => { class => 'aside' },
@@ -613,7 +622,11 @@ sub _get_ibis :Private {
           $self->_do_connect_form($c, $subject, $type),
           $self->_do_create_form($c, $uri, $type)),
          $self->_do_toggle)),
-    )->toString(1);
+    );
+
+    my $body = $doc->toString(1);
+    $c->res->content_length(length $body);
+    utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
 
     # XXX forward this maybe?
     $c->res->body($body);
@@ -690,6 +703,12 @@ Standard 404 error page
 
 sub default :Path {
     my ( $self, $c, @p) = @_;
+
+    if ($p[0] and $p[0] =~ $UUID_RE) {
+        $c->forward(uuid => [lc $p[0]]);
+        return;
+    }
+
     $c->log->debug(@p);
     $c->res->status(404);
     my $doc = $self->_doc('Nothing here. Make something?',
@@ -900,14 +919,19 @@ sub _do_content {
                        (E form => { method => 'POST', action => '',
                                     'accept-charset' => 'utf-8' },
                         (E div => {}, @baleet,
-                         (E a => { href => $uri }, $tv))));
+                         (E a => { about => $o->value, href => $uri,
+                                   property => 'rdf:value' }, $tv))));
         }
 
         if ($res{$k} && @li) {
+            my $abbrk = $ns->abbreviate($k);
+            my $first = '/' . URI->new($res{$k}[0]->value)->uuid;
             push @asides,
-                (E aside => { class => 'predicate' },
+                (E aside => { class => 'predicate', rel => $abbrk,
+                              resource => $first },
                  (E h3 => { about => $k, property => 'rdfs:label'},
-                  $labels->{$k}[1]), (E ul => {}, @li));
+                  $labels->{$k}[1]),
+                 (E ul => { about => '', rel => $abbrk }, @li));
         }
 
     }
@@ -1081,7 +1105,8 @@ sub _do_index {
 sub _do_404 {
     my ($self, $new) = @_;
     $new ||= '/' . $self->uuid4;
-    E form => { method => 'POST', 'accept-charset' => 'utf-8', action => $new },
+    E form => { id => 'blank-page', method => 'POST',
+                'accept-charset' => 'utf-8', action => $new },
         (E fieldset => {},
          (E legend => {},
           (E span => {}, 'Start a new '),

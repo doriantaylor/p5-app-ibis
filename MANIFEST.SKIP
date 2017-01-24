@@ -111,3 +111,4 @@ root/static/.*
 nytprof\.out$
 nytprof/.*
 App-IBIS.*\.tar\.gz
+\.db

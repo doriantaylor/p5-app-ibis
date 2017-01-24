@@ -62,6 +62,11 @@ input[type='text'], input[type='submit'], input[type='reset'], select, button {
    border: 1px solid #444;
 }
 
+form#blank-page {
+   margin: 5em auto;
+   width: 70ex;
+}
+
 form#toggle-which {
    padding: 0.25em;
 }
@@ -86,8 +91,21 @@ select.target, input.new-value {
    max-width: 32ex;
 }
 
-option {
+select.target option {
+   max-width: 70ex;
+   overflow-x: hidden;
+   text-overflow: ellipsis;
+}
+
+/*
+optgroup {
    font-size: 75%;
+   line-height: 1.33em;
+   padding-left: 0.5em;
+}*/
+
+option {
+   padding: 0 0 0 1ex;
 }
 
 button:hover, label:hover {
