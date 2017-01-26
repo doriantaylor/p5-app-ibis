@@ -11,6 +11,8 @@ use MooseX::Types::Moose qw(Maybe Defined Str Num HashRef ArrayRef);
 
 use MooseX::Params::Validate;
 
+with 'Role::Markup::XML';
+
 use List::Util;
 use Math::Trig;
 use POSIX                    qw(fmod);

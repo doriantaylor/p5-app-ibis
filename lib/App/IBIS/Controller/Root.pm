@@ -7,11 +7,11 @@ use Moose;
 use namespace::autoclean;
 
 BEGIN {
-    extends 'App::IBIS::Base::Controller';
+#    extends 'App::IBIS::Base::Controller';
+    extends 'Catalyst::Controller';
     with    'App::IBIS::Role::Schema';
+    with    'Role::Markup::XML';
 }
-
-
 
 # constants
 use RDF::Trine qw(iri blank literal);
@@ -19,14 +19,15 @@ use RDF::Trine::Namespace qw(RDF);
 use constant IBIS => RDF::Trine::Namespace->new
     ('http://privatealpha.com/ontology/ibis/1#');
 
-use XML::LibXML::LazyBuilder qw(DOM E DTD F);
+#use XML::LibXML::LazyBuilder qw(DOM E DTD F);
 use RDF::KV;
 use DateTime;
 use DateTime::Format::W3CDTF;
 
+use Scalar::Util ();
 use List::MoreUtils qw(any);
 
-use App::IBIS::HivePlot;
+#use App::IBIS::HivePlot;
 use App::IBIS::Circos;
 
 my $UUID_RE = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
@@ -41,14 +42,27 @@ has _dispatch => (
         my $ibis = $ns->ibis;
         my $skos = $ns->skos;
         return {
-            $ibis->Issue->value      => '_get_ibis',
-            $ibis->Position->value   => '_get_ibis',
-            $ibis->Argument->value   => '_get_ibis',
+            $ibis->Issue->value      => '_get_ibis_2',
+            $ibis->Position->value   => '_get_ibis_2',
+            $ibis->Argument->value   => '_get_ibis_2',
             $skos->Concept->value    => '_get_concept',
             $skos->Collection->value => '_get_collection',
         };
     },
 );
+
+use constant TOGGLE => {
+    -name => 'form', id => 'toggle-which',
+    -content => { -name => 'fieldset', -content => [
+        { -name => 'label', -content => [
+            { -name => 'input', type => 'radio',
+              name => 'new-item', value => '' },
+            ' Connect existing' ] },
+        { -name => 'label', -content => [
+            { -name => 'input', type => 'radio',
+              name => 'new-item', value => 1, checked => 'checked' },
+            ' Create new' ] } ] }
+};
 
 #
 # Sets the actions in this controller to be registered with no prefix
@@ -77,18 +91,26 @@ sub index :Path :Args(0) {
 
     my $req  = $c->req;
     my $resp = $c->res;
-    my $doc = $self->_doc('Welcome to App::IBIS: We Have Issues.',
-                            $req->base, undef, {},
-                            $self->_do_index($c));
-    my $body = $doc->toString(1);
-    $c->res->content_length(length $body);
-    utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
 
-    $resp->body($body);
+    # my $doc = $self->_doc('Welcome to App::IBIS: We Have Issues.',
+    #                         $req->base, undef, {},
+    #                         $self->_do_index($c));
+
+    my $doc = $self->_doc_2(
+        uri => $req->base,
+        title => 'Welcome to App::IBIS: We Have Issues.',
+        content => $self->_do_index_2($c));
+
+    $resp->body($doc);
+
+    # my $body = $doc->toString(1);
+    # $c->res->content_type('application/xhtml+xml');
+    # $c->res->content_length(length $body);
+    # utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
+
+    #$resp->body($body);
 }
 
-
-#[rdf => [qw(type value)]], [dct => [qw(created)]], [ibis => [qw(generalizes specializes 
 
 sub ci :Local {
     my ($self, $c) = @_;
@@ -97,7 +119,7 @@ sub ci :Local {
     my $ns  = $self->ns;
     my $b   = $req->base;
     my $q   = $req->query_parameters;
-    my $ref = $q->{referrer} || $q->{referer} || $req->referer;
+    my $ref = $q->{subject} || $q->{referrer} || $q->{referer} || $req->referer;
     my $col = $q->{collection} || [];
     $col = ref $col ? $col : [$col];
 
@@ -115,13 +137,13 @@ sub ci :Local {
     #$c->log->debug(Data::Dumper::Dumper($self->_ns));
 
     my $circos = App::IBIS::Circos->new(
-        start     => 0,    # initial degree offset
-        end       => 240,     # terminal degree offset
-        rotate    => 60,     # offset to previous two values
-        gap       => 2,     # units of whitespace between arc slices
-        thickness => 50,    # thickness of arc slices
-        margin    => 20,    # gap between outer edge and viewbox
-        size      => 200,   # overall width/height of the viewbox
+        start     => 0,   # initial degree offset
+        end       => 240, # terminal degree offset
+        rotate    => 60,  # offset to previous two values
+        gap       => 2,   # units of whitespace between arc slices
+        thickness => 50,  # thickness of arc slices
+        margin    => 20,  # gap between outer edge and viewbox
+        size      => 200, # overall width/height of the viewbox
         radius    => 270,
         base => $b,
         css  => $c->uri_for('/asset/circos.css'),
@@ -148,7 +170,7 @@ sub ci :Local {
         if (my ($uu) = ($u->path =~ $UUID_RE)) {
             $u = URI->new("urn:uuid:$uu");
         }
-
+        
         # trine-ify this >:|
         $u = iri("$u");
 
@@ -322,44 +344,11 @@ sub ci :Local {
     $c->res->body($doc->toString(1));
 }
 
-sub hp :Local {
-    my ($self, $c) = @_;
-
-    my $req = $c->req;
-    my $b   = $req->base;
-    my $q   = $req->query_parameters;
-    my $ref = $q->{referrer} || $q->{referer} || $req->referer;
-    my $col = $q->{collection} || [];
-    $col = ref $col ? $col : [$col];
-
-    # glean subject from referrer
-    my $s;
-    if ($ref) {
-        $ref = $ref->[0] if ref $ref eq 'ARRAY'; # lol got all that?
-        $ref = URI->new_abs($ref, $b);
-
-        if (my ($uuid) = ($ref->path =~ $UUID_RE)) {
-            $s = iri('urn:uuid:' . lc $uuid);
-        }
-    }
-
-    my $hp = App::IBIS::HivePlot->new(
-        model       => $c->model('RDF'),
-        callback    => sub { _from_urn(shift, $b) },
-        collections => $col,
-    );
-    $c->res->content_type('image/svg+xml');
-    $c->res->body($hp->plot($s)->toString(1));
-}
-
-#sub uuid :Regexp('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})') {
 sub uuid :Private {
     my ($self, $c, $uuid) = @_;
 
     my $req  = $c->req;
     my $resp = $c->res;
-
-#my $uuid = $c->req->captures->[0];
 
     my $path = '/' . lc $uuid;
     $uuid = RDF::Trine::Node::Resource->new('urn:uuid:' . lc $uuid);
@@ -398,9 +387,11 @@ sub uuid :Private {
             $c->log->debug("failed to identify $new");
             $new =~ s!urn:uuid:!/!;
             $resp->status(404);
-            $resp->body($self->_doc('Nothing here. Make something?',
-                                    $req->base, undef, {},
-                                    $self->_do_404($new))->toString(1));
+            my $msg = $self->_doc_2(
+                uri => $req->base,
+                title => 'Nothing here. Make something?',
+                content => $self->_do_404_2($new));
+            $resp->body($msg);
         }
     }
     elsif ($method eq 'DELETE') {
@@ -516,21 +507,34 @@ sub feed :Local {
                 $entry->{modified}[-1] : $published;
             my $uuid = URI->new($entry->{id}->uri_value);
             my $link = $c->req->base . $uuid->uuid;
-            push @out, (E entry => {},
-                        (E title => {}, $entry->{title}->literal_value),
-                        (E link => { rel => 'alternate',
-                                     type => 'text/html',
-                                     href => $link }),
-                        (E id => {}, $uuid->as_string),
-                        (E updated => {}, $dtf->format_datetime($updated)),
-                        (E published => {}, $dtf->format_datetime($published)));
+            push @out, {
+                -name => 'entry',
+                -content => [
+                    { -name => 'title',
+                      -content => $entry->{title}->literal_value },
+                    { -name => 'link', rel => 'alternate',
+                      type => 'text/html', href => $link },
+                    { -name => 'id', -content => $uuid->as_string },
+                    { -name => 'updated',
+                      -content => $dtf->format_datetime($updated) },
+                    { -name => 'published',
+                      -content => $dtf->format_datetime($published) },
+                ]
+            };
         }
 
-        my $doc = DOM (E feed => { xmlns => 'http://www.w3.org/2005/Atom' },
-                       (E title => {}, 'New Issues, Positions and Arguments'),
-                       (E updated => {}, $dtf->format_datetime($lm)), @out);
+        my $doc = $self->_DOC;
+        $self->_XML(
+            doc => $doc,
+            spec => {
+                -name => 'feed', xmlns => 'http://www.w3.org/2005/Atom',
+                -content => [
+                    { -name => 'title',
+                      -content => 'New Issues, Positions and Arguments' },
+                    { -name => 'updated',
+                      -content => $dtf->format_datetime($lm) }, @out ] } );
 
-        $resp->body($doc->toString(1));
+        $resp->body($doc);
     }
     else {
         $resp->status(304);
@@ -539,9 +543,17 @@ sub feed :Local {
 
 sub _get_concept :Private {
     my ($self, $c, $subject) = @_;
+
+    my $doc  = $self->_DOC;
+    my $body = $self->_XHTML(
+        uri  => $c->req->uri,
+        attr => { typeof => 'skos:Concept' },
+    );
+
+    $c->res->body($doc);
 }
 
-sub _get_collection :Private {
+sub _get_collection_2 :Private {
     my ($self, $c, $subject) = @_;
 
     # XXX COPY THIS SHIT FROM THE OTHER ONE
@@ -563,26 +575,27 @@ sub _get_collection :Private {
 
     my $maybetitle = $title ? $title->value : '';
 
-    my $body = $self->_doc($maybetitle || $subject->value,
-                           $uri, undef, \%attrs,
-                           (E form => { method => 'post',
-                                        action => $uri,
-                                        'accept-encoding' => 'utf-8' },
-                            (E h1 => {},
-                             E input => {
-                                 name => '= skos:prefLabel',
-                                 value => $maybetitle }),
-                            (E p => {},
-                             (E textarea => { name => '= skos:description' },
-                              $desc ? $desc->value : ''))),
-                           $self->_do_index($c, $subject),
-            )->toString(1);
+    my $doc = $self->_doc_2(
+        uri   => $uri,
+        title => $maybetitle || $subject->value,
+        attr  => \%attrs,
+        content => {
+            -name => 'form', method => 'post', action => $uri,
+            'accept-encoding' => 'utf-8', -content => [
+                { -name => 'h1', -content => {
+                    -name => 'input', name => '= skos:prefLabel',
+                    value => $maybetitle } },
+                { -name => 'p', -content => {
+                    -name => 'textarea', name => '= skos:description',
+                    -content => $desc ? $desc->value : '' }},
+                $self->_do_index_2($c, $subject) ] },
+    );
 
     # XXX forward this maybe?
-    $c->res->body($body);
+    $c->res->body($doc);
 }
 
-sub _get_ibis :Private {
+sub _get_ibis_2 :Private {
     my ($self, $c, $subject) = @_;
 
     my $uri = $c->req->uri;
@@ -608,28 +621,34 @@ sub _get_ibis :Private {
         $label .= ': ';
     }
 
-    my $doc = $self->_doc(
-        $label . ($title ? $title->value : ''), $uri, undef, \%attrs,
-        (E main => {},
-         (E figure => { class => 'aside' },
-          (E object => { class => 'hiveplot',
-                         data => '/ci',
-                         type => 'image/svg+xml' }, "(Hive Plot)")),
-        (E article => {},
-         $self->_do_content($c, $subject),
-         (E hr => { class => 'separator' }),
-         (E section => {},
-          $self->_do_connect_form($c, $subject, $type),
-          $self->_do_create_form($c, $uri, $type)),
-         $self->_do_toggle)),
+    my (undef, $doc) = $self->_XHTML(
+        ns    => $self->uns,
+        uri   => $uri,
+        title => $label . $title ? $title->value : '',
+        link  => [
+            { rel => 'stylesheet', type => 'text/css',
+              href => '/asset/main.css' },
+            { rel => 'alternate', type => 'application/atom+xml',
+              href => '/feed' } ],
+        head  => [
+            map +{ -name => 'script', type => 'text/javascript', src => $_ },
+            qw(/asset/jquery.js /asset/main.js) ],
+        attr  => \%attrs,
+        content => { -name => 'main', -content => [
+            { -name => 'figure', class => 'aside', -content => {
+                -name => 'object', class => 'hiveplot', data => '/ci',
+                type => 'image/svg+xml', -content => '(Circos Plot)' } },
+            { -name => 'article', -content => [
+                $self->_do_content_2($c, $subject),
+                { -name => 'hr', class => 'separator' },
+                { -name => 'section', -content => [
+                    $self->_do_connect_form_2($c, $subject, $type),
+                    $self->_do_create_form_2($c, $uri, $type) ] },
+                TOGGLE ] } ] },
     );
 
-    my $body = $doc->toString(1);
-    $c->res->content_length(length $body);
-    utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
-
     # XXX forward this maybe?
-    $c->res->body($body);
+    $c->res->body($doc);
 }
 
 sub _to_urn {
@@ -711,9 +730,11 @@ sub default :Path {
 
     $c->log->debug(@p);
     $c->res->status(404);
-    my $doc = $self->_doc('Nothing here. Make something?',
-                $c->req->base, undef, {}, $self->_do_404);
-    $c->res->body($doc->toString(1));
+    my $doc = $self->_doc_2(
+        title => 'Nothing here. Make something?',
+        uri => $c->req->base, content => $self->_do_404_2);
+
+    $c->res->body($doc);
 }
 
 
@@ -737,7 +758,7 @@ sub _naive_typeof {
 # XXX make a resource containing all objects of type X then just turn
 # it into a select.
 
-sub _select {
+sub _select_2 {
     my ($self, $c, $subject) = @_;
     my @labels = qw(Issue Position Argument);
     my @types  = map { $self->ns->ibis->uri($_) } @labels;
@@ -759,32 +780,30 @@ sub _select {
 
         my @o;
         # XXX this might be a blank node but not on my watch
-        #for my $pair  (map { iri($_) } keys %{$map->{$v} || {}}) {
         for my $pair (@pairs) {
             my ($s, $val) = @$pair;
             next if $subject->equal($s);
 
-            #my ($val) = $model->objects($s, RDF->value);
             my $text = $val ? $val->value : $s->value;
             my $ss   = $s->value;
-            push @o, (E option => { about => $ss, value => $ss }, $text);
+            push @o, { -name => 'option',
+                       about => $ss, value => $ss, -content => $text };
         }
 
-        push @opts, (E optgroup => {
-            about => $v, label => $l, rev => 'rdf:type' }, @o) if @o;
+        push @opts, { -name => 'optgroup', about => $v, label => $l,
+                      rev => 'rdf:type', -content => \@o } if @o;
     }
 
-    E select => { class => 'target', name => '$ obj' }, @opts;
+    return { -name => 'select', class => 'target',
+             name => '$ obj', -content => \@opts };
 }
 
-sub _menu {
+sub _menu_2 {
     my ($self, $c, $type, $flag) = @_;
     my $ns  = $self->ns;
 
     my @labels = qw(Issue Position Argument);
     my @types  = map { $ns->ibis->uri($_) } @labels;
-
-    #warn Data::Dumper::Dumper(\@types);
 
     my @out;
 
@@ -802,13 +821,12 @@ sub _menu {
 
             my $name = $ns->abbreviate($item->[0]) . ' : $';
             $name = '! ' . $name if $flag;
-            push @checkbox, (E li => {},
-                             (E label => {},
-                              (E input => {
-                                  type  => 'checkbox',
-                                  name  => $name,
-                                  value => '$obj',
-                              }), ' ' . $item->[1]));
+            push @checkbox, {
+                -name => 'li', -content => {
+                    -name => 'label', -content => [
+                        { -name => 'input', type => 'checkbox',
+                          name => $name, value => '$obj' },
+                        ' ' . $item->[1] ] } };
         }
 
         my %attr = (
@@ -823,31 +841,81 @@ sub _menu {
 
         my $class = 'relation ' . lc $labels[$i];
 
-        push @out, (E fieldset => { class => $class },
-                    (E legend => {},
-                     (E label => {}, (E input => \%attr), " $labels[$i]")),
-                    scalar(@checkbox) ? (E ul => {}, @checkbox) : ());
+        push @out, { -name => 'fieldset', class => $class, -content => [
+            { -name => 'legend', -content => {
+                -name => 'label', -content => [
+                    { -name => 'input', %attr }, " $labels[$i]" ] } },
+            scalar(@checkbox) ? { -name => 'ul',
+                                  -content => \@checkbox } : () ] };
     }
 
     @out;
-}
-
-sub _do_toggle {
-    E form => { id => 'toggle-which' },
-        (E fieldset => {},
-         (E label => {},
-          (E input => { type => 'radio', name => 'new-item', value => '',
-                        }), ' Connect existing'),
-         (E label => {},
-          (E input => { type => 'radio', value => 1, checked => 'checked',
-                        name => 'new-item'}), ' Create new'));
 }
 
 sub _do_dl {
     my ($self, $c, $authed) = @_;
 }
 
-sub _do_content {
+sub _do_index_2 {
+    my ($self, $c, @collections) = @_;
+    my $m = $c->model('RDF');
+    my $ns = $self->ns;
+
+
+    my @labels = qw(Issue Position Argument);
+    my @types  = map { $self->ns->ibis->uri($_) } @labels;
+
+    my %set;
+    if (@collections) {
+        for my $col (@collections) {
+            for my $o ($m->objects($col, $ns->skos->member)) {
+                my ($t) = $m->objects($o, $ns->rdf->type);
+                my ($d) = $m->objects($o, $ns->dct->created);
+                my ($v) = $m->objects($o, $ns->rdf->value);
+                my $x = $set{$t->value} ||= [];
+                push @$x, [$o, $v, $d];
+            }
+        }
+    }
+    else {
+        for my $t (@types) {
+            for my $o ($m->subjects($ns->rdf->type, $t)) {
+                my ($t) = $m->objects($o, $ns->rdf->type);
+                my ($d) = $m->objects($o, $ns->dct->created);
+                my ($v) = $m->objects($o, $ns->rdf->value);
+                my $x = $set{$t->value} ||= [];
+                push @$x, [$o, $v, $d];
+            }
+        }
+    }
+
+    my @out;
+    for my $i (0..$#labels) {
+        my @triads = @{$set{$types[$i]->value} || []};
+
+        my %d = map {
+            $_->[0]->value => defined $_->[2] ? $_->[2]->value : undef
+        } @triads;
+
+        my @x;
+        for my $x (sort { $d{$b->[0]->value} cmp $d{$a->[0]->value} } @triads) {
+            my ($s, $v) = @{$x}[0,1];
+            my $uu = URI->new($s->value);
+            push @x, {
+                -name => 'li',
+                -content => { href => '/' . $uu->uuid,
+                              -content => $v ? $v->value : $s->value } };
+        }
+
+        @x = { -name => 'ul', -content => [@x] } if @x;
+        push @out, { -name => 'section', -content => [
+            { -name => 'h2', -content => $labels[$i] . 's' }, @x ] };
+    }
+
+    @out;
+}
+
+sub _do_content_2 {
     my ($self, $c, $subject, $demote) = @_;
     my (%in, %res, %lit, $iter);
 
@@ -903,35 +971,37 @@ sub _do_content {
             #warn $text;
             my $uri = '/' . URI->new($o->value)->uuid;
 
-            my @baleet = (E button => {
-                class => 'disconnect fa fa-unlink',
-                name => "- $pred :", value => $uri }, ''); # disconnect
-            if ($inv) {
-                unshift @baleet, (E input => { type => 'hidden',
-                                               name => "-! $inv :",
-                                               value => $uri });
-            }
+            my @baleet = { -name => 'button',
+                           class => 'disconnect fa fa-unlink',
+                           name => "- $pred :", value => $uri };
+            unshift @baleet, { -name => 'input', type => 'hidden',
+                               name => "-! $inv :", value => $uri } if $inv;
 
             my $tv = $text ? $text->value : $uri;
 
-            push @li, (E li => { about  => $o->value,
-                                 typeof => $ns->abbreviate($type) },
-                       (E form => { method => 'POST', action => '',
-                                    'accept-charset' => 'utf-8' },
-                        (E div => {}, @baleet,
-                         (E a => { about => $o->value, href => $uri,
-                                   property => 'rdf:value' }, $tv))));
+            push @li, {
+                -name => 'li', about => $o->value,
+                typeof => $ns->abbreviate($type),
+                -content => {
+                    -name => 'form', method => 'POST', action => '',
+                    'accept-charset' => 'utf-8', -content => {
+                        -name => 'div', -content => [
+                            @baleet,
+                            { about => $o->value, href => $uri,
+                              property => 'rdf:value', -content => $tv } ] } }
+            };
         }
 
         if ($res{$k} && @li) {
             my $abbrk = $ns->abbreviate($k);
             my $first = '/' . URI->new($res{$k}[0]->value)->uuid;
-            push @asides,
-                (E aside => { class => 'predicate', rel => $abbrk,
-                              resource => $first },
-                 (E h3 => { about => $k, property => 'rdfs:label'},
-                  $labels->{$k}[1]),
-                 (E ul => { about => '', rel => $abbrk }, @li));
+            push @asides, {
+                -name => 'aside', class => 'predicate', rel => $abbrk,
+                resource => $first, -content => [
+                    { -name => 'h3', about => $k, property => 'rdfs:label',
+                      -content => $labels->{$k}[1] },
+                    { -name => 'ul', about => '', rel => $abbrk,
+                      -content => \@li } ] };
         }
 
     }
@@ -945,11 +1015,13 @@ sub _do_content {
     # XXX 
     my @buttons = map {
         my $t = "ibis:$_";
-        my %attrs = (class => "set-type fa $c{$_}", title => $_,
-                     name => '= rdf:type :', value => $t);
+        my %attrs = (
+            -name => 'button',
+            class => "set-type fa $c{$_}", title => $_,
+            name => '= rdf:type :', value => $t);
         $attrs{disabled} = 'disabled' if grep { $ns->uri($t)->equal($_) }
             @{$res{$ns->rdf->type->value} ||[]};
-        (E button => \%attrs, '')
+        \%attrs;
     } (qw(Issue Position Argument));
 
     my $rank = $demote || 1;
@@ -957,18 +1029,22 @@ sub _do_content {
     my $v = $ns->rdf->value->value;
     my $text = $lit{$v} ? $lit{$v}[0]->value : '';
 
-    E section => {},
-        (E form => { class => 'set-type',
-                     method => 'POST', 'accept-charset' => 'utf-8',
-                     action => '' },
-         (E div => { class => 'class-selector' }, @buttons),
-         (E "h$rank" => { class => 'heading' },
-          (E textarea => { class => 'heading', name => '= rdf:value' }, $text),
-          (E button => { class => 'update fa fa-repeat' }, ''))),
-              $self->_do_collection_form($c, $subject), @asides;
+    return {
+        -name => 'section', -content => [
+            { -name => 'form', class => 'set-type', method => 'POST',
+              'accept-charset' => 'utf-8', action => '', -content => [
+                  { -name => 'div', class => 'class-selector',
+                    -content => \@buttons },
+                  { -name => "h$rank", class => 'heading', -content => [
+                      { -name => 'textarea', class => 'heading',
+                        name => '= rdf:value', -content => $text },
+                      { -name => 'button', class => 'update fa fa-repeat',
+                        -content => '' } ] } ] },
+            $self->_do_collection_form_2($c, $subject), @asides ],
+    };
 }
 
-sub _do_collection_form {
+sub _do_collection_form_2 {
     my ($self, $c, $subject) = @_;
 
     my $m = $c->model('RDF');
@@ -1002,140 +1078,94 @@ sub _do_collection_form {
 
             my $uu = URI->new($s->value);
 
-            my $a = E a => { href => '/' . $uu->uuid }, $label;
-            my $li = E li => {}, $a,
-                     (E button => {
-                         name => '-! skos:member :', value => "$uu" },
-                 'Remove');
-            push @li, $li;
+            push @li, {
+                -name => 'li', -content => [
+                    { href => '/' . $uu->uuid, -content => $label },
+                    { -name => 'button', name => '-! skos:member :',
+                      value => "$uu" }, 'Remove' ]
+            };
         }
 
-        push @out, (E form => \%boilerplate, (E ul => {}, @li)) if @li;
+        push @out, { -name => 'form', %boilerplate,
+                     -content => { -name => 'ul', -content => \@li } } if @li;
 
         if (my @which = grep { ! $map{$_->[0]->value} } @s) {
             # generate a sorted list of option elements
-            my @opts = map {
-                (E option => { value => $_->[0]->value }, $_->[1]) }
-                sort { $a->[1] cmp $b->[1] } @which;
+            my @opts = map +{ -name => 'option', value => $_->[0]->value,
+                              -content => $_->[1] },
+                                  sort { $a->[1] cmp $b->[1] } @which;
 
-            push @out, (E form => \%boilerplate,
-                        (E select => { name => '! skos:member :' }, @opts),
-                        (E button => { class => 'fa fa-link' }, '')); # Attach
+            push @out, {
+                -name => 'form', %boilerplate, -content => [
+                    { -name => 'select', name => '! skos:member :',
+                      -content => \@opts },
+                    { -name => 'button',
+                      class => 'fa fa-link', -content => '' } ]
+            }; # attach
         }
     }
 
     # XXX THERE IS NOW A PROTOCOL MACRO FOR THIS
     my $newuuid = $self->uuid4urn;
 
-    push @out,
-        (E form => \%boilerplate,
-         (E div => {},
-          (E input => { type  => 'hidden',
-                        name  => "= $newuuid rdf:type :",
-                        value => $ns->skos->Collection->value }),
-          (E input => { type => 'hidden',
-                        name => '! skos:member :',
-                       value => $newuuid }),
-          (E div => {},
-           (E button => { class => 'fa fa-plus' }, ''),
-           (E input => {
-               type => 'text',
-               name => "= $newuuid skos:prefLabel" }),
-       ))); # Create & Attach
+    push @out, {
+        -name => 'form', %boilerplate, -content => {
+            -name => 'div', -content => [
+                { -name => 'input', type => 'hidden',
+                  name => "= $newuuid rdf:type :",
+                  value => $ns->skos->Collection->value },
+                { -name => 'input', type => 'hidden',
+                  name => '! skos:member :', value => $newuuid },
+                { -name => 'div', -content => [
+                    { -name => 'button', class => 'fa fa-plus',
+                      -content => '' },
+                    { -name => 'input', type => 'text',
+                      name => "= $newuuid skos:prefLabel" }
+                ] } ] } }; # Create & Attach
 
-    (E aside => { class => 'collection' }, @out);
+    return { -name => 'aside', class => 'collection', -content => \@out };
 }
 
-sub _do_index {
-    my ($self, $c, @collections) = @_;
-    my $m = $c->model('RDF');
-    my $ns = $self->ns;
-
-
-    my @labels = qw(Issue Position Argument);
-    my @types  = map { $self->ns->ibis->uri($_) } @labels;
-
-    my %set;
-    if (@collections) {
-        for my $col (@collections) {
-            for my $o ($m->objects($col, $ns->skos->member)) {
-                my ($t) = $m->objects($o, $ns->rdf->type);
-                my ($d) = $m->objects($o, $ns->dct->created);
-                my ($v) = $m->objects($o, $ns->rdf->value);
-                my $x = $set{$t->value} ||= [];
-                push @$x, [$o, $v, $d];
-            }
-        }
-    }
-    else {
-        for my $t (@types) {
-            for my $o ($m->subjects($ns->rdf->type, $t)) {
-                my ($t) = $m->objects($o, $ns->rdf->type);
-                my ($d) = $m->objects($o, $ns->dct->created);
-                my ($v) = $m->objects($o, $ns->rdf->value);
-                my $x = $set{$t->value} ||= [];
-                push @$x, [$o, $v, $d];
-            }
-        }
-    }
-
-    my @out;
-    for my $i (0..$#labels) {
-        my @triads = @{$set{$types[$i]->value} || []};
-
-        my %d = map {
-            $_->[0]->value => defined $_->[2] ? $_->[2]->value : undef
-        } @triads;
-
-        my @x;
-        for my $x (sort { $d{$b->[0]->value} cmp $d{$a->[0]->value} } @triads) {
-            my ($s, $v) = @{$x}[0,1];
-            my $uu = URI->new($s->value);
-            push @x, (E li => {}, (E a => { href => '/'. $uu->uuid },
-                                   $v ? $v->value : $s->value));
-            #push @x, $self->_do_content($c, $s, 2);
-        }
-        @x = (E ul => {}, @x) if @x;
-        push @out, (E div => {}, (E h2 => {}, $labels[$i] . 's'), @x);
-    }
-
-    @out;
-}
-
-sub _do_404 {
+sub _do_404_2 {
     my ($self, $new) = @_;
     $new ||= '/' . $self->uuid4;
-    E form => { id => 'blank-page', method => 'POST',
-                'accept-charset' => 'utf-8', action => $new },
-        (E fieldset => {},
-         (E legend => {},
-          (E span => {}, 'Start a new '),
-          (E select => { name => 'rdf:type :' },
-           (map { (E option => { value => "ibis:$_" }, $_) }
-                qw(Issue Position Argument)))),
-         (E input => { class => 'new-value',
-                       type => 'text', name => '= rdf:value' }),
-         (E button => {}, 'Go'));
+    return {
+        -name => 'form', id => 'blank-page', method => 'POST',
+        'accept-charset' => 'utf-8', action => $new,
+        -content => {
+            -name => 'fieldset', -content => [
+                { -name => 'legend', -content => [
+                    { -name => 'span', -content => 'Start a new ' },
+                    { -name => 'select', name => 'rdf:type :',
+                      -content => [map +{ -name => 'option',
+                                          value => "ibis:$_" },
+                                   qw(Issue Position Argument)] } ] },
+                { -name => 'input', class => 'new-value',
+                  type => 'text', name => '= rdf:value' },
+                { -name => 'button', -content => 'Go' } ] } };
 }
 
-sub _do_connect_form {
+sub _do_connect_form_2 {
     my ($self, $c, $subject, $type) = @_;
 
-    E form => { id => 'connect-existing',
-                method => 'post', 'accept-charset' => 'utf-8', action => '' },
-        (E fieldset => {}, $self->_menu($c, $type),
-         (E fieldset => { class => 'interaction' },
-          $self->_select($c, $subject),
-          (E button => { class => 'fa fa-link'}, ''))); # Connect
+    return {
+        -name => 'form', id => 'connect-existing', method => 'post',
+        'accept-charset' => 'utf-8', action => '', -content => {
+            -name => 'fieldset', -content => [
+                $self->_menu_2($c, $type),
+                { -name => 'fieldset', class => 'interaction',
+                  -content => [
+                      $self->_select_2($c, $subject),
+                      { -name => 'button', class => 'fa fa-link',
+                        -content => '' }] } ] } };
 }
 
-sub _do_create_form {
+sub _do_create_form_2 {
     my ($self, $c, $subject, $type) = @_;
 
-    my $m = $c->model('RDF');
+    my $m  = $c->model('RDF');
     my $ns = $self->ns;
 
-    # XXX WHY IS THIS A URI OBJECT AGAIN?
     my $s = $subject->isa('RDF::Trine::Node') ? $subject : iri("$subject");
     if ($subject->isa('URI::http')) {
         my $path = $subject->path;
@@ -1144,57 +1174,653 @@ sub _do_create_form {
         }
     }
 
-
     my @has = $m->subjects($ns->skos->member, $s);
-
-    @has = map { E input => { type => 'hidden',
-                              name => '! skos:member :',
-                              value => $_->value  } } @has;
+    @has = map +{ -name => 'input', type => 'hidden',
+                  name => '! skos:member :', value => $_->value }, @has;
 
     my $new = '/' . $self->uuid4;
 
-    E form => { id => 'create-new',
-                method => 'post', 'accept-charset' => 'utf-8', action => $new },
-                    (E fieldset => {}, @has,
-         (E input => { type => 'hidden', name => '$ obj', value => $subject }),
-         $self->_menu($c, $type, 1),
-         (E fieldset => { class => 'interaction' },
-          (E input => { class => 'new-value',
-                        type => 'text', name => '= rdf:value' }),
-           (E button => { class => 'fa fa-plus' }, ''))); # Create
+    return {
+        -name => 'form', id => 'create-new', method => 'post',
+        'accept-charset' => 'utf-8', action => $new, -content => {
+            -name => 'fieldset', -content => [
+                @has,
+                { -name => 'input', type => 'hidden',
+                  name => '$ obj', value => $subject },
+                $self->_menu_2($c, $type, 1),
+                { -name => 'fieldset', class => 'interaction', -content => [
+                    { -name => 'input', class => 'new-value',
+                      type => 'text', name => '= rdf:value' },
+                    { -name => 'button', class => 'fa fa-plus',
+                      -content => '' } ] } ] },
+    };
 }
 
-sub _doc {
-    my ($self, $title, $base, $ns, $attrs, @body) = @_;
+sub _doc_2 {
+    my ($self, %p) = @_;
 
-    $attrs ||= {};
-    $ns    ||= $self->xmlns;
+    #my %ns = (%{$self->uns}, %{$p{ns} || {}});
 
-    DOM F(
-        (DTD 'html'),
-        (E html => { version => 'XHTML+RDFa 1.0',
-                     xmlns => 'http://www.w3.org/1999/xhtml', %$ns },
-         (E head => {},
-          (E title => {}, $title),
-          (E base => { href => $base }),
-          (E link => { rel => 'stylesheet',
-                       type => 'text/css', href => '/asset/main.css' }),
-          (E script => { type => 'text/javascript', src => '/asset/jquery.js' }, '//'),
-          (E script => { type => 'text/javascript', src => '/asset/main.js' }, '//'),
-          (map { E link => $_ } @{$self->links || []}),
-          (map { E meta => $_ } @{$self->metas || []}),
-          ),#(E style => { type => 'text/css' }, $CSS)),
-         (E body => $attrs, @body)));
+    my ($body, $doc) = $self->_XHTML(
+        %p,
+        link  => [
+            { rel => 'stylesheet', type => 'text/css',
+              href => '/asset/main.css' },
+            { rel => 'alternate', type => 'application/atom+xml',
+              href => '/feed' } ],
+        head  => [
+            map +{ -name => 'script', type => 'text/javascript', src => $_ },
+            qw(/asset/jquery.js /asset/main.js) ],
+        ns => $self->uns,
+    );
+
+    wantarray ? ($body, $doc) : $doc;
 }
-
 
 =head2 end
 
-Attempt to render a view, if needed.
+Fiddle with serialization, content type/length, etc.
 
 =cut
 
-sub end : ActionClass('RenderView') {}
+sub end : ActionClass('RenderView') {
+    my ($self, $c) = @_;
+
+    my $resp = $c->res;
+    my $body = $resp->body;
+    if (ref $body and Scalar::Util::blessed($body)
+            and $body->isa('XML::LibXML::Document')) {
+        my $doc = $body;
+        my $ct;
+        if ($body->documentElement->localName eq 'html') {
+            $ct = 'application/xhtml+xml';
+        }
+        else {
+            $ct = 'application/xml';
+        }
+
+        $resp->content_type($ct);
+
+        $body = $body->toString(1);
+        $resp->content_length(length $body);
+        utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
+        $resp->body($body);
+    }
+}
+
+=head2 OLD SHIT
+
+All this shit is old and should be nuked.
+
+=cut
+
+# sub hp :Local {
+#     my ($self, $c) = @_;
+
+#     my $req = $c->req;
+#     my $b   = $req->base;
+#     my $q   = $req->query_parameters;
+#     my $ref = $q->{referrer} || $q->{referer} || $req->referer;
+#     my $col = $q->{collection} || [];
+#     $col = ref $col ? $col : [$col];
+
+#     # glean subject from referrer
+#     my $s;
+#     if ($ref) {
+#         $ref = $ref->[0] if ref $ref eq 'ARRAY'; # lol got all that?
+#         $ref = URI->new_abs($ref, $b);
+
+#         if (my ($uuid) = ($ref->path =~ $UUID_RE)) {
+#             $s = iri('urn:uuid:' . lc $uuid);
+#         }
+#     }
+
+#     my $hp = App::IBIS::HivePlot->new(
+#         model       => $c->model('RDF'),
+#         callback    => sub { _from_urn(shift, $b) },
+#         collections => $col,
+#     );
+#     $c->res->content_type('image/svg+xml');
+#     $c->res->body($hp->plot($s)->toString(1));
+# }
+
+# sub _get_collection :Private {
+#     my ($self, $c, $subject) = @_;
+
+#     # XXX COPY THIS SHIT FROM THE OTHER ONE
+
+#     my $uri = $c->req->uri;
+
+#     my $m = $c->model('RDF');
+
+#     #warn $subject;
+#     my $rns = $self->ns;
+
+#     # XXX THIS CAN GET AWAY ON US
+#     my ($type)  = $m->objects($subject, $rns->rdf->type);
+#     my ($title) = $m->objects($subject, $rns->skos->prefLabel);
+#     my ($desc)  = $m->objects($subject, $rns->skos->description);
+
+#     my %attrs;
+#     $attrs{typeof} = $rns->abbreviate($type) if $type;
+
+#     my $maybetitle = $title ? $title->value : '';
+
+#     my $body = $self->_doc($maybetitle || $subject->value,
+#                            $uri, undef, \%attrs,
+#                            (E form => { method => 'post',
+#                                         action => $uri,
+#                                         'accept-encoding' => 'utf-8' },
+#                             (E h1 => {},
+#                              E input => {
+#                                  name => '= skos:prefLabel',
+#                                  value => $maybetitle }),
+#                             (E p => {},
+#                              (E textarea => { name => '= skos:description' },
+#                               $desc ? $desc->value : ''))),
+#                            $self->_do_index($c, $subject),
+#             )->toString(1);
+
+#     # XXX forward this maybe?
+#     $c->res->body($body);
+# }
+
+# sub _get_ibis :Private {
+#     my ($self, $c, $subject) = @_;
+
+#     my $uri = $c->req->uri;
+
+#     my $m = $c->model('RDF');
+
+#     #warn $subject;
+#     my $rns = $self->ns;
+
+#     # XXX THIS CAN GET AWAY ON US
+#     my ($type)  = $m->objects($subject, $rns->rdf->type);
+#     my ($title) = $m->objects($subject, $rns->rdf->value);
+
+#     $c->log->debug($title->value);
+
+#     my %attrs;
+
+#     # XXX DERIVE THIS BETTER
+#     my $label;
+#     if ($type) {
+#         $attrs{typeof} = $rns->abbreviate($type);
+#         ($label) = ($attrs{typeof} =~ /:(.*)/);
+#         $label .= ': ';
+#     }
+
+#     my $doc = $self->_doc(
+#         $label . ($title ? $title->value : ''), $uri, undef, \%attrs,
+#         (E main => {},
+#          (E figure => { class => 'aside' },
+#           (E object => { class => 'hiveplot',
+#                          data => '/ci',
+#                          type => 'image/svg+xml' }, "(Hive Plot)")),
+#         (E article => {},
+#          $self->_do_content($c, $subject),
+#          (E hr => { class => 'separator' }),
+#          (E section => {},
+#           $self->_do_connect_form($c, $subject, $type),
+#           $self->_do_create_form($c, $uri, $type)),
+#          $self->_do_toggle)),
+#     );
+
+#     my $body = $doc->toString(1);
+#     $c->res->content_length(length $body);
+#     utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
+
+#     # XXX forward this maybe?
+#     $c->res->body($body);
+# }
+
+# sub _select {
+#     my ($self, $c, $subject) = @_;
+#     my @labels = qw(Issue Position Argument);
+#     my @types  = map { $self->ns->ibis->uri($_) } @labels;
+#     my $map    = $self->_naive_typeof($c, @types);
+#     my $model  = $c->model('RDF');
+#     my @opts;
+#     for my $i (0..$#labels) {
+#         my $l = $labels[$i];
+#         my $t = $types[$i];
+#         my $v = $t->value;
+
+#         # XXX this will crash
+#         my $rdfv = $self->ns->rdf->value;
+#         my @pairs = sort {
+#             ($a->[1] ? $a->[1]->value : '') cmp ($b->[1] ? $b->[1]->value : '')
+#         } map {
+#             my $s = iri($_); [$s, $model->objects($s, $rdfv)]
+#         } keys %{$map->{$v} || {}};
+
+#         my @o;
+#         # XXX this might be a blank node but not on my watch
+#         #for my $pair  (map { iri($_) } keys %{$map->{$v} || {}}) {
+#         for my $pair (@pairs) {
+#             my ($s, $val) = @$pair;
+#             next if $subject->equal($s);
+
+#             #my ($val) = $model->objects($s, RDF->value);
+#             my $text = $val ? $val->value : $s->value;
+#             my $ss   = $s->value;
+#             push @o, (E option => { about => $ss, value => $ss }, $text);
+#         }
+
+#         push @opts, (E optgroup => {
+#             about => $v, label => $l, rev => 'rdf:type' }, @o) if @o;
+#     }
+
+#     E select => { class => 'target', name => '$ obj' }, @opts;
+# }
+
+# sub _menu {
+#     my ($self, $c, $type, $flag) = @_;
+#     my $ns  = $self->ns;
+
+#     my @labels = qw(Issue Position Argument);
+#     my @types  = map { $ns->ibis->uri($_) } @labels;
+
+#     #warn Data::Dumper::Dumper(\@types);
+
+#     my @out;
+
+#     my $map = $self->predicate_map;
+
+#     # XXX TEMPORARY
+#     my @rep = map { $ns->ibis->uri($_) } qw(replaces replaced-by);
+
+#     for my $i (0..$#labels) {
+#         my $v = $type->uri_value;
+#         my @checkbox;
+#         for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
+#             # XXX TEMPORARY
+#             next if grep { $_->equal($item->[0]) } @rep;
+
+#             my $name = $ns->abbreviate($item->[0]) . ' : $';
+#             $name = '! ' . $name if $flag;
+#             push @checkbox, (E li => {},
+#                              (E label => {},
+#                               (E input => {
+#                                   type  => 'checkbox',
+#                                   name  => $name,
+#                                   value => '$obj',
+#                               }), ' ' . $item->[1]));
+#         }
+
+#         my %attr = (
+#             class => 'type-toggle',
+#             type  => 'radio',
+#             name  => $flag ? 'rdf:type :' : 'rdf-type',
+#             #value => $flag ? $ns->abbreviate($types[$i]) : '',
+#             value => $ns->abbreviate($types[$i]),
+#         );
+#         $attr{checked}  = 'checked' if $i == 0;
+#         #$attr{disabled} = 'disabled' unless @checkbox;
+
+#         my $class = 'relation ' . lc $labels[$i];
+
+#         push @out, (E fieldset => { class => $class },
+#                     (E legend => {},
+#                      (E label => {}, (E input => \%attr), " $labels[$i]")),
+#                     scalar(@checkbox) ? (E ul => {}, @checkbox) : ());
+#     }
+
+#     @out;
+# }
+
+# sub _do_toggle {
+#     E form => { id => 'toggle-which' },
+#         (E fieldset => {},
+#          (E label => {},
+#           (E input => { type => 'radio', name => 'new-item', value => '',
+#                         }), ' Connect existing'),
+#          (E label => {},
+#           (E input => { type => 'radio', value => 1, checked => 'checked',
+#                         name => 'new-item'}), ' Create new'));
+# }
+
+# sub _do_content {
+#     my ($self, $c, $subject, $demote) = @_;
+#     my (%in, %res, %lit, $iter);
+
+#     my $m = $c->model('RDF');
+#     my $ns      = $self->ns;
+#     my $inverse = $self->inverse;
+#     my $labels  = $self->labels;
+
+#     $iter = $m->get_statements(undef, undef, $subject);
+#     while (my $stmt = $iter->next) {
+#         #my $p = $NS->abbreviate($stmt->predicate) || $stmt->predicate->value;
+#         my $p = $stmt->predicate->value;
+#         my $s = $stmt->subject;
+#         if (my $inv = $inverse->{$p}) {
+#             $p = $inv->[0]->value;
+#             $res{$p} ||= [];
+#             push @{$res{$p}}, $s;
+#         }
+#         else {
+#             $in{$p} ||= [];
+#             push @{$in{$p}}, $s;
+#         }
+#     }
+
+#     $iter = $m->get_statements($subject, undef, undef);
+#     while (my $stmt = $iter->next) {
+#         #my $p = $NS->abbreviate($stmt->predicate) || $stmt->predicate->value;
+#         my $p = $stmt->predicate->value;
+#         my $o = $stmt->object;
+#         if ($o->is_literal) {
+#             $lit{$p} ||= [];
+#             push @{$lit{$p}}, $o;
+#         }
+#         else {
+#             $res{$p} ||= [];
+#             push @{$res{$p}}, $o;
+#         }
+#     }
+
+#     my @asides;
+#     my %p = map { $_ => 1 } (keys %in, keys %res);
+
+
+#     for my $k ($self->predicate_seq) {
+
+#         my $pred = $ns->abbreviate(iri($k));
+#         my $inv  = $inverse->{$k} ? $ns->abbreviate($inverse->{$k}[0]) : undef;
+
+#         my @li;
+#         for my $o (@{$res{$k} || []}) {
+#             my ($type) = $m->objects($o, $ns->rdf->type);
+#             my ($text) = $m->objects($o, $ns->rdf->value);
+#             #warn $text;
+#             my $uri = '/' . URI->new($o->value)->uuid;
+
+#             my @baleet = (E button => {
+#                 class => 'disconnect fa fa-unlink',
+#                 name => "- $pred :", value => $uri }, ''); # disconnect
+#             if ($inv) {
+#                 unshift @baleet, (E input => { type => 'hidden',
+#                                                name => "-! $inv :",
+#                                                value => $uri });
+#             }
+
+#             my $tv = $text ? $text->value : $uri;
+
+#             push @li, (E li => { about  => $o->value,
+#                                  typeof => $ns->abbreviate($type) },
+#                        (E form => { method => 'POST', action => '',
+#                                     'accept-charset' => 'utf-8' },
+#                         (E div => {}, @baleet,
+#                          (E a => { about => $o->value, href => $uri,
+#                                    property => 'rdf:value' }, $tv))));
+#         }
+
+#         if ($res{$k} && @li) {
+#             my $abbrk = $ns->abbreviate($k);
+#             my $first = '/' . URI->new($res{$k}[0]->value)->uuid;
+#             push @asides,
+#                 (E aside => { class => 'predicate', rel => $abbrk,
+#                               resource => $first },
+#                  (E h3 => { about => $k, property => 'rdfs:label'},
+#                   $labels->{$k}[1]),
+#                  (E ul => { about => '', rel => $abbrk }, @li));
+#         }
+
+#     }
+
+#     my %c = (
+#         Issue    => 'fa-exclamation-triangle',
+#         Position => 'fa-gavel',
+#         Argument => 'fa-comments',
+#     );
+
+#     # XXX 
+#     my @buttons = map {
+#         my $t = "ibis:$_";
+#         my %attrs = (class => "set-type fa $c{$_}", title => $_,
+#                      name => '= rdf:type :', value => $t);
+#         $attrs{disabled} = 'disabled' if grep { $ns->uri($t)->equal($_) }
+#             @{$res{$ns->rdf->type->value} ||[]};
+#         (E button => \%attrs, '')
+#     } (qw(Issue Position Argument));
+
+#     my $rank = $demote || 1;
+
+#     my $v = $ns->rdf->value->value;
+#     my $text = $lit{$v} ? $lit{$v}[0]->value : '';
+
+#     E section => {},
+#         (E form => { class => 'set-type',
+#                      method => 'POST', 'accept-charset' => 'utf-8',
+#                      action => '' },
+#          (E div => { class => 'class-selector' }, @buttons),
+#          (E "h$rank" => { class => 'heading' },
+#           (E textarea => { class => 'heading', name => '= rdf:value' }, $text),
+#           (E button => { class => 'update fa fa-repeat' }, ''))),
+#               $self->_do_collection_form($c, $subject), @asides;
+# }
+
+# sub _do_collection_form {
+#     my ($self, $c, $subject) = @_;
+
+#     my $m = $c->model('RDF');
+#     my $ns = $self->ns;
+
+#     my @has = $m->subjects($ns->skos->member, $subject);
+#     my %map = map { $_->value => 1 } @has;
+
+#     my %boilerplate = (
+#         method => 'post',
+#         action => '',
+#         'accept-encoding' => 'utf-8'
+#     );
+
+#     my @out;
+#     # get the list of collections and their labels
+#     my @s = $m->subjects($ns->rdf->type, $ns->skos->Collection);
+#     if (@s) {
+#         for my $i (0..$#s) {
+#             my $s = $s[$i];
+#             my ($label) = $m->objects($s, $ns->skos->prefLabel);
+#             $s[$i] = [$s, $label ? $label->value : ''];
+#         }
+
+#         # make a bullet list
+#         my @li;
+#         for my $pair (sort { $a->[1] cmp $b->[1] } @s) {
+#             my ($s, $label) = @$pair;
+#             #warn $s;
+#             next unless $map{$s->value};
+
+#             my $uu = URI->new($s->value);
+
+#             my $a = E a => { href => '/' . $uu->uuid }, $label;
+#             my $li = E li => {}, $a,
+#                      (E button => {
+#                          name => '-! skos:member :', value => "$uu" },
+#                  'Remove');
+#             push @li, $li;
+#         }
+
+#         push @out, (E form => \%boilerplate, (E ul => {}, @li)) if @li;
+
+#         if (my @which = grep { ! $map{$_->[0]->value} } @s) {
+#             # generate a sorted list of option elements
+#             my @opts = map {
+#                 (E option => { value => $_->[0]->value }, $_->[1]) }
+#                 sort { $a->[1] cmp $b->[1] } @which;
+
+#             push @out, (E form => \%boilerplate,
+#                         (E select => { name => '! skos:member :' }, @opts),
+#                         (E button => { class => 'fa fa-link' }, '')); # Attach
+#         }
+#     }
+
+#     # XXX THERE IS NOW A PROTOCOL MACRO FOR THIS
+#     my $newuuid = $self->uuid4urn;
+
+#     push @out,
+#         (E form => \%boilerplate,
+#          (E div => {},
+#           (E input => { type  => 'hidden',
+#                         name  => "= $newuuid rdf:type :",
+#                         value => $ns->skos->Collection->value }),
+#           (E input => { type => 'hidden',
+#                         name => '! skos:member :',
+#                        value => $newuuid }),
+#           (E div => {},
+#            (E button => { class => 'fa fa-plus' }, ''),
+#            (E input => {
+#                type => 'text',
+#                name => "= $newuuid skos:prefLabel" }),
+#        ))); # Create & Attach
+
+#     (E aside => { class => 'collection' }, @out);
+# }
+
+# sub _do_index {
+#     my ($self, $c, @collections) = @_;
+#     my $m = $c->model('RDF');
+#     my $ns = $self->ns;
+
+
+#     my @labels = qw(Issue Position Argument);
+#     my @types  = map { $self->ns->ibis->uri($_) } @labels;
+
+#     my %set;
+#     if (@collections) {
+#         for my $col (@collections) {
+#             for my $o ($m->objects($col, $ns->skos->member)) {
+#                 my ($t) = $m->objects($o, $ns->rdf->type);
+#                 my ($d) = $m->objects($o, $ns->dct->created);
+#                 my ($v) = $m->objects($o, $ns->rdf->value);
+#                 my $x = $set{$t->value} ||= [];
+#                 push @$x, [$o, $v, $d];
+#             }
+#         }
+#     }
+#     else {
+#         for my $t (@types) {
+#             for my $o ($m->subjects($ns->rdf->type, $t)) {
+#                 my ($t) = $m->objects($o, $ns->rdf->type);
+#                 my ($d) = $m->objects($o, $ns->dct->created);
+#                 my ($v) = $m->objects($o, $ns->rdf->value);
+#                 my $x = $set{$t->value} ||= [];
+#                 push @$x, [$o, $v, $d];
+#             }
+#         }
+#     }
+
+#     my @out;
+#     for my $i (0..$#labels) {
+#         my @triads = @{$set{$types[$i]->value} || []};
+
+#         my %d = map {
+#             $_->[0]->value => defined $_->[2] ? $_->[2]->value : undef
+#         } @triads;
+
+#         my @x;
+#         for my $x (sort { $d{$b->[0]->value} cmp $d{$a->[0]->value} } @triads) {
+#             my ($s, $v) = @{$x}[0,1];
+#             my $uu = URI->new($s->value);
+#             push @x, (E li => {}, (E a => { href => '/'. $uu->uuid },
+#                                    $v ? $v->value : $s->value));
+#             #push @x, $self->_do_content($c, $s, 2);
+#         }
+#         @x = (E ul => {}, @x) if @x;
+#         push @out, (E div => {}, (E h2 => {}, $labels[$i] . 's'), @x);
+#     }
+
+#     @out;
+# }
+
+# sub _do_404 {
+#     my ($self, $new) = @_;
+#     $new ||= '/' . $self->uuid4;
+#     E form => { id => 'blank-page', method => 'POST',
+#                 'accept-charset' => 'utf-8', action => $new },
+#         (E fieldset => {},
+#          (E legend => {},
+#           (E span => {}, 'Start a new '),
+#           (E select => { name => 'rdf:type :' },
+#            (map { (E option => { value => "ibis:$_" }, $_) }
+#                 qw(Issue Position Argument)))),
+#          (E input => { class => 'new-value',
+#                        type => 'text', name => '= rdf:value' }),
+#          (E button => {}, 'Go'));
+# }
+
+# sub _do_connect_form {
+#     my ($self, $c, $subject, $type) = @_;
+
+#     E form => { id => 'connect-existing',
+#                 method => 'post', 'accept-charset' => 'utf-8', action => '' },
+#         (E fieldset => {}, $self->_menu($c, $type),
+#          (E fieldset => { class => 'interaction' },
+#           $self->_select($c, $subject),
+#           (E button => { class => 'fa fa-link'}, ''))); # Connect
+# }
+
+# sub _do_create_form {
+#     my ($self, $c, $subject, $type) = @_;
+
+#     my $m = $c->model('RDF');
+#     my $ns = $self->ns;
+
+#     # XXX WHY IS THIS A URI OBJECT AGAIN?
+#     my $s = $subject->isa('RDF::Trine::Node') ? $subject : iri("$subject");
+#     if ($subject->isa('URI::http')) {
+#         my $path = $subject->path;
+#         if (my ($uuid) = $path =~ $UUID_RE) {
+#             $s = iri("urn:uuid:$uuid");
+#         }
+#     }
+
+
+#     my @has = $m->subjects($ns->skos->member, $s);
+
+#     @has = map { E input => { type => 'hidden',
+#                               name => '! skos:member :',
+#                               value => $_->value  } } @has;
+
+#     my $new = '/' . $self->uuid4;
+
+#     E form => { id => 'create-new',
+#                 method => 'post', 'accept-charset' => 'utf-8', action => $new },
+#                     (E fieldset => {}, @has,
+#          (E input => { type => 'hidden', name => '$ obj', value => $subject }),
+#          $self->_menu($c, $type, 1),
+#          (E fieldset => { class => 'interaction' },
+#           (E input => { class => 'new-value',
+#                         type => 'text', name => '= rdf:value' }),
+#            (E button => { class => 'fa fa-plus' }, ''))); # Create
+# }
+
+# sub _doc {
+#     my ($self, $title, $base, $ns, $attrs, @body) = @_;
+
+#     $attrs ||= {};
+#     $ns    ||= $self->xmlns;
+
+#     DOM F(
+#         (DTD 'html'),
+#         (E html => { version => 'XHTML+RDFa 1.0',
+#                      xmlns => 'http://www.w3.org/1999/xhtml', %$ns },
+#          (E head => {},
+#           (E title => {}, $title),
+#           (E base => { href => $base }),
+#           (E link => { rel => 'stylesheet',
+#                        type => 'text/css', href => '/asset/main.css' }),
+#           (E script => { type => 'text/javascript', src => '/asset/jquery.js' }, '//'),
+#           (E script => { type => 'text/javascript', src => '/asset/main.js' }, '//'),
+#           (map { E link => $_ } @{$self->links || []}),
+#           (map { E meta => $_ } @{$self->metas || []}),
+#           ),#(E style => { type => 'text/css' }, $CSS)),
+#          (E body => $attrs, @body)));
+# }
+
 
 =head1 AUTHOR
 

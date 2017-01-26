@@ -3,7 +3,6 @@ package App::IBIS::Role::Schema;
 use strict;
 use warnings FATAL => 'all';
 
-#use Moose;
 use Moose::Role;
 use namespace::autoclean;
 
@@ -12,6 +11,9 @@ use URI::NamespaceMap;
 use RDF::Trine::NamespaceMap;
 
 #use RDF::Trine qw(iri blank literal);
+
+use Data::GUID::Any    ();
+use Data::UUID::NCName ();
 
 # if i hadn't already mentioned, the angry fruit salad takes care of
 # all this crap.
@@ -88,6 +90,8 @@ my %MAP = (
             [$NS->ibis->response,                  'Response'],
         ],
         argument => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
         ],
@@ -109,6 +113,8 @@ my %MAP = (
     },
     argument => {
         issue => [
+            [$NS->ibis->generalizes,            'Generalizes'],
+            [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],
@@ -188,14 +194,9 @@ sub _ns {
     my %out;
     # not sure why we need this
     my $ns = $self->ns;
-    # warn Data::Dumper::Dumper([$ns->list_prefixes]);
     for my $prefix ($ns->list_prefixes) {
         $out{$prefix} = $ns->namespace_uri($prefix)->uri->uri_value;
     }
-    # XXX BREAK INTERFACE
-    # while (my ($k, $v) = each %$ns) {
-    #     $out{$k} = $v->uri->uri_value;
-    # }
     \%out;
 }
 
@@ -297,9 +298,26 @@ has metas => (
 #     isa => 'URI',
 # );
 
+
 =head1 METHODS
 
 =cut
+
+=head2 uuid4
+
+=cut
+
+sub uuid4 () {
+    lc Data::GUID::Any::v4_guid_as_string();
+}
+
+=head2 uuid4urn
+
+=cut
+
+sub uuid4urn () {
+    URI->new('urn:uuid:' . uuid4);
+}
 
 =head1 AUTHOR
 
