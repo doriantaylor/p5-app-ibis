@@ -27,9 +27,9 @@ requires 'Data::UUID::NCName'       => '0.03';
 requires 'RDF::Trine'               => '1.007';
 requires 'RDF::KV'                  => '0.04';
 requires 'URI::NamespaceMap'        => '0.06';
-requires 'XML::LibXML::LazyBuilder' => '0.06';
 requires 'Graphics::ColorObject'    => '0';
 requires 'DateTime::Format::W3CDTF' => '0';
+requires 'Role::Markup::XML'        => '0.03';
 
 test_requires 'Test::More' => '0.88';
 catalyst;

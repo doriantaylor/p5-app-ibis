@@ -33,7 +33,7 @@ extends 'Catalyst';
 
 use Graphics::ColorObject;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 after setup_finalize => sub {
     my $app = shift;

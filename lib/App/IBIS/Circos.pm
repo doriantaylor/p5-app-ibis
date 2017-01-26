@@ -16,7 +16,6 @@ with 'Role::Markup::XML';
 use List::Util;
 use Math::Trig;
 use POSIX                    qw(fmod);
-use XML::LibXML::LazyBuilder qw(DOM E F P);
 
 class_type URIObject, { class => 'URI' };
 coerce URIObject, from Str, via { URI->new($_) };
@@ -327,19 +326,22 @@ sub plot {
         }
 
         #warn $points;
-        push @paths, E a => {
+
+        push @paths, {
+            -name => 'a',
             'target'       => '_parent',
             'xlink:target' => '_parent',
             'xlink:href'   => $id,
             'xlink:title'  => $rec->{label} || '',
-        },
-            E path => {
+            -content => {
+                -name => 'path',
                 d => $points,
                 class => join(' ', @css),
                 #stroke => 'none',
                 #fill   => sprintf('#%02x%02x%02x', ($i * 3) x 3),
                 about  => $id,
                 typeof => $self->ns->abbreviate($rec->{type}) || $rec->{type},
+            }
         };
 
         $angle += rad2deg($deg + $plen + $gap);
@@ -456,13 +458,14 @@ sub plot {
                     $p{title} = $edge->{label}
                         if defined $edge->{label};
 
-                    push @g, E path => \%p;
+                    push @g, { %p, -name => 'path' };
 
                     $src->{soff} += $w;
                     $trg->{eoff} -= $w;
                 }
             }
-            push @lines, (E g => {}, @g);
+
+            push @lines, { -name => 'g', -content => \@g };
         }
     }
 
@@ -471,25 +474,30 @@ sub plot {
         ("xmlns:$_" => $self->ns->namespace_uri($_)->as_string)
     } ($self->ns->list_prefixes));
     $ns{'xml:base'} = $self->base->as_string if $self->base;
-    my $css = P 'xml-stylesheet',
-            { type => 'text/css', href => $self->css->as_string }
-                if $self->css;
+
     my $xl = $self->radius + $self->thickness + $self->margin;
-    my $svg = (E svg => {
-        %ns,
+
+    my $doc = $self->_DOC;
+    my @spec = {
+        -name => 'svg', %ns,
         xmlns         => 'http://www.w3.org/2000/svg',
         'xmlns:xlink' => 'http://www.w3.org/1999/xlink',
         viewBox => sprintf("0 0 %g %g", ($xl * 2) x 2),
         preserveAspectRatio => 'xMinYMid meet',
-    },
-               (E title => {}, $self->title),
-               (E g => { transform => sprintf('translate(%g, %g)', ($xl) x 2) },
-                (E g => { id => 'edges' }, @lines),
-                (E g => { id => 'nodes' }, @paths))
-           );
+        -content => [
+            { -name => 'title', -content => $self->title },
+            { -name => 'g',
+              transform => sprintf('translate(%g, %g)', ($xl) x 2),
+              -content => [
+                  { -name => 'g', id => 'edges', -content => \@lines },
+                  { -name => 'g', id => 'nodes', -content => \@paths } ] } ] };
 
-    # aaaand punt out SVG
-    return $css ? DOM F($css, $svg) : DOM $svg;
+    unshift @spec, { -pi => 'xml-stylesheet', type => 'text/css',
+                  href => $self->css->as_string } if $self->css;
+
+    $self->_XML(doc => $doc, spec => \@spec);
+
+    $doc;
 }
 
 __PACKAGE__->meta->make_immutable;
