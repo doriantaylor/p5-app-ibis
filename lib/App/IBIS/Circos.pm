@@ -23,6 +23,10 @@ coerce URIObject, from Str, via { URI->new($_) };
 subtype Angle, as Num,   where { $_ >= 0 && $_ <= 360 };
 coerce  Angle, from Num, via { fmod($_, 360) };
 
+coerce HashRef, from Maybe[Str|URIObject],
+    via { defined $_[0] ? {$_[0] => $_[0]} : {} };
+coerce HashRef, from ArrayRef, via { { map ($_ => $_), @{$_[0]} } };
+
 has title => (
     is      => 'ro',
     isa     => Str,
@@ -121,6 +125,20 @@ has radius => (
     default => 30,
 );
 
+has node_seq => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    lazy    => 1,
+    default => sub { [] },
+);
+
+has edge_seq => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    lazy    => 1,
+    default => sub { [] },
+);
+
 #sub BUILD {
     # yo do we need to do anything here?
 #}
@@ -134,7 +152,7 @@ sub plot {
         \@_,
         nodes  => { isa => HashRef  },
         edges  => { isa => ArrayRef },
-        active => { isa => Maybe[Str|URIObject], optional => 1 },
+        active => { isa => HashRef, coerce => 1, optional => 1 },
     );
 
     # derive global geometric properties
@@ -193,13 +211,36 @@ sub plot {
         my $weight = $edge->{weight} || 1;
         $p{nodes}{$s}{degree} += $weight;
         $p{nodes}{$o}{degree} += $weight;
+
+        # remove any stubs for which we actually have the edge
+        my $stubs = $p{nodes}{$s}{stubs};
+        # warn Data::Dumper::Dumper($stubs);
+        if ($stubs and $stubs->{$t}) {
+            delete $stubs->{$t}{$o};
+        }
+        my $rstubs = $p{nodes}{$o}{rstubs};
+        # warn Data::Dumper::Dumper($rstubs);
+        if ($rstubs and $rstubs->{$t}) {
+            delete $rstubs->{$t}{$s};
+        }
+    }
+
+    # fix degrees for stubs
+    for my $node (values %{$p{nodes}}) {
+        my %stubs  = (%{$node->{stubs} || {}});
+        my %rstubs = (%{$node->{rstubs} || {}});
+        my $weight = List::Util::sum(0, map { scalar keys %$_ } values %stubs);
+        $weight += List::Util::sum(0, map { scalar keys %$_ } values %rstubs);
+        $node->{degree} += $weight;
     }
 
     # XXX make this a sort parameter
-    my @order = qw(Issue Argument Position);
-    my %type = map {
-        'http://privatealpha.com/ontology/ibis/1#' . $order[$_] => $_
-    } (0..$#order);
+    # my @order = qw(Issue Argument Position);
+    # my %type = map {
+    #     'http://privatealpha.com/ontology/ibis/1#' . $order[$_] => $_
+    # } (0..$#order);
+
+    my %type = map { $self->node_seq->[$_] => $_ } (0..$#{$self->node_seq});
 
     # skip everything if keys %{$p{nodes}} == 0
 
@@ -207,6 +248,7 @@ sub plot {
         my ($x, $y) = ($p{nodes}{$a}, $p{nodes}{$b});
         $type{$x->{type}} <=> $type{$y->{type}}
             || ($x->{date} || '') cmp ($y->{date} || '')
+                || $x->{label} cmp $y->{label}
     } keys %{$p{nodes}};
 
     # skip all this crap if @seq == 0
@@ -216,7 +258,7 @@ sub plot {
 
     # degree sum
     my $dsum  = List::Util::sum
-        (map { $_ ? $p{nodes}{$_}{degree} || 0 : 0 } @seq);
+        (0, map { $_ ? $p{nodes}{$_}{degree} || 0 : 0 } @seq);
     # node count
     my $nodes = scalar @seq;
 
@@ -253,8 +295,14 @@ sub plot {
         my $rest = $arcr - $dsumr;
 
         if ($rest > 2 * $glen) {
-            # pad length depends on degree length
+            # the pad length is the same as degree length
             $dlen = $plen = ($arcr - $glen) / ($nodes + $dsum);
+
+            my $thick = $self->thickness / $r;
+            if ($dlen > $thick) {
+                $dlen = $thick;
+                $plen = ($arcr - $glen - ($dlen * $dsum)) / $nodes;
+            }
         }
         else {
             # split the remaining length between padding and gap
@@ -268,8 +316,8 @@ sub plot {
     my %neighbours;
     if ($p{active}) {
         for my $edge (@{$p{edges}}) {
-            $neighbours{$edge->{source}} = 1 if $edge->{target} eq $p{active};
-            $neighbours{$edge->{target}} = 1 if $edge->{source} eq $p{active};
+            $neighbours{$edge->{source}} = 1 if $p{active}{$edge->{target}};
+            $neighbours{$edge->{target}} = 1 if $p{active}{$edge->{source}};
         }
     }
 
@@ -315,7 +363,7 @@ sub plot {
 
         # add css hooks for highlighting
         my @css = qw(node);
-        if ($p{active} and $id eq $p{active}) {
+        if ($p{active} and $p{active}{$id}) {
             push @css, 'subject';
         }
         elsif ($neighbours{$id}) {
@@ -349,6 +397,7 @@ sub plot {
 
     # sort edges by type and then by source/target position
 
+    my %es = map { $self->edge_seq->[$_] => $_ } (0..$#{$self->edge_seq});
     my @lines;
     for my $s (@seq) {
         my $x = $edges{$s};
@@ -365,7 +414,9 @@ sub plot {
             }
         }
 
-        for my $type (sort { $t{$b} <=> $t{$a} } keys %t) {
+
+        for my $type (sort {$t{$b} <=> $t{$a}
+                                or $es{$a} <=> $es{$b} } keys %t) {
             my @g;
             my $y = $x->{$type};
             # XXX sort this more intelligently
@@ -435,9 +486,10 @@ sub plot {
 
                     my @css;
                     push @css, 'subject' if $p{active}
-                        and ($s eq $p{active} or $o eq $p{active});
+                        and ($p{active}{$s} or $p{active}{$o});
 
                     my %p = (
+                        -name    => 'path',
                         d        => $points,
                         #fill     => 'black',
                         #stroke   => 'none',
@@ -455,14 +507,38 @@ sub plot {
                     }
 
                     $p{class} = join ' ', @css if @css;
-                    $p{title} = $edge->{label}
+                    $p{title} = $p{'xlink:title'} = $edge->{label}
                         if defined $edge->{label};
 
-                    push @g, { %p, -name => 'path' };
+                    push @g, \%p;
 
                     $src->{soff} += $w;
                     $trg->{eoff} -= $w;
+
+                    # if ($src->{stubs} and $src->{stubs}{$type}
+                    #         and keys %{$src->{stubs}{$type}}) {
+                    #     warn "fwd $type";
+                    #     warn Data::Dumper::Dumper($src->{stubs}{$type});
+                    # }
+                    # if ($trg->{rstubs} and $trg->{rstubs}{$type}
+                    #         and keys %{$trg->{rstubs}{$type}}) {
+                    #     warn "rev $type";
+                    #     warn Data::Dumper::Dumper($trg->{rstubs}{$type});
+                    # }
                 }
+            }
+
+            # now we do stubs
+            my $node = $p{nodes}{$s};
+            if ($node->{stubs} and $node->{stubs}{$type}
+                    and keys %{$node->{stubs}{$type}}) {
+                warn "fwd stub $s $type";
+                warn Data::Dumper::Dumper($node->{stubs}{$type});
+            }
+            if ($node->{rstubs} and $node->{rstubs}{$type}
+                    and keys %{$node->{rstubs}{$type}}) {
+                warn "rev stub $s $type";
+                warn Data::Dumper::Dumper($node->{rstubs}{$type});
             }
 
             push @lines, { -name => 'g', -content => \@g };

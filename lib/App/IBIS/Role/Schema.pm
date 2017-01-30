@@ -32,7 +32,10 @@ my $NS = RDF::Trine::NamespaceMap->new(\%XMLNS);
 my $IBIS_RE = do { my $x = $NS->ibis->uri->value; qr/^$x/; };
 
 my %LABELS = map {
-    my $x = $NS->ibis->uri($_->[0]); $x->value => [$x, $_->[1]] } (
+    my $x = $_->[0];
+    $x = $x =~ /:/ ? $NS->uri($x) : $NS->ibis->uri($x);
+    $x->uri_value => [$x, $_->[1]] } (
+        # IBIS
         ['endorses',      'Endorses'],
         ['endorsed-by',   'Endorsed by'],
         ['generalizes',   'Generalizes'],
@@ -49,10 +52,23 @@ my %LABELS = map {
         ['supported-by',  'Supported by'],
         ['opposes',       'Opposes'],
         ['opposed-by',    'Opposed by'],
+        # SKOS
+        ['skos:related',            'Related To'],
+        ['skos:narrower',           'Has Narrower'],
+        ['skos:broader',            'Has Broader'],
+        ['skos:narrowerTransitive', 'Has Narrower (Transitive)'],
+        ['skos:broaderTransitive',  'Has Broader (Transitive)'],
+        ['skos:narrowMatch',        'Has Narrower Match'],
+        ['skos:broadMatch',         'Has Broader Match'],
+        ['skos:closeMatch',         'Has Close Match'],
+        ['skos:exactMatch',         'Has Exact Match'],
 );
 
-my %INVERSE = map { $NS->ibis->uri($_->[0])->value
-                        => $LABELS{$NS->ibis->uri($_->[1])->value} } (
+my %INVERSE = map {
+    my ($x, $y) = @$_;
+    $x = $x =~ /:/ ? $NS->uri($x) : $NS->ibis->uri($x);
+    $y = $y =~ /:/ ? $NS->uri($y) : $NS->ibis->uri($y);
+    $x->uri_value => $LABELS{$y->uri_value} } (
         [qw(endorses endorsed-by)],
         [qw(generalizes specializes)],
         [qw(specializes generalizes)],
@@ -70,6 +86,16 @@ my %INVERSE = map { $NS->ibis->uri($_->[0])->value
         [qw(supported-by supports)],
         [qw(opposes opposed-by)],
         [qw(opposed-by opposes)],
+        # SKOS
+        [qw(skos:related skos:related)],
+        [qw(skos:narrower skos:broader)],
+        [qw(skos:broader skos:narrower)],
+        [qw(skos:narrowerTransitive skos:broaderTransitive)],
+        [qw(skos:broaderTransitive skos:narrowerTransitive)],
+        [qw(skos:narrowMatch skos:broadMatch)],
+        [qw(skos:broadMatch skos:narrowMatch)],
+        [qw(skos:closeMatch skos:closeMatch)],
+        [qw(skos:exactMatch skos:exactMatch)],
 );
 
 my %MAP = (
@@ -127,14 +153,29 @@ my %MAP = (
             [$NS->ibis->specializes,            'Specializes'],
         ],
     },
+    'skos:Concept' => {
+        'skos:Concept' => [
+            [$NS->skos->related,            'Is Related'],
+            [$NS->skos->narrower,           'Has Narrower'],
+            [$NS->skos->broader,            'Has Broader'],
+            [$NS->skos->narrowerTransitive, 'Has Narrower (Transitive)'],
+            [$NS->skos->broaderTransitive,  'Has Broader (Transitive)'],
+            [$NS->skos->narrowMatch,        'Has Narrower Match'],
+            [$NS->skos->broadMatch,         'Has Broader Match'],
+            [$NS->skos->closeMatch,         'Has Close Match'],
+            [$NS->skos->exactMatch,         'Has Exact Match'],
+        ],
+    },
 );
 
 # rewrite this sucka
 %MAP = map {
     my $x = $_;
-    $NS->ibis->uri(ucfirst $_)->uri_value => {
+    my $y = $x =~ /:/ ? $NS->uri($x) : $NS->ibis->uri(ucfirst $x);
+    $y->uri_value => {
         map {
-            $NS->ibis->uri(ucfirst $_)->uri_value => $MAP{$x}{$_}
+            my $z = $_ =~ /:/ ? $NS->uri($_) : $NS->ibis->uri(ucfirst $_);
+            $z->uri_value => $MAP{$x}{$_}
         } keys %{$MAP{$x}}
     }
 } keys %MAP;

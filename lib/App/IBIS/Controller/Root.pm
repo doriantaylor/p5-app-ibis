@@ -30,7 +30,15 @@ use List::MoreUtils qw(any);
 #use App::IBIS::HivePlot;
 use App::IBIS::Circos;
 
-my $UUID_RE = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
+my $UUID_RE  = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
+my $UUID_URN = qr/^urn:uuid:
+                  ([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})$/ix;
+my %FORMBP = (
+    -name            => 'form',
+    method           => 'POST',
+    action           => '',
+    'accept-charset' => 'utf-8',
+);
 
 has _dispatch => (
     is => 'ro',
@@ -46,7 +54,7 @@ has _dispatch => (
             $ibis->Position->value   => '_get_ibis_2',
             $ibis->Argument->value   => '_get_ibis_2',
             $skos->Concept->value    => '_get_concept',
-            $skos->Collection->value => '_get_collection',
+            $skos->Collection->value => '_get_collection_2',
         };
     },
 );
@@ -344,6 +352,378 @@ sub ci :Local {
     $c->res->body($doc->toString(1));
 }
 
+sub ci2 :Local {
+    my ($self, $c) = @_;
+
+    # get some input. innnnnnn putttttt
+    my $req = $c->req;
+    my $ns  = $self->ns;
+    my $b   = $req->base;
+    my $q   = $req->query_parameters;
+    my $ref = $q->{subject} || $q->{referrer} || $q->{referer} || $req->referer;
+
+    # other handy things
+    my $lab = $self->labels;
+    my $inv = $self->inverse;
+    my $m   = $c->model('RDF');
+
+    # first we obtain the subject either from the query string or from
+    # the referrer
+
+    my ($snode, $suri);
+    if ($ref) {
+        $ref = $ref->[0] if ref $ref eq 'ARRAY'; # lol got all that?
+        $ref = URI->new_abs($ref, $b);
+
+        if (my ($uuid) = ($ref->path =~ $UUID_RE)) {
+            $snode = iri('urn:uuid:' . lc $uuid);
+            $suri  = $c->uri_for($uuid);
+        }
+    }
+
+    # types
+    my @t  = map { $ns->ibis->uri($_) } qw(Issue Argument Position);
+
+    # "forward" relations, i.e. those visible on the chart
+    my @fp = map { $ns->ibis->uri($_) } qw(generalizes replaces questions
+                                           suggests responds-to supports
+                                           opposes);
+    my %fp = map { $_->uri_value => $_ } @fp;
+    # "reverse" relations, i.e. those which are flipped into forward
+    my %rp = map { my $x = $ns->ibis->uri($_); $x->uri_value => $x }
+        qw(specializes replaced-by questioned-by suggested-by response
+           supported-by opposed-by);
+
+    my (%nodes, @edges, @queue);
+
+    # here we execute a riff on a spanning tree
+    if ($snode) {
+        # start the queue with the context node if present
+        push @queue, $snode;
+    }
+    else {
+        # otherwise get a list of all the "top" nodes
+        my $i = $ns->ibis;
+        my $t = $ns->rdf->type;
+        my @pairs = (
+            [$i->generalizes, $i->specializes],
+            [$i->questions, $i->uri('questioned-by')],
+            [$i->uri('suggested-by'), $i->suggests],
+        );
+        for my $node (map { $m->subjects($t, $_) } @t) {
+            my $skip;
+            for my $p (@pairs) {
+                $skip = $m->count_statements(undef, $p->[0], $node) and last;
+                $skip = $m->count_statements($node, $p->[1], undef) and last;
+            }
+            next if $skip;
+
+            #next if my @x = $m->subjects($i->generalizes, $node);
+            #next if    @x = $m->objects($node, $i->specializes);
+
+            push @queue, $node;
+        }
+    }
+
+    while (my $s = shift @queue) {
+        next unless $s->is_resource;
+
+        my $uu = URI->new($s->uri_value);
+        # XXX warn this maybe?
+        next unless $uu->isa('URI::urn::uuid');
+
+        my $su = URI->new_abs($uu->uuid, $b);
+        next if $nodes{$su};
+
+        my $n = $nodes{$su} ||= {};
+
+        my $ns = $self->ns;
+
+        # first we get
+
+        if (my @types = $m->objects($s, $ns->rdf->type)) {
+            my %t = map +($_->uri_value => $_), @t;
+            @types = grep { $_->is_resource && $t{$_->uri_value} } @types;
+            $n->{type} = URI->new($types[0]->uri_value) if @types;
+        }
+        if (my ($created) = $m->objects($s, $ns->dct->created)) {
+            $n->{date} = $created->literal_value;
+        }
+        if (my ($value) = $m->objects($s, $ns->rdf->value)) {
+            $n->{label} = $value->literal_value;
+        }
+
+        # first we accumulate all the "neighbours" of the node under
+        # inspection, then we select which edges we want to display,
+        # then we select which of these neighbours we add to the
+        # queue.
+
+        # cache of "neighbours"
+        my %nbrs;
+
+        for my $p (values %fp, values %rp) {
+            # we want to unconditionally add the neighbour, then we
+            # want to flip the semantic relation where applicable
+            my $pv = $p->uri_value;
+
+            for my $o ($m->objects($s, $p)) {
+                next unless $o->is_resource;
+
+                my $ov = $o->uri_value;
+                next unless $ov =~ $UUID_URN;
+
+                my $x = $nbrs{$pv} ||= {};
+                $x->{$ov} = $o;
+            }
+
+            # skip if there is no inverse (there always should be)
+            my $ip = $inv->{$pv}[0] or next;
+            my $iv = $ip->uri_value;
+
+            for my $o ($m->subjects($p, $s)) {
+                next unless $o->is_resource;
+
+                my $ov = $o->uri_value;
+                next unless $ov =~ $UUID_URN;
+
+                my $x = $nbrs{$iv} ||= {};
+                $x->{$ov} = $o;
+            }
+        }
+
+        # now we add only the "forward" edges for this node to the
+        # list. 1) subsequent nodes will have their own "forward"
+        # edges added; 2) we don't care if these edges will actually
+        # be shown because the circos module takes care of that.
+        for my $pv (keys %nbrs) {
+            next unless $fp{$pv};
+            my $pu = URI->new($pv);
+            my $pl = $lab->{$pv}[1];
+            for my $ov (keys %{$nbrs{$pv}}) {
+                my $ou = URI->new($ov);
+                $ou = URI->new_abs($ou->uuid, $b);
+                push @edges, {
+                    source => $su,
+                    target => $ou,
+                    type   => $pu,
+                    label  => $pl,
+                };
+            }
+        }
+
+        # now we prune out the neighbours that we don't want to display
+        my %nope = map {
+            my $x = $ns->ibis->uri($_)->uri_value;
+            my $y = delete $nbrs{$x};
+            $y ? ($x => $y) : ()
+        } qw(generalizes specializes questions questioned-by
+             suggests suggested-by);
+
+        # we also flatten out the remaining nodes
+        my %ok = map +(%{$_}), values %nbrs;
+
+        # add nodes to queue
+        push @queue, values %ok;
+        if ($snode and $s->equal($snode)) {
+            # add recurse down (?s ibis:generalizes ?o, ?o
+            # ibis:specializes ?s) to queue
+            %nope = map +(%$_), values %nope;
+            push @queue, values %nope;
+        }
+        else {
+            # add downward hierarchy to "stubs"
+            my (%stubs, %rstubs);
+            for my $pv (keys %nope) {
+                my $x = $nope{$pv};
+                my $y;
+                if ($fp{$pv}) {
+                    $y = $stubs{$pv} ||= {};
+                }
+                else {
+                    my $p = $inv->{$pv}[0] or next;
+                    $pv = $p->uri_value;
+                    $y  = $rstubs{$pv} ||= {};
+                }
+
+                #next unless $fp{$pv};
+                #$stubs{$pv} ||= {};
+                for my $ov (keys %$x) {
+                    my $ou = URI->new($ov);
+                    $ou = URI->new_abs($ou->uuid, $b);
+                    $y->{$ou} = $ou;
+                    #$stubs{$pv}{$ou} = $ou;
+                }
+            }
+            $nodes{$su}{stubs}  = { %{$nodes{$su}{stubs}  ||= {}}, %stubs  };
+            $nodes{$su}{rstubs} = { %{$nodes{$su}{rstubs} ||= {}}, %rstubs };
+        }
+    }
+
+    # now generate the graphic
+    my $circos = App::IBIS::Circos->new(
+        start     => 0,   # initial degree offset
+        end       => 240, # terminal degree offset
+        rotate    => 60,  # offset to previous two values
+        gap       => 2,   # units of whitespace between arc slices
+        thickness => 50,  # thickness of arc slices
+        margin    => 20,  # gap between outer edge and viewbox
+        size      => 200, # overall width/height of the viewbox
+        radius    => 270,
+        base      => $b,
+        css       => $c->uri_for('/asset/circos.css'),
+        ns        => $self->uns,
+        node_seq  => [map { $_->uri_value} @t],
+        edge_seq  => [map { $_->uri_value} @fp],
+    );
+
+    #warn Data::Dumper::Dumper(\%nodes, \@edges);
+
+    my $doc = $circos->plot(
+        nodes  => \%nodes,
+        edges  => \@edges,
+        active => $suri,
+    );
+
+    $c->res->content_type('image/svg+xml');
+    $c->res->body($doc);
+}
+
+sub concepts :Local {
+    my ($self, $c) = @_;
+
+    # get some input. innnnnnn putttttt
+    my $req = $c->req;
+    my $ns  = $self->ns;
+    my $b   = $req->base;
+    my $q   = $req->query_parameters;
+    my $ref = $q->{subject} || $q->{referrer} || $q->{referer} || $req->referer;
+
+    # other handy things
+    my $lab = $self->labels;
+    my $inv = $self->inverse;
+    my $m   = $c->model('RDF');
+
+    # these are the nodes we want lit up; we get them from QS or Referer
+    my %lit;
+    if ($ref) {
+        # lol @ this
+        $ref = [$ref] unless ref $ref;
+        for my $uu (@$ref) {
+            next unless $uu =~ $UUID_RE;
+            $uu = iri("urn:uuid:$1");
+            $lit{$uu->uri_value} = $uu;
+        }
+    }
+
+    # generate semantic relations
+
+    my @fp = map { $ns->skos->uri($_) } qw(narrower narrowerTransitive
+                                           narrowMatch related closeMatch
+                                           exactMatch);
+    my %fp = map { $_->uri_value => $_ } @fp;
+    my %rp = map { my $x = $ns->skos->uri($_); $x->uri_value => $x }
+        qw(broader broaderTransitive broadMatch related closeMatch exactMatch);
+
+    # note the symmetric properties are in both groups.
+
+    # for the concepts we just want to get them all and sort them
+    # alphabetically.
+
+    my (%nodes, @edges);
+
+    for my $s ($m->subjects($ns->rdf->type, $ns->skos->Concept)) {
+        next unless $s->is_resource;
+        my $uu = URI->new($s->uri_value);
+        next unless $uu->isa('URI::urn::uuid');
+
+        my $su = URI->new_abs($uu->uuid, $b);
+        next if $nodes{$su};
+
+        my $n = $nodes{$su} ||= {};
+
+        my ($label) = $m->objects($s, $ns->skos->prefLabel);
+
+        $n->{label} = $label->literal_value;
+        $n->{type}  = 'skos:Concept';
+
+        # do the neighbour thing again
+        my %nbrs;
+
+        for my $p (values %fp, values %rp) {
+            my $pv = $p->uri_value;
+
+            for my $o ($m->objects($s, $p)) {
+                next unless $o->is_resource;
+                my $ov = $o->uri_value;
+                next unless $ov =~ $UUID_URN;
+
+                my $x = $nbrs{$pv} ||= {};
+                $x->{ov} = $o;
+            }
+
+            # now we do the reverse thing again
+            my $ip = $inv->{$pv}[0] or next;
+            my $iv = $ip->uri_value;
+
+            for my $o ($m->subjects($p, $s)) {
+                next unless $o->is_resource;
+
+                my $ov = $o->uri_value;
+                next unless $ov =~ $UUID_URN;
+
+                my $x = $nbrs{$iv} ||= {};
+                $x->{$ov} = $o;
+            }
+        }
+
+        # now we do this again
+        for my $pv (keys %nbrs) {
+            next unless $fp{$pv};
+            my $pu = URI->new($pv);
+            my $pl = $lab->{$pv}[1];
+            for my $ov (keys %{$nbrs{$pv}}) {
+                my $ou = URI->new($ov);
+                $ou = URI->new_abs($ou->uuid, $b);
+                push @edges, {
+                    source => $su,
+                    target => $ou,
+                    type   => $pu,
+                    label  => $pl,
+                };
+            }
+        }
+
+    }
+
+    my $circos = App::IBIS::Circos->new(
+        start     => 0,   # initial degree offset
+        end       => 240, # terminal degree offset
+        rotate    => 60,  # offset to previous two values
+        gap       => 2,   # units of whitespace between arc slices
+        thickness => 50,  # thickness of arc slices
+        margin    => 20,  # gap between outer edge and viewbox
+        size      => 200, # overall width/height of the viewbox
+        radius    => 270,
+        base      => $b,
+        css       => $c->uri_for('/asset/circos.css'),
+        ns        => $self->uns,
+        node_seq  => [$ns->skos->Concept->uri_value],
+        edge_seq  => [map { $_->uri_value } @fp],
+    );
+
+    #warn Data::Dumper::Dumper(\%nodes, \@edges);
+
+    my $doc = $circos->plot(
+        nodes  => \%nodes,
+        edges  => \@edges,
+#        active => $suri,
+    );
+
+    $c->res->content_type('image/svg+xml');
+    $c->res->body($doc);
+
+}
+
 sub uuid :Private {
     my ($self, $c, $uuid) = @_;
 
@@ -544,10 +924,37 @@ sub feed :Local {
 sub _get_concept :Private {
     my ($self, $c, $subject) = @_;
 
-    my $doc  = $self->_DOC;
-    my $body = $self->_XHTML(
-        uri  => $c->req->uri,
-        attr => { typeof => 'skos:Concept' },
+    my $m = $c->model('RDF');
+    my $ns = $self->ns;
+
+    my ($label) = $m->objects($subject, $ns->skos->prefLabel);
+    my ($desc)  = $m->objects($subject, $ns->skos->description);
+    $desc = '' unless defined $desc;
+
+    my $uu = URI->new($subject->uri_value);
+
+    my $doc = $self->_doc_2(
+        uri   => $c->req->uri,
+        title => $label->value,
+        attr  => { typeof => 'skos:Concept' },
+        content => { -name => 'main', -content => [
+            { -name => 'figure', class => 'aside', -content => {
+                -name => 'object', class => 'hiveplot', type => 'image/svg+xml',
+                data => $c->uri_for(concepts => { subject => $uu->uuid }) } },
+            { -name => 'article', -content => [
+                { -name => 'section', -content => [
+                    { -name => 'h1', -content => { %FORMBP, -content => [
+                        { -name => 'input', type => 'text',
+                          name => '= skos:prefLabel',
+                          value => $label->literal_value },
+                        { -name => 'button', class => 'fa fa-repeat',
+                          -content => '', } ] } },
+                    { %FORMBP, -content => [
+                        { -name => 'textarea', class => '',
+                          name => '= skos:description', -content => $desc },
+                        { -name => 'button', class => 'update fa fa-repeat',
+                          -content => '' } ] },
+                    ] } ] } ] }
     );
 
     $c->res->body($doc);
@@ -579,16 +986,14 @@ sub _get_collection_2 :Private {
         uri   => $uri,
         title => $maybetitle || $subject->value,
         attr  => \%attrs,
-        content => {
-            -name => 'form', method => 'post', action => $uri,
-            'accept-encoding' => 'utf-8', -content => [
-                { -name => 'h1', -content => {
-                    -name => 'input', name => '= skos:prefLabel',
-                    value => $maybetitle } },
-                { -name => 'p', -content => {
-                    -name => 'textarea', name => '= skos:description',
-                    -content => $desc ? $desc->value : '' }},
-                $self->_do_index_2($c, $subject) ] },
+        content => { %FORMBP, action => $uri, -content => [
+            { -name => 'h1', -content => {
+                -name => 'input', name => '= skos:prefLabel',
+                value => $maybetitle } },
+            { -name => 'p', -content => {
+                -name => 'textarea', name => '= skos:description',
+                -content => $desc ? $desc->value : '' }},
+            $self->_do_index_2($c, $subject) ] },
     );
 
     # XXX forward this maybe?
@@ -598,7 +1003,10 @@ sub _get_collection_2 :Private {
 sub _get_ibis_2 :Private {
     my ($self, $c, $subject) = @_;
 
+
     my $uri = $c->req->uri;
+    my $uu  = URI->new($subject->uri_value);
+    my $su  = URI->new_abs($uu->uuid, $uri);
 
     my $m = $c->model('RDF');
 
@@ -621,6 +1029,8 @@ sub _get_ibis_2 :Private {
         $label .= ': ';
     }
 
+    my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid });
+
     my (undef, $doc) = $self->_XHTML(
         ns    => $self->uns,
         uri   => $uri,
@@ -636,7 +1046,7 @@ sub _get_ibis_2 :Private {
         attr  => \%attrs,
         content => { -name => 'main', -content => [
             { -name => 'figure', class => 'aside', -content => {
-                -name => 'object', class => 'hiveplot', data => '/ci',
+                -name => 'object', class => 'hiveplot', data => $ci2,
                 type => 'image/svg+xml', -content => '(Circos Plot)' } },
             { -name => 'article', -content => [
                 $self->_do_content_2($c, $subject),
@@ -982,13 +1392,11 @@ sub _do_content_2 {
             push @li, {
                 -name => 'li', about => $o->value,
                 typeof => $ns->abbreviate($type),
-                -content => {
-                    -name => 'form', method => 'POST', action => '',
-                    'accept-charset' => 'utf-8', -content => {
-                        -name => 'div', -content => [
-                            @baleet,
-                            { about => $o->value, href => $uri,
-                              property => 'rdf:value', -content => $tv } ] } }
+                -content => { %FORMBP, -content => {
+                    -name => 'div', -content => [
+                        @baleet,
+                        { about => $o->value, href => $uri,
+                          property => 'rdf:value', -content => $tv } ] } }
             };
         }
 
@@ -1031,8 +1439,7 @@ sub _do_content_2 {
 
     return {
         -name => 'section', -content => [
-            { -name => 'form', class => 'set-type', method => 'POST',
-              'accept-charset' => 'utf-8', action => '', -content => [
+            { %FORMBP, class => 'set-type', -content => [
                   { -name => 'div', class => 'class-selector',
                     -content => \@buttons },
                   { -name => "h$rank", class => 'heading', -content => [
@@ -1040,8 +1447,127 @@ sub _do_content_2 {
                         name => '= rdf:value', -content => $text },
                       { -name => 'button', class => 'update fa fa-repeat',
                         -content => '' } ] } ] },
-            $self->_do_collection_form_2($c, $subject), @asides ],
+            #$self->_do_collection_form_2($c, $subject),
+            $self->_do_link_form($c, $subject),
+            $self->_do_concept_form($c, $subject),
+            @asides ],
     };
+}
+
+sub _do_link_form {
+    my ($self, $c, $subject) = @_;
+
+    my $m  = $c->model('RDF');
+    my $ns = $self->ns;
+    my $bs  = $c->req->base;
+
+    my @li;
+    for my $link ($m->objects($subject, $ns->dct->references)) {
+        next unless $link->is_resource;
+        my $uri = URI->new($link->uri_value);
+        if ($uri->isa('URI::urn::uuid')) {
+            # skip concepts
+            next if $m->count_statements
+                ($link, $ns->rdf->type, $ns->skos->Concept);
+            $uri = URI->new_abs($uri->uuid, $bs);
+        }
+
+        # XXX do labels here
+
+        my %wtf = ( );
+
+        push @li, { -name => 'li', -content => [
+            { href => $uri, -content => $uri },
+            { %FORMBP, -content => {
+                -name => 'button', name => '- dct:references :',
+                value => $uri, class => 'fa fa-unlink', -content => '' } } ] };
+    }
+
+    # conveniently we can sort this list after we construct it
+    @li = sort {
+        $a->{-content}[0]{-content} cmp $b->{-content}[0]{-content} } @li;
+
+    # default list item to add a new link
+    push @li, { -name => 'li', -content => { %FORMBP, -content => [
+        { -name => 'input', type => 'text', name => 'dct:references :' },
+        { -name => 'button', class=> 'fa fa-plus', -content => '' } ] } };
+
+    return { -name => 'aside', class => 'inset', -content => [
+        { -name => 'h3', -content => 'Links' },
+        { -name => 'ul', -content => \@li } ] };
+}
+
+sub _do_concept_form {
+    my ($self, $c, $subject) = @_;
+
+    my $m  = $c->model('RDF');
+    my $ns = $self->ns;
+    my $bs = $c->req->base;
+
+    my (%li, %opt, @li, @opt);
+
+    for my $concept ($m->objects($subject, $ns->dct->references)) {
+        next unless $concept->is_resource;
+        next unless $concept->uri_value =~ $UUID_URN;
+        next unless $m->count_statements
+            ($concept, $ns->rdf->type, $ns->skos->Concept);
+
+        # cache this to prune from select options
+        $li{$concept->uri_value} = $concept;
+
+        my ($label) = $m->objects($concept, $ns->skos->prefLabel);
+
+        my $uri = URI->new($concept->uri_value);
+        $uri = URI->new_abs($uri->uuid, $bs);
+
+        push @li, { -name => 'li', -content => [
+            { href => $uri, -content => $label->value },
+            { %FORMBP, -content => [
+                { -name => 'input', type => 'hidden',
+                  name => '-! dct:isReferencedBy :',
+                  value => $concept->uri_value },
+                { -name => 'button', class => 'fa fa-unlink',
+                  name => '- dct:references :',
+                  value => $concept->uri_value } ] } ] };
+    }
+
+    for my $concept ($m->subjects($ns->rdf->type, $ns->skos->Concept)) {
+        # remove self links
+        next if $subject and $concept->equal($subject);
+
+        # remove bnodes
+        next unless $concept->is_resource;
+
+        # and now prune
+        next if $li{$concept->uri_value};
+
+        # XXX REDO LABELS
+        my ($label) = $m->objects($concept, $ns->skos->prefLabel);
+
+        push @opt, { -name => 'option', value => $concept->uri_value,
+                     -content => $label->value };
+    }
+
+    @opt = sort { $a->{-content} cmp $b->{-content} } @opt;
+
+    push @li, { -name => 'li', -content => { %FORMBP, -content => [
+        { -name => 'select', name => 'dct:references :', -content => \@opt },
+        { -name => 'button', class => 'fa fa-link', -content => '' }]}} if @opt;
+    push @li, { -name => 'li', -content => { %FORMBP, -content => [
+        { -name => 'input', type => 'hidden',
+          name => '$ concept $', value => '$NEW_UUID_URN' },
+        { -name => 'input', type => 'hidden',
+          name => 'dct:references : $', value => '$concept' },
+        { -name => 'input', type => 'hidden',
+          name => '= $concept rdf:type :', value => 'skos:Concept' },
+        { -name => 'input', type => 'text',
+          name => '= $concept skos:prefLabel' },
+        { -name => 'button', class=> 'fa fa-plus', -content => '' },
+    ]}};
+
+    return { -name => 'aside', class => 'inset', -content => [
+        { -name => 'h3', -content => 'Concepts' },
+        { -name => 'ul', -content => \@li } ] };
 }
 
 sub _do_collection_form_2 {
@@ -1086,7 +1612,7 @@ sub _do_collection_form_2 {
             };
         }
 
-        push @out, { -name => 'form', %boilerplate,
+        push @out, { %FORMBP,
                      -content => { -name => 'ul', -content => \@li } } if @li;
 
         if (my @which = grep { ! $map{$_->[0]->value} } @s) {
@@ -1095,12 +1621,10 @@ sub _do_collection_form_2 {
                               -content => $_->[1] },
                                   sort { $a->[1] cmp $b->[1] } @which;
 
-            push @out, {
-                -name => 'form', %boilerplate, -content => [
-                    { -name => 'select', name => '! skos:member :',
-                      -content => \@opts },
-                    { -name => 'button',
-                      class => 'fa fa-link', -content => '' } ]
+            push @out, { %FORMBP, -content => [
+                { -name => 'select', name => '! skos:member :',
+                  -content => \@opts },
+                { -name => 'button', class => 'fa fa-link', -content => '' } ]
             }; # attach
         }
     }
@@ -1108,20 +1632,18 @@ sub _do_collection_form_2 {
     # XXX THERE IS NOW A PROTOCOL MACRO FOR THIS
     my $newuuid = $self->uuid4urn;
 
-    push @out, {
-        -name => 'form', %boilerplate, -content => {
-            -name => 'div', -content => [
-                { -name => 'input', type => 'hidden',
-                  name => "= $newuuid rdf:type :",
-                  value => $ns->skos->Collection->value },
-                { -name => 'input', type => 'hidden',
-                  name => '! skos:member :', value => $newuuid },
-                { -name => 'div', -content => [
-                    { -name => 'button', class => 'fa fa-plus',
-                      -content => '' },
-                    { -name => 'input', type => 'text',
-                      name => "= $newuuid skos:prefLabel" }
-                ] } ] } }; # Create & Attach
+    push @out, { %FORMBP, -content => {
+        -name => 'div', -content => [
+            { -name => 'input', type => 'hidden',
+              name => "= $newuuid rdf:type :",
+              value => $ns->skos->Collection->value },
+            { -name => 'input', type => 'hidden',
+              name => '! skos:member :', value => $newuuid },
+            { -name => 'div', -content => [
+                { -name => 'button', class => 'fa fa-plus', -content => '' },
+                { -name => 'input', type => 'text',
+                  name => "= $newuuid skos:prefLabel" }
+            ] } ] } }; # Create & Attach
 
     return { -name => 'aside', class => 'collection', -content => \@out };
 }
@@ -1129,35 +1651,32 @@ sub _do_collection_form_2 {
 sub _do_404_2 {
     my ($self, $new) = @_;
     $new ||= '/' . $self->uuid4;
-    return {
-        -name => 'form', id => 'blank-page', method => 'POST',
-        'accept-charset' => 'utf-8', action => $new,
-        -content => {
-            -name => 'fieldset', -content => [
-                { -name => 'legend', -content => [
-                    { -name => 'span', -content => 'Start a new ' },
-                    { -name => 'select', name => 'rdf:type :',
-                      -content => [map +{ -name => 'option',
-                                          value => "ibis:$_" },
-                                   qw(Issue Position Argument)] } ] },
-                { -name => 'input', class => 'new-value',
-                  type => 'text', name => '= rdf:value' },
-                { -name => 'button', -content => 'Go' } ] } };
+    return { %FORMBP, id => 'blank-page', action => $new,
+             -content => {
+                 -name => 'fieldset', -content => [
+                     { -name => 'legend', -content => [
+                         { -name => 'span', -content => 'Start a new ' },
+                         { -name => 'select', name => 'rdf:type :',
+                           -content => [map +{ -name => 'option',
+                                               value => "ibis:$_",
+                                               -content => $_ },
+                                        qw(Issue Position Argument)] } ] },
+                     { -name => 'input', class => 'new-value',
+                       type => 'text', name => '= rdf:value' },
+                     { -name => 'button', -content => 'Go' } ] } };
 }
 
 sub _do_connect_form_2 {
     my ($self, $c, $subject, $type) = @_;
 
-    return {
-        -name => 'form', id => 'connect-existing', method => 'post',
-        'accept-charset' => 'utf-8', action => '', -content => {
-            -name => 'fieldset', -content => [
-                $self->_menu_2($c, $type),
-                { -name => 'fieldset', class => 'interaction',
-                  -content => [
-                      $self->_select_2($c, $subject),
-                      { -name => 'button', class => 'fa fa-link',
-                        -content => '' }] } ] } };
+    return { %FORMBP, id => 'connect-existing', -content => {
+        -name => 'fieldset', -content => [
+            $self->_menu_2($c, $type),
+            { -name => 'fieldset', class => 'interaction',
+              -content => [
+                  $self->_select_2($c, $subject),
+                  { -name => 'button', class => 'fa fa-link', -content => '' }]
+          } ] } };
 }
 
 sub _do_create_form_2 {
@@ -1180,20 +1699,17 @@ sub _do_create_form_2 {
 
     my $new = '/' . $self->uuid4;
 
-    return {
-        -name => 'form', id => 'create-new', method => 'post',
-        'accept-charset' => 'utf-8', action => $new, -content => {
-            -name => 'fieldset', -content => [
-                @has,
-                { -name => 'input', type => 'hidden',
-                  name => '$ obj', value => $subject },
-                $self->_menu_2($c, $type, 1),
-                { -name => 'fieldset', class => 'interaction', -content => [
-                    { -name => 'input', class => 'new-value',
-                      type => 'text', name => '= rdf:value' },
-                    { -name => 'button', class => 'fa fa-plus',
-                      -content => '' } ] } ] },
-    };
+    return { %FORMBP, id => 'create-new', action => $new, -content => {
+        -name => 'fieldset', -content => [
+            @has,
+            { -name => 'input', type => 'hidden',
+              name => '$ obj', value => $subject },
+            $self->_menu_2($c, $type, 1),
+            { -name => 'fieldset', class => 'interaction', -content => [
+                { -name => 'input', class => 'new-value',
+                  type => 'text', name => '= rdf:value' },
+                { -name => 'button', class => 'fa fa-plus', -content => '' } ]
+          } ] } };
 }
 
 sub _doc_2 {
@@ -1230,6 +1746,14 @@ sub end : ActionClass('RenderView') {
     my $body = $resp->body;
     if (ref $body and Scalar::Util::blessed($body)
             and $body->isa('XML::LibXML::Document')) {
+        # fix it ya goof
+        unless ($body->documentElement) {
+            $resp->status(501);
+            $resp->content_type('text/plain');
+            $resp->body("Missing document element!");
+            return;
+        }
+
         my $doc = $body;
         my $ct;
         if ($body->documentElement->localName eq 'html') {
@@ -1239,7 +1763,7 @@ sub end : ActionClass('RenderView') {
             $ct = 'application/xml';
         }
 
-        $resp->content_type($ct);
+        $resp->content_type($ct) unless $resp->content_type;
 
         $body = $body->toString(1);
         $resp->content_length(length $body);
