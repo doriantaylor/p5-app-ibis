@@ -44,6 +44,18 @@
 #nodes path[typeof~='ibis:Argument']:hover {
    fill: #d8d8ff;
 }
+
+#nodes path[typeof~='skos:Concept'] {
+   fill: #c9c;
+}
+#nodes path[typeof~='skos:Concept'].subject {
+   fill: #ffd8ff;
+}
+#nodes path[typeof~='skos:Concept']:hover {
+   fill: #ffd8ff;
+}
+
+
 .arc {
    opacity: 1;
    fill: none;
@@ -141,6 +153,31 @@ path[rel~='ibis:opposed-by'] {
 }
 path[rel~='ibis:opposed-by'].subject {
    fill: #fd8ba3;
+}
+
+/* skos arrows */
+
+path[rel~='skos:related'] {
+   fill: #ffcccc;
+}
+path[rel~='skos:related'].subject {
+   fill: #fd8ba3;
+}
+
+/* make these the same as ibis */
+
+path[rel~='skos:narrower'] {
+   fill: #5f7fff;
+}
+path[rel~='skos:narrower'].subject {
+   fill: #abbcff;
+}
+
+path[rel~='skos:broader'] {
+   fill: #0033ff;
+}
+path[rel~='skos:broader'].subject {
+   fill: #4c70ff;
 }
 
 

@@ -3,7 +3,8 @@
 html {
    width: 100%;
    min-height: 100%;
-   overflow-y: scroll;
+   /*overflow-y: scroll;*/
+   overflow: hidden;
    font-family: Roboto, Helvetica Neue, sans-serif;
    background-color: #333;
    color: #999;
@@ -11,7 +12,7 @@ html {
 
 body {
    position: absolute;
-   overflow: visible;
+   overflow: hidden;
    top: 0;
    /*bottom: 0;*/
    left: 0;
@@ -49,6 +50,14 @@ fieldset.relation {
    overflow: hidden;
 }
 
+fieldset.skos.relation {
+   height: 6em;
+}
+
+fieldset.relation legend {
+   font-weight: bold;
+}
+
 fieldset.relation ul {
    padding: 0;
    list-style-type: none;
@@ -57,10 +66,13 @@ fieldset.relation ul {
 input[type='text'], input[type='submit'], input[type='reset'], select, button {
    font-family: inherit;
    font-size: inherit;
+   font-weight: inherit;
    background-color: inherit;
    color: inherit;
    border: 1px solid #444;
 }
+
+
 
 form#blank-page {
    margin: 5em auto;
@@ -198,6 +210,24 @@ object.hiveplot {
    height: 100%;
 }
 
+object.baby.hiveplot {
+   display: block;
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: auto;
+   height: 25%;
+   transform: rotate(45deg);
+}
+
+object.other.baby.hiveplot {
+   top: unset;
+   bottom: 0;
+   width: auto;
+   height: 25%;
+   transform: rotate(-45deg);
+}
+
 aside.predicate {
    display: block;
    background-color: black;
@@ -234,7 +264,7 @@ dd, aside.predicate li {
    margin-bottom: 0.5em;
 }
 
-*[property='rdfs:label'] {
+*[property='rdfs:label'], h3.label {
    color: #ddd;
    padding: 0.1em 0.3em;
    display: inline-block;
@@ -317,6 +347,14 @@ body[typeof~='ibis:Argument'] h1, fieldset.argument  {
    color: #889;
 }
 
+body[typeof~='skos:Concept'], fieldset.concept, body[typeof~='skos:Concept'] aside.predicate {
+   background-color: #323;
+}
+
+body[typeof~='skos:Concept'] h1, fieldset.argument  {
+   color: #989;
+}
+
 /*
 dd[typeof~='ibis:Issue'] {
    background-color: #300;
@@ -342,8 +380,11 @@ li[typeof~='ibis:Argument'] a {
 input, select, option, textarea, button {
    background-color: transparent;
 }
+button {
+   padding: 1pt 1ex;
+}
 
-textarea.heading {
+textarea.heading, textarea.description {
    border: none;
    color: inherit;
    font-family: inherit;
@@ -354,6 +395,7 @@ textarea.heading {
    resize: none;
    overflow: visible;
    height: 5em;
+   white-space: pre-line;
 }
 
 aside.collection {
@@ -399,6 +441,10 @@ body[typeof~='ibis:Position'] article {
 }
 body[typeof~='ibis:Argument'] article {
    background-color: #333344;
+}
+
+body[typeof~='skos:Concept'] article {
+   background-color: #443344;
 }
 
 button.update {

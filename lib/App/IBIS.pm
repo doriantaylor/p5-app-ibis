@@ -31,24 +31,54 @@ use Catalyst qw/
 
 extends 'Catalyst';
 
-use Graphics::ColorObject;
+#use Graphics::ColorObject ();
+use Convert::Color  ();
+use HTTP::Negotiate ();
 
 our $VERSION = '0.03';
 
+my (@LABELS, @ALT_LAB);
+
 after setup_finalize => sub {
     my $app = shift;
+
+    # TODO prepare palette 
     my $p = $app->config->{palette};
-    for my $t (keys %{$p->{types}}) {
+    for my $t (sort keys %{$p->{class}}) {
         if ($t =~ /:/) {
-            my $hex = $p->{types}{$t};
-            # expand 3x to 6x
-            #$hex =~ s/^#?([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/#$1$1$2$2$3$3/;
-            #my $co = Graphics::ColorObject->new_RGBhex($hex);
-            my $co = Graphics::ColorObject->new($hex);
-            warn "$t: " . join ', ', @{$co->as_LCHab};
+            chomp (my $hex = $p->{class}{$t});
+
+            # correct shorthand hex values and coerce to Convert::Color
+            $hex =~ /^#?([0-9A-Fa-f]{3})|([0-9A-Fa-f]{6})$/;
+            if ($1 ne '') {
+                $hex = 'rgb8:' . join '', map { ($_) x 2 } split //, $1;
+            }
+             elsif ($2 ne '') {
+                $hex = "rgb8:$2";
+            }
+            else {
+                # XXX not sure what to do here
+                next;
+            }
+
+            my $co = Convert::Color->new($hex);
+
+            $app->log->debug(sprintf "%s\tH:%03.2f\tS:%03.2f\tL:%03.2f",
+                             $t, $co->convert_to('husl')->hsl);
         }
     }
-    #warn Data::Dumper::Dumper($app->config->{palette});
+
+    # populate labels
+
+    my $m  = $app->model('RDF');
+    my $ns = $m->ns;
+
+    @LABELS  = grep { defined $_ } map { $ns->uri($_) }
+        qw(skos:prefLabel rdfs:label foaf:name dct:title
+         dc:title dct:identifier dc:identifier rdf:value);
+    @ALT_LAB = grep { defined $_ } map { $ns->uri($_) }
+        qw(skos:altLabel bibo:shortTitle dct:alternative);
+
 };
 
 # Configure the application.
@@ -82,6 +112,56 @@ App::IBIS - Catalyst based application
 =head1 DESCRIPTION
 
 [enter your description here]
+
+=head1 METHODS
+
+=head2 label_for $SUBJECT
+
+Ghetto-rig a definitive label
+
+=cut
+
+sub label_for {
+    my ($c, $s, $alt) = @_;
+    return unless $s->is_resource or $s->is_blank;
+
+    my $m  = $c->model('RDF');
+    my $ns = $m->ns;
+
+    # get the sequence of candidates
+    my @candidates = $alt ? (@ALT_LAB, @LABELS) : (@LABELS, @ALT_LAB);
+
+    # pull them all out
+    my %out;
+    for my $p (@candidates) {
+        my @coll = grep { $_->is_literal and $_->literal_value !~ /^\s*$/ }
+            $m->objects($s, $p);
+
+        $out{$p->uri_value} = \@coll if @coll;
+    }
+
+    # now do content negotiation to them
+    my (@variants, $qs);
+    for my $i (1..@candidates) {
+        my $p = $candidates[$i-1];
+        $qs = 1/$i;
+        for my $o (@{$out{$p->uri_value}}) {
+            my $lang = $o->literal_value_language;
+            my $size = length $o->literal_value;
+            $size = 1/$size unless $alt; # choose the longest one
+            push @variants, [[$o, $p], $qs, undef, undef, undef, $lang, $size];
+        }
+    }
+
+    if (my @out = HTTP::Negotiate::choose(\@variants, $c->req->headers)) {
+        my ($o, $p) = @{$out[0][0]};
+
+        return wantarray ? ($o, $p) : $o;
+    }
+    else {
+        return $s;
+    }
+}
 
 =head1 SEE ALSO
 

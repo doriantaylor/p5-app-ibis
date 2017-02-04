@@ -203,6 +203,9 @@ sub plot {
         my $t = $edge->{type};
         $t = '' unless defined $t;
 
+        next if $edge->{symmetric} and $edges{$o} and $edges{$o}{$t}
+            and $edges{$o}{$t}{$s};
+
         my $x = $edges{$s} ||= {};
         my $y = $x->{$t}   ||= {};
         my $z = $y->{$o}   ||= [];
@@ -246,7 +249,7 @@ sub plot {
 
     my @seq = sort {
         my ($x, $y) = ($p{nodes}{$a}, $p{nodes}{$b});
-        $type{$x->{type}} <=> $type{$y->{type}}
+        ($type{$x->{type}} || 0) <=> ($type{$y->{type}} || 0)
             || ($x->{date} || '') cmp ($y->{date} || '')
                 || $x->{label} cmp $y->{label}
     } keys %{$p{nodes}};
