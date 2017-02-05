@@ -354,6 +354,7 @@ sub ci2 :Local {
     my $lab = $self->labels;
     my $inv = $self->inverse;
     my $m   = $c->model('RDF');
+    my $g   = $m->graph;
 
     # first we obtain the subject either from the query string or from
     # the referrer
@@ -401,8 +402,10 @@ sub ci2 :Local {
         for my $node (map { $m->subjects($t, $_) } @t) {
             my $skip;
             for my $p (@pairs) {
-                $skip = $m->count_statements(undef, $p->[0], $node) and last;
-                $skip = $m->count_statements($node, $p->[1], undef) and last;
+                $skip = $m->count_statements
+                    (undef, $p->[0], $node) and last;
+                $skip = $m->count_statements
+                    ($node, $p->[1], undef) and last;
             }
             next if $skip;
 
@@ -605,6 +608,7 @@ sub concepts :Local {
     my $lab = $self->labels;
     my $inv = $self->inverse;
     my $m   = $c->model('RDF');
+    my $g   = $m->graph;
 
     # these are the nodes we want lit up; we get them from QS or Referer
     my %lit;
@@ -760,7 +764,8 @@ sub uuid :Private {
         $resp->content_type('application/xhtml+xml');
         # check model for subject
         my $m = $c->model('RDF');
-        if (my @o = $m->objects($uuid, $self->ns->rdf->type, undef)) {
+        my $g = $m->graph;
+        if (my @o = $m->objects($uuid, $self->ns->rdf->type)) {
             # GHETTO FRESNEL
             my $d = $self->_dispatch;
             my ($handler) = map { $d->{$_->value} } grep { $d->{$_->value} } @o;
@@ -796,15 +801,15 @@ sub uuid :Private {
 sub _delete_uuid :Private {
     my ($self, $c, $uuid) = @_;
     my $m = $c->model('RDF');
-
     my $g = $m->graph;
+
     $c->log->debug($g);
 
     $c->log->debug(sprintf 'Model size: %d', $m->size);
 
     $m->begin_bulk_ops;
-    $m->remove_statements($uuid, undef, undef, $g);
-    $m->remove_statements(undef, undef, $uuid, $g);
+    $m->remove_statements($uuid, undef, undef);
+    $m->remove_statements(undef, undef, $uuid);
     $m->end_bulk_ops;
 
     $c->log->debug(sprintf 'New size: %d', $m->size);
@@ -834,11 +839,39 @@ sub bulk :Local {
     my $rm  = $req->method;
 
     if ($rm eq 'GET' or $rm eq 'HEAD') {
+
+        my $doc = $self->_doc(
+            title => 'Load a (Turtle) data file',
+            uri   => $req->uri,
+            content => {
+                %FORMBP, enctype => 'multipart/form-data', -content => [
+                    { -name => 'input', type => 'file', name => 'data' },
+                    { -name => 'button', -content => 'Upload' },
+                ] },
+        );
+
+        $c->res->body($doc);
         return;
     }
     elsif ($rm eq 'POST') {
+        my $up = $req->upload('data');
+
+        my $m = $c->model('RDF');
+        my $g = $m->graph;
+        #my $fh = $up->decoded_fh(':raw');
+        #$c->log->debug($up->charset);
+        #$fh->binmode(':raw');
+
+        my $p = RDF::Trine::Parser->new('turtle');
+        $p->parse_into_model
+            (undef, $up->decoded_slurp(':raw'), $m);
+
+        $c->res->redirect('/');
+        return;
     }
     else {
+        $c->res->status(405);
+        $c->res->body('Method not allowed');
     }
 }
 
@@ -862,13 +895,15 @@ sub feed :Local {
 
     my $ns = $self->ns;
     my $m  = $c->model('RDF');
+    my $g  = $m->graph;
 
     # specify relevant types
     my @t  = map { $ns->ibis->uri($_) } qw(Issue Position Argument);
 
     # get unique subjects
     my %s = map { $_->uri_value => { id => $_ } }
-        grep { $_->is_resource } map { $m->subjects($ns->rdf->type, $_) } @t;
+        grep { $_->is_resource }
+            map { $m->subjects($ns->rdf->type, $_) } @t;
 
     # this is dumb because it does all the work before sending the
     # cache response but whatever
@@ -954,7 +989,8 @@ sub feed :Local {
 sub _get_concept :Private {
     my ($self, $c, $subject) = @_;
 
-    my $m = $c->model('RDF');
+    my $m  = $c->model('RDF');
+    my $g  = $m->graph;
     my $ns = $self->ns;
 
     my ($label) = $m->objects($subject, $ns->skos->prefLabel);
@@ -1015,8 +1051,9 @@ my @SKOS_SEQ = (
 sub _do_concept_neighbours {
     my ($self, $c, $subject) = @_;
 
-    my $bs   = $c->req->base;
+    my $bs  = $c->req->base;
     my $m   = $c->model('RDF');
+    my $g   = $m->graph;
     my $ns  = $self->ns;
     my $inv = $self->inverse;
     my $sv  = $subject->uri_value;
@@ -1158,6 +1195,7 @@ sub _do_concept_connect_form {
     my ($self, $c, $subject) = @_;
     my $ns = $self->ns;
     my $m  = $c->model('RDF');
+    my $g  = $m->graph;
 
     my %c;
     for my $c ($m->subjects($ns->rdf->type, $ns->skos->Concept)) {
@@ -1188,6 +1226,7 @@ sub _get_collection :Private {
     my $uri = $c->req->uri;
 
     my $m = $c->model('RDF');
+    my $g = $m->graph;
 
     #warn $subject;
     my $rns = $self->ns;
@@ -1229,6 +1268,7 @@ sub _get_ibis :Private {
     my $su  = URI->new_abs($uu->uuid, $uri);
 
     my $m = $c->model('RDF');
+    my $g = $m->graph;
 
     #warn $subject;
     my $rns = $self->ns;
@@ -1317,13 +1357,13 @@ sub _post_uuid {
 
     my $rns = $self->ns;
     my $m = $c->model('RDF');
-    #likmy $g = $m->graph;
+    my $g = $m->graph;
 
     my $kv = RDF::KV->new(
         #subject    => 'http://deuce:5000/' . $uuid->uuid,
         subject    => $c->req->base . $uuid->uuid,
         namespaces => $ns,
-        #graph      => $g,
+        #graph      => $g->value,
         callback   => \&_to_urn,
    );
 

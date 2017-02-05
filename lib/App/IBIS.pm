@@ -26,8 +26,8 @@ use Catalyst qw/
     Static::Simple
     StackTrace
 /;
-#    +CatalystX::Profile
-#/;
+#     +CatalystX::Profile
+# /;
 
 extends 'Catalyst';
 
@@ -126,6 +126,7 @@ sub label_for {
     return unless $s->is_resource or $s->is_blank;
 
     my $m  = $c->model('RDF');
+    my $g  = $m->graph;
     my $ns = $m->ns;
 
     # get the sequence of candidates
