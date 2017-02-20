@@ -1,0 +1,10 @@
+#!/bin/sh
+
+SLUG=font-awesome-4.7.0
+TARGET=/tmp/durrr
+ZIP=`mktemp -u`
+curl -o $ZIP http://fontawesome.io/assets/$SLUG.zip
+unzip -d $TARGET -j $ZIP $SLUG/css/font-awesome.css
+unzip -d $TARGET/font-awesome -j $ZIP $SLUG/fonts/*
+rm $ZIP
+sed -i 's!\.\./fonts/!/asset/font-awesome/!g' $TARGET/font-awesome.css 

@@ -297,7 +297,10 @@ sub plot {
         my $glen = $nodes * $gap;
         my $rest = $arcr - $dsumr;
 
-        if ($rest > 2 * $glen) {
+        if (!$nodes) {
+            # noop to eliminate division by zero
+        }
+        elsif ($rest > 2 * $glen) {
             # the pad length is the same as degree length
             $dlen = $plen = ($arcr - $glen) / ($nodes + $dsum);
 
@@ -535,13 +538,13 @@ sub plot {
             my $node = $p{nodes}{$s};
             if ($node->{stubs} and $node->{stubs}{$type}
                     and keys %{$node->{stubs}{$type}}) {
-                warn "fwd stub $s $type";
-                warn Data::Dumper::Dumper($node->{stubs}{$type});
+                #warn "fwd stub $s $type";
+                #warn Data::Dumper::Dumper($node->{stubs}{$type});
             }
             if ($node->{rstubs} and $node->{rstubs}{$type}
                     and keys %{$node->{rstubs}{$type}}) {
-                warn "rev stub $s $type";
-                warn Data::Dumper::Dumper($node->{rstubs}{$type});
+                #warn "rev stub $s $type";
+                #warn Data::Dumper::Dumper($node->{rstubs}{$type});
             }
 
             push @lines, { -name => 'g', -content => \@g };

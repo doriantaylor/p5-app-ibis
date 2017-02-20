@@ -31,13 +31,20 @@ use Catalyst qw/
 
 extends 'Catalyst';
 
-#use Graphics::ColorObject ();
-use Convert::Color  ();
-use HTTP::Negotiate ();
+use Convert::Color   ();
+use HTTP::Negotiate  ();
+use Unicode::Collate ();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 my (@LABELS, @ALT_LAB);
+
+# XXX maybe rig this up so we can configure it via the config file?
+has collator => (
+    is      => 'ro',
+    isa     => 'Unicode::Collate',
+    default => sub { Unicode::Collate->new },
+);
 
 after setup_finalize => sub {
     my $app = shift;
@@ -72,6 +79,8 @@ after setup_finalize => sub {
 
     my $m  = $app->model('RDF');
     my $ns = $m->ns;
+
+    $app->log->debug('Contexts: ', $m->get_contexts);
 
     @LABELS  = grep { defined $_ } map { $ns->uri($_) }
         qw(skos:prefLabel rdfs:label foaf:name dct:title

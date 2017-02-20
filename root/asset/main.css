@@ -90,6 +90,7 @@ form#toggle-which label {
    margin: 0 2%;
    font-size: 80%;
    font-weight: bold;
+   text-align: center;
 }
 
 fieldset.interaction {
@@ -228,7 +229,7 @@ object.other.baby.hiveplot {
    transform: rotate(-45deg);
 }
 
-aside.predicate {
+aside.predicate, td.predicate {
    display: block;
    background-color: black;
    padding: 0.5em;
@@ -236,21 +237,25 @@ aside.predicate {
    border-radius: 1em;
    margin-bottom: 0.5em;
 }
+td.predicate {
+   vertical-align: top;
+   display: table-cell;
+}
 
-dl.predicates, aside.predicate {
+dl.predicates, aside.predicate, td.predicate {
    font-size: 80%;
 }
 
-aside.predicate h3 {
+aside.predicate h3, td.predicate h3 {
    margin: 0 0 0.5em 0.25em;
 }
 
-aside.predicate ul {
+aside.predicate ul, td.predicate ul {
    margin: 0;
    padding-left: 1em;
 }
 
-aside.predicate li {
+aside.predicate li, td.predicate li {
    list-style-type: none;
 }
 
@@ -258,10 +263,17 @@ dt {
    font-weight: bold;
 }
 
-dd, aside.predicate li {
+dd, aside.predicate li, td.predicate li {
    margin-left: 0.5em;
    padding: 0.2em;
    margin-bottom: 0.5em;
+}
+
+aside.predicate.link ul li a {
+   display: inline-block;
+   max-width: 80%;
+   overflow: hidden;
+   text-overflow: ellipsis;
 }
 
 *[property='rdfs:label'], h3.label {
@@ -395,7 +407,7 @@ textarea.heading, textarea.description {
    resize: none;
    overflow: visible;
    height: 5em;
-   white-space: pre-line;
+   white-space: pre-wrap;
 }
 
 aside.collection {
@@ -429,9 +441,10 @@ article {
    overflow-y: auto;
 }
 
+/*
 article h1 {
    padding-left: 2.5em;
-}
+}*/
 
 body[typeof~='ibis:Issue'] article {
    background-color: #443333;
@@ -460,4 +473,132 @@ button.update {
 hr.separator {
    border: none;
    margin: 1em;
+}
+
+section.self {
+   position: absolute;
+   top: 1em;
+   left: 1em;
+   right: 1em;
+}
+
+section.self form.types {
+   position: absolute;
+   /*
+   top: 0.25em;
+   left: 0.25em;*/
+   width: 2.25em;
+}
+
+section.self form.types button {
+   -moz-border-radius: 0.25em;
+   -webkit-border-radius: 0.25em;
+   border-radius: 0.25em;
+   height: 1.5em;
+}
+
+section.self h1 {
+   margin: 0;
+   height: 4em;
+   font-size: 133.3%;
+}
+
+section.self form.description {
+   position: absolute;
+   /*top: 0.25em;*/
+   top: 0;
+   left: 2.25em;
+   right: 0.25em;
+}
+
+section.self form.description textarea {
+   box-sizing: border-box;
+   padding-right: 2.5em;
+   height: 4em;
+}
+
+section.self form.description button {
+   position: absolute;
+   top: 0;
+   right: 0;
+   height: 4em;
+   width: 2em;
+   -moz-border-radius: 0.25em;
+   -webkit-border-radius: 0.25em;
+   border-radius: 0.25em;
+}
+
+section.self aside.predicate {
+   height: 6em;
+   position: absolute;
+}
+
+section.self aside.predicate.concept {
+   top: 7.5em;
+   left: 0;
+   width: 40%;
+   /*right: 26.5em;*/
+}
+
+section.self aside.predicate ul {
+   overflow-y: auto;
+   height: 3.33em;
+}
+
+section.self aside.predicate.link {
+   top: 7.5em;
+   right: 0;
+   width: 53.5%;
+   /*left: 20em;*/
+}
+
+section.self aside.predicate li input, section.self aside.predicate li select {
+   width: 78%;
+   display: block;
+   float: left;
+   height: 100%;
+   line-height: inherit;
+}
+section.self aside.predicate li button {
+   width: 18%;
+   display: block;
+   float: right;
+   height: 100%;
+   line-height: inherit;
+   margin: 0;
+}
+
+section.relations {
+   position: absolute;
+   top: 13em;
+   bottom: 15em;
+   overflow-y: auto;
+   border-radius: 0.8em;
+   -moz-border-radius: 0.8em;
+   -webkit-border-radius: 0.8em;
+   /*padding-right: 1em; */
+   left: 1em;
+   right: 1em;
+}
+
+section.edit {
+   position: absolute;
+   bottom: 0;
+   left: 1em;
+   right: 1em;
+   height: 15em;
+}
+
+span.date {
+   position: absolute;
+   bottom: 0;
+   right: 5em;
+   font-size: 66.6%;
+   opacity: 0.3;
+}
+
+/* XXX remove when home page is designed */
+body > section > ul {
+   height: 10em;
+   overflow-y: auto;
 }

@@ -31,6 +31,7 @@ requires 'DateTime::Format::W3CDTF' => '0';
 requires 'Role::Markup::XML'        => '0.03';
 requires 'HTTP::Negotiate'          => '6.00';
 requires 'Convert::Color::HUSL'     => '1.000';
+requires 'Unicode::Collate'         => '1.19';
 
 test_requires 'Test::More' => '0.88';
 catalyst;

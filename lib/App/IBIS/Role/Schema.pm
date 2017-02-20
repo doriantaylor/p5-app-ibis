@@ -103,12 +103,12 @@ my %MAP = (
         issue => [
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
-            [$NS->ibis->replaces,                  'Replaces'],
-            [$NS->ibis->uri('replaced-by'),     'Replaced by'],
             [$NS->ibis->suggests,                  'Suggests'],
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
             [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
+            [$NS->ibis->replaces,                  'Replaces'],
+            [$NS->ibis->uri('replaced-by'),     'Replaced by'],
         ],
         position => [
             [$NS->ibis->questions,                'Questions'],
@@ -124,9 +124,9 @@ my %MAP = (
     },
     position => {
         issue => [
+            [$NS->ibis->uri('responds-to'),     'Responds to'],
             [$NS->ibis->suggests,                  'Suggests'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
-            [$NS->ibis->uri('responds-to'),     'Responds to'],
         ],
         position => [
             [$NS->ibis->generalizes,            'Generalizes'],
@@ -192,22 +192,26 @@ my %PREFER = map {
         [qw(opposed-by opposes)],
     );
 
-my @SEQ;
+# explicitly set the sequence
+my @SEQ = map { $NS->ibis->uri($_) }
+    qw(supports opposes responds-to response supported-by opposed-by
+       suggests suggested-by questions questioned-by generalizes specializes
+       replaces replaced-by);
 
-    {
-        my %seq;
-        my @each = map {
-            $NS->ibis->uri($_)->value } qw(Issue Position Argument);
-        my $i = 1;
-        for my $k1 (@each) {
-            for my $k2 (@each) {
-                for my $v (@{$MAP{$k1}{$k2}}) {
-                    $seq{$v->[0]->value} ||= $i++;
-                }
-            }
-        }
-        @SEQ = sort { $seq{$a} <=> $seq{$b} } keys %seq;
-    }
+# do {
+#     my %seq;
+#     my @each = map {
+#         $NS->ibis->uri($_)->value } qw(Issue Position Argument);
+#     my $i = 1;
+#     for my $k1 (@each) {
+#         for my $k2 (@each) {
+#             for my $v (@{$MAP{$k1}{$k2}}) {
+#                 $seq{$v->[0]->value} ||= $i++;
+#             }
+#         }
+#     }
+#     @SEQ = sort { $seq{$a} <=> $seq{$b} } keys %seq;
+# };
 
 
 # this is our equivalent of class data
