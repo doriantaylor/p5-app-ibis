@@ -222,7 +222,7 @@ sub plot {
             delete $stubs->{$t}{$o};
         }
         my $rstubs = $p{nodes}{$o}{rstubs};
-        # warn Data::Dumper::Dumper($rstubs);
+        #warn Data::Dumper::Dumper($rstubs);
         if ($rstubs and $rstubs->{$t}) {
             delete $rstubs->{$t}{$s};
         }
@@ -230,12 +230,15 @@ sub plot {
 
     # fix degrees for stubs
     for my $node (values %{$p{nodes}}) {
-        my %stubs  = (%{$node->{stubs} || {}});
+        my %stubs  = (%{$node->{stubs}  || {}});
         my %rstubs = (%{$node->{rstubs} || {}});
         my $weight = List::Util::sum(0, map { scalar keys %$_ } values %stubs);
         $weight += List::Util::sum(0, map { scalar keys %$_ } values %rstubs);
         $node->{degree} += $weight;
+
+        #warn Data::Dumper::Dumper(\%stubs, \%rstubs);
     }
+
 
     # XXX make this a sort parameter
     # my @order = qw(Issue Argument Position);
@@ -409,7 +412,11 @@ sub plot {
         my $x = $edges{$s};
         next unless defined $x;
 
+        my $src = $p{nodes}{$s};
+
         #warn $s;
+
+        # XXX yo ass these are not types these are predicates
 
         # sort types by source clustering
         my %t;
@@ -419,82 +426,54 @@ sub plot {
                 $t{$t} += scalar @{$y->{$o}};
             }
         }
+        # also do the stubs
+        for my $t (keys %{$src->{stubs} || {}}) {
+            $t{$t} += scalar keys %{$src->{stubs}{$t}};
+        }
+        for my $t (keys %{$src->{rstubs} || {}}) {
+            $t{$t} += scalar keys %{$src->{rstubs}{$t}};
+        }
 
-
-        for my $type (sort {$t{$b} <=> $t{$a}
-                                or $es{$a} <=> $es{$b} } keys %t) {
+        for my $pred (sort { $t{$b} <=> $t{$a}
+                                 or $es{$a} <=> $es{$b} } keys %t) {
             my @g;
-            my $y = $x->{$type};
+            my $objs = $x->{$pred};
             # XXX sort this more intelligently
-            for my $o (grep { $y->{$_} } reverse @seq) {
-                for my $edge (@{$y->{$o}}) {
-                    my $src = $p{nodes}{$s};
+            for my $o (reverse @seq) {
+                next unless $objs->{$o};
+                for my $edge (@{$objs->{$o}}) {
+                    #my $src = $p{nodes}{$s};
                     my $trg = $p{nodes}{$o};
 
-                    my $w = $dlen * ($edge->{weight} || 1);
 
-                    my $soff = $src->{soff}; #+ $dlen/2;
-                    my $eoff = $trg->{eoff}; #- $dlen/2;
+                    # point-generating functions
+                    my $points;
 
-                    my $sx = cos($soff);
-                    my $sy = sin($soff);
-
-                    my $tx = cos($eoff);
-                    my $ty = sin($eoff);
-
-                    my $pf = join(' ',
-                                  'M%g,%g',               # moveto
-                                  'Q%g,%g %g,%g',         # q-curve over
-                                  'L%g,%g %g,%g',         # arrowhead
-                                  'Q%g,%g %g,%g',         # q-curve back
-                                  'A%g,%g, %g 0,0 %g,%g', # arc
-                                  'z'                     # close path
-                              );
-
-                    my $shortr = $r-$w*sin(pi/4)*$r; # 45 degree arrowhead
-                    my $ddeg   = -rad2deg($w);
-                    # first point
-                    my $th = 0; #$self->thickness;
-                    my $x1 = $sx*($r + $th);
-                    my $y1 = $sy*($r + $th);
-
-                    # central point 1
-                    my $cp = ($eoff - $soff)/2;
-                    my $x2 = cos($soff + $cp) * $w;
-                    my $y2 = sin($soff + $cp) * $w;
-
-                    # q-curve stop 1
-                    my $x3 = $tx * $shortr;
-                    my $y3 = $ty * $shortr;
-
-                    # arrowhead
-                    my $x4 = cos($eoff-$w/2) * $r;
-                    my $y4 = sin($eoff-$w/2) * $r;
-                    my $x5 = cos($eoff-$w) * $shortr;
-                    my $y5 = sin($eoff-$w) * $shortr;
-
-                    # central point 2
-                    my $x6 = cos($eoff - $cp) * $dlen;
-                    my $y6 = sin($eoff - $cp) * $dlen;
-
-                    # q-curve stop 2
-                    my $x7 = cos($soff + $w) * ($r + $th);
-                    my $y7 = sin($soff + $w) * ($r + $th);
-
-                    my $points = sprintf
-                        ($pf,                     # format string
-                         $x1, $y1,                # moveto
-                         $x2, $y2, $x3, $y3,      # q-curve over
-                         $x4, $y4, $x5, $y5,      # arrowhead
-                         $x6, $y6, $x7, $y7,      # q-curve back
-                         ($r + $th) x 2, $ddeg, $x1, $y1, # arc
-                     );
+                    if ($edge->{symmetric}) {
+                        $points = $self->_symmetric_points(
+                            length => $dlen,
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            start  => $src->{soff},
+                            end    => $trg->{eoff},
+                        );
+                    }
+                    else {
+                        $points = $self->_directed_points(
+                            length => $dlen,
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            start  => $src->{soff},
+                            end    => $trg->{eoff},
+                        );
+                    }
 
                     my @css;
                     push @css, 'subject' if $p{active}
                         and ($p{active}{$s} or $p{active}{$o});
 
-                    my %p = (
+                    # wat
+                    my %elem = (
                         -name    => 'path',
                         d        => $points,
                         #fill     => 'black',
@@ -505,46 +484,42 @@ sub plot {
                         resource => $o,
                     );
 
-                    if (my $rel = $self->ns->abbreviate($type)) {
-                        $p{rel} = $rel;
+                    if (my $rel = $self->ns->abbreviate($pred)) {
+                        $elem{rel} = $rel;
                     }
                     else {
-                        #warn $type;
+                        #warn $pred;
                     }
 
-                    $p{class} = join ' ', @css if @css;
-                    $p{title} = $p{'xlink:title'} = $edge->{label}
+                    $elem{class} = join ' ', @css if @css;
+                    $elem{title} = $elem{'xlink:title'} = $edge->{label}
                         if defined $edge->{label};
 
-                    push @g, \%p;
+                    push @g, \%elem;
 
+                    # this is the arc width in radians
+                    my $w = $dlen * ($edge->{weight} || 1);
                     $src->{soff} += $w;
                     $trg->{eoff} -= $w;
-
-                    # if ($src->{stubs} and $src->{stubs}{$type}
-                    #         and keys %{$src->{stubs}{$type}}) {
-                    #     warn "fwd $type";
-                    #     warn Data::Dumper::Dumper($src->{stubs}{$type});
-                    # }
-                    # if ($trg->{rstubs} and $trg->{rstubs}{$type}
-                    #         and keys %{$trg->{rstubs}{$type}}) {
-                    #     warn "rev $type";
-                    #     warn Data::Dumper::Dumper($trg->{rstubs}{$type});
-                    # }
                 }
             }
 
             # now we do stubs
             my $node = $p{nodes}{$s};
-            if ($node->{stubs} and $node->{stubs}{$type}
-                    and keys %{$node->{stubs}{$type}}) {
-                #warn "fwd stub $s $type";
-                #warn Data::Dumper::Dumper($node->{stubs}{$type});
+            if ($node->{stubs} and $node->{stubs}{$pred}
+                    and keys %{$node->{stubs}{$pred}}) {
+
+                for my $o (values %{$node->{stubs}{$pred}}) {
+                    my $trg = $p{nodes}{$o};
+                }
+
+                # warn "fwd stub $s $pred";
+                # warn Data::Dumper::Dumper($node->{stubs}{$pred});
             }
-            if ($node->{rstubs} and $node->{rstubs}{$type}
-                    and keys %{$node->{rstubs}{$type}}) {
-                #warn "rev stub $s $type";
-                #warn Data::Dumper::Dumper($node->{rstubs}{$type});
+            if ($node->{rstubs} and $node->{rstubs}{$pred}
+                    and keys %{$node->{rstubs}{$pred}}) {
+                # warn "rev stub $s $pred";
+                # warn Data::Dumper::Dumper($node->{rstubs}{$pred});
             }
 
             push @lines, { -name => 'g', -content => \@g };
@@ -580,6 +555,164 @@ sub plot {
     $self->_XML(doc => $doc, spec => \@spec);
 
     $doc;
+}
+
+# generate path points
+
+sub _directed_points {
+    my ($self, %p) = @_;
+
+    my $dlen = $p{length} || 1;
+    my $w    = $dlen * ($p{weight} || 1);
+    my $r    = $p{radius} || 1;
+    my $soff = $p{start}  || 0;
+    my $eoff = $p{end}    || $p{start} + $w;
+
+
+    my $sx = cos($soff);
+    my $sy = sin($soff);
+
+    my $tx = cos($eoff);
+    my $ty = sin($eoff);
+
+    my $pf = join(' ',
+                  'M%g,%g',               # moveto
+                  'Q%g,%g %g,%g',         # q-curve over
+                  'L%g,%g %g,%g',         # arrowhead
+                  'Q%g,%g %g,%g',         # q-curve back
+                  'A%g,%g, %g 0,0 %g,%g', # arc
+                  'z'                     # close path
+              );
+
+    my $shortr = $r-$w*sin(pi/4)*$r; # 45 degree arrowhead
+    my $ddeg   = -rad2deg($w);
+
+    # first point
+    my $th = 0;                 #$self->thickness;
+    my $x1 = $sx*($r + $th);
+    my $y1 = $sy*($r + $th);
+
+    # central point 1
+    my $cp = ($eoff - $soff)/2;
+    my $x2 = cos($soff + $cp) * $w;
+    my $y2 = sin($soff + $cp) * $w;
+
+    # q-curve stop 1
+    my $x3 = $tx * $shortr;
+    my $y3 = $ty * $shortr;
+
+    # arrowhead
+    my $x4 = cos($eoff-$w/2) * $r;
+    my $y4 = sin($eoff-$w/2) * $r;
+    my $x5 = cos($eoff-$w) * $shortr;
+    my $y5 = sin($eoff-$w) * $shortr;
+
+    # central point 2
+    my $x6 = cos($eoff - $cp) * $dlen;
+    my $y6 = sin($eoff - $cp) * $dlen;
+
+    # q-curve stop 2
+    my $x7 = cos($soff + $w) * ($r + $th);
+    my $y7 = sin($soff + $w) * ($r + $th);
+
+    sprintf(
+        $pf,                                # format string
+        $x1, $y1,                           # moveto
+        $x2, $y2, $x3, $y3,                 # q-curve over
+        $x4, $y4, $x5, $y5,                 # arrowhead
+        $x6, $y6, $x7, $y7,                 # q-curve back
+        ($r + $th) x 2, $ddeg, $x1, $y1,    # arc
+    );
+}
+
+sub _symmetric_points {
+    my ($self, %p) = @_;
+
+    my $dlen = $p{length} || 1;
+    my $w    = $dlen * ($p{weight} || 1);
+    my $r    = $p{radius} || 1;
+    my $soff = $p{start}  || 0;
+    my $eoff = $p{end}    || $w;
+
+    my $sx = cos($soff);
+    my $sy = sin($soff);
+
+    my $tx = cos($eoff);
+    my $ty = sin($eoff);
+
+    my $pf = join(' ',
+                  'M%g,%g',               # moveto
+                  'Q%g,%g %g,%g',         # q-curve over
+                  'A%g,%g, %g 0,0 %g,%g', # arc 1
+                  'Q%g,%g %g,%g',         # q-curve back
+                  'A%g,%g, %g 0,0 %g,%g', # arc 2
+                  'z'                     # close path
+              );
+
+    my $ddeg   = -rad2deg($w);
+
+    # first point
+    my $th = 0;                 #$self->thickness;
+    my $x1 = $sx * ($r + $th);
+    my $y1 = $sy * ($r + $th);
+
+    # central point 1
+    my $cp = ($eoff - $soff)/2;
+    my $x2 = cos($soff + $cp) * $w;
+    my $y2 = sin($soff + $cp) * $w;
+
+    # q-curve stop 1
+    my $x3 = $tx * $r;
+    my $y3 = $ty * $r;
+
+    # arc 1
+    my $x4 = cos($eoff-$w) * $r;
+    my $y4 = sin($eoff-$w) * $r;
+
+    # central point 2
+    my $x5 = cos($eoff - $cp) * $dlen;
+    my $y5 = sin($eoff - $cp) * $dlen;
+
+    # q-curve stop 2
+    my $x6 = cos($soff + $w) * ($r + $th);
+    my $y6 = sin($soff + $w) * ($r + $th);
+
+    sprintf(
+        $pf,                                # format string
+        $x1, $y1,                           # moveto
+        $x2, $y2, $x3, $y3,                 # q-curve over
+        ($r + $th) x 2, -$ddeg, $x4, $y4,   # arc 1
+        $x5, $y5, $x6, $y6,                 # q-curve back
+        ($r + $th) x 2,  $ddeg, $x1, $y1,   # arc 2
+    );
+}
+
+sub _stub_points {
+    my ($self, %p) = @_;
+
+    my $dlen = $p{length} || 1;
+    my $w    = $dlen * ($p{weight} || 1);
+    my $r    = $p{radius} || 1;
+    my $soff = $p{start}  || 0;
+    my $eoff = $p{end}    || $w;
+
+
+    my $sx = cos($soff);
+    my $sy = sin($soff);
+}
+
+sub _reverse_stub_points {
+    my ($self, %p) = @_;
+
+    my $dlen = $p{length} || 1;
+    my $w    = $dlen * ($p{weight} || 1);
+    my $r    = $p{radius} || 1;
+    my $soff = $p{start}  || 0;
+    my $eoff = $p{end}    || $w;
+
+
+    my $sx = cos($soff);
+    my $sy = sin($soff);
 }
 
 __PACKAGE__->meta->make_immutable;

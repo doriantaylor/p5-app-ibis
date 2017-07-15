@@ -16,7 +16,6 @@ inc/Module/Install/Scripts.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/App/IBIS.pm
-lib/App/IBIS/Base/Controller.pm
 lib/App/IBIS/Circos.pm
 lib/App/IBIS/Controller/Root.pm
 lib/App/IBIS/HivePlot.pm
@@ -46,6 +45,7 @@ script/app_ibis_fastcgi.pl
 script/app_ibis_server.pl
 script/app_ibis_test.pl
 script/get-jquery
+script/get-fa
 t/01app.t
 t/02pod.t
 t/03podcoverage.t

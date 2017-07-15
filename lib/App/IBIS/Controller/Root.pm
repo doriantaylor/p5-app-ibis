@@ -30,8 +30,8 @@ use List::MoreUtils qw(any);
 use App::IBIS::Circos;
 
 my $UUID_RE  = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
-my $UUID_URN = qr/^urn:uuid:
-                  ([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})$/ix;
+my $UUID_URN = qr/^urn:uuid:([0-9a-f]{8}(?:-[0-9a-f]{4}){4}[0-9a-f]{8})$/i;
+
 my %FORMBP = (
     -name            => 'form',
     method           => 'POST',

@@ -269,11 +269,14 @@ dd, aside.predicate li, td.predicate li {
    margin-bottom: 0.5em;
 }
 
-aside.predicate.link ul li a {
+/* uhh this is a terrible designation */
+
+aside.predicate.link ul li a, aside.predicate.concept ul li a  {
    display: inline-block;
    max-width: 80%;
    overflow: hidden;
    text-overflow: ellipsis;
+   white-space: nowrap;
 }
 
 *[property='rdfs:label'], h3.label {

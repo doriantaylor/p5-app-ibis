@@ -15,6 +15,7 @@ requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Static::Simple';
 requires 'Catalyst::Action::RenderView';
 requires 'Moose';
+requires 'MooseX::Params::Validate';
 requires 'namespace::autoclean';
 
 # This should reflect the config file format you've chosen
@@ -27,7 +28,8 @@ requires 'Data::UUID::NCName'       => '0.03';
 requires 'RDF::Trine'               => '1.007';
 requires 'RDF::KV'                  => '0.04';
 requires 'URI::NamespaceMap'        => '0.06';
-requires 'DateTime::Format::W3CDTF' => '0';
+requires 'URI::urn::uuid'           => '0.03';
+requires 'DateTime::Format::W3CDTF' => '0.06';
 requires 'Role::Markup::XML'        => '0.03';
 requires 'HTTP::Negotiate'          => '6.00';
 requires 'Convert::Color::HUSL'     => '1.000';
