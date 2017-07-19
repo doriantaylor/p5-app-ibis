@@ -526,6 +526,12 @@ sub plot {
         }
     }
 
+    $self->_make_doc(\@paths, \@lines);
+}
+
+sub _make_doc {
+    my ($self, $paths, $lines) = @_;
+
     # something in here causes a syntax error
     my %ns = (map {
         ("xmlns:$_" => $self->ns->namespace_uri($_)->as_string)
@@ -546,8 +552,8 @@ sub plot {
             { -name => 'g',
               transform => sprintf('translate(%g, %g)', ($xl) x 2),
               -content => [
-                  { -name => 'g', id => 'edges', -content => \@lines },
-                  { -name => 'g', id => 'nodes', -content => \@paths } ] } ] };
+                  { -name => 'g', id => 'edges', -content => $lines },
+                  { -name => 'g', id => 'nodes', -content => $paths } ] } ] };
 
     unshift @spec, { -pi => 'xml-stylesheet', type => 'text/css',
                   href => $self->css->as_string } if $self->css;
@@ -678,12 +684,12 @@ sub _symmetric_points {
     my $y6 = sin($soff + $w) * ($r + $th);
 
     sprintf(
-        $pf,                                # format string
-        $x1, $y1,                           # moveto
-        $x2, $y2, $x3, $y3,                 # q-curve over
-        ($r + $th) x 2, -$ddeg, $x4, $y4,   # arc 1
-        $x5, $y5, $x6, $y6,                 # q-curve back
-        ($r + $th) x 2,  $ddeg, $x1, $y1,   # arc 2
+        $pf,                          # format string
+        $x1, $y1,                     # moveto
+        $x2, $y2, $x3, $y3,           # q-curve over
+        ($r + $th) x 2, 0, $x4, $y4,  # arc 1
+        $x5, $y5, $x6, $y6,           # q-curve back
+        ($r + $th) x 2,  0, $x1, $y1, # arc 2
     );
 }
 
@@ -693,12 +699,40 @@ sub _stub_points {
     my $dlen = $p{length} || 1;
     my $w    = $dlen * ($p{weight} || 1);
     my $r    = $p{radius} || 1;
-    my $soff = $p{start}  || 0;
-    my $eoff = $p{end}    || $w;
+    my $soff = $p{start}  || $p{end} - $w;
 
+    my $pf = join(' ',
+                  'M%g,%g',               # moveto
+                  'A%g,%g, %g 0,0 %g,%g', # arc 1
+                  'A%g,%g, %g 0,0 %g,%g', # arc 2
+                  'z'                     # close path
+              );
 
     my $sx = cos($soff);
     my $sy = sin($soff);
+
+    my $tx = cos($soff + $w);
+    my $ty = sin($soff + $w);
+
+    #my $ddeg   = -rad2deg($w);
+
+    # first point
+    my $th = 0;                 #$self->thickness;
+    my $x1 = $sx * ($r + $th);
+    my $y1 = $sy * ($r + $th);
+
+    # second point
+    my $x2 = $tx * ($r + $th);
+    my $y2 = $ty * ($r + $th);
+
+    # degrees
+
+    sprintf(
+        $pf,
+        $x1, $y1,                         # moveto
+        ($w) x 2, 0, $x2, $y2,       # arc 1
+        ($r + $th) x 2, 0, $x1, $y1, # arc 2
+    );
 }
 
 sub _reverse_stub_points {
@@ -707,12 +741,860 @@ sub _reverse_stub_points {
     my $dlen = $p{length} || 1;
     my $w    = $dlen * ($p{weight} || 1);
     my $r    = $p{radius} || 1;
-    my $soff = $p{start}  || 0;
-    my $eoff = $p{end}    || $w;
+    my $soff = $p{start}  || $p{end} - $w;
+    my $eoff = $p{end}    || $p{start} + $w;
 
+    my $pf = join(' ',
+                  'M%g,%g',               # moveto
+                  'L%g,%g %g,%g',         # arrowhead
+                  'A%g,%g, %g 0,1 %g,%g', # arc
+                  'z'                     # close path
+              );
 
     my $sx = cos($soff);
     my $sy = sin($soff);
+
+    my $tx = cos($eoff);
+    my $ty = sin($eoff);
+
+    my $shortr = $r-$w*sin(pi/4)*$r; # 45 degree arrowhead
+
+    # first point
+    my $th = 0;                 #$self->thickness;
+    my $x1 = $sx * $shortr;
+    my $y1 = $sy * $shortr;
+
+    # arrowhead point
+    my $x2 = cos($eoff - $w/2) * ($r + $th);
+    my $y2 = sin($eoff - $w/2) * ($r + $th);
+
+    # third point
+    my $x3 = $tx * $shortr;
+    my $y3 = $ty * $shortr;
+
+    sprintf(
+        $pf,
+        $x1, $y1,              # moveto
+        $x2, $y2, $x3, $y3,    # arrowhead
+        ($w) x 2, 0, $x1, $y1, # arc
+    );
+}
+
+sub _node_cmp_func {
+    my ($self, $nodes) = @_;
+    my $nseq = $self->node_seq;
+    my %tseq = map +($nseq->[$_] => $_), (0..$#$nseq);
+
+    return sub {
+        my ($l, $r) = @{$nodes}{@_[0,1]};
+        my $lt = defined $l->{type} ? $l->{type} : '';
+        my $rt = defined $r->{type} ? $r->{type} : '';
+        return (($tseq{$lt} || 0) <=> ($tseq{$rt} || 0))
+            || (($l->{date} || '') cmp ($r->{date} || ''))
+                || ($l->{label} cmp $r->{label});
+    };
+}
+
+sub _make_node_seq {
+    my ($self, $nodes) = @_;
+
+    my $cmp = $self->_node_cmp_func($nodes);
+
+    sort { $cmp->($a, $b) } keys %$nodes;
+}
+
+=head2 plot
+
+well i suppose this is one way to settle it
+
+=cut
+
+sub _nested_hash_get {
+    my ($hash, @stack) = @_;
+    return unless defined $hash;
+    Carp::croak("$hash not a HASH") unless ref $hash eq 'HASH';
+    Carp::croak('need at least one element in the stack') unless @stack;
+
+    my $k = shift @stack;
+    my $x = $hash->{$k};
+
+    return unless defined $x;
+    return $x unless @stack;
+
+    _nested_hash_get($x, @stack);
+}
+
+sub _nested_hash_put {
+    my ($hash, @stack) = @_;
+    return unless defined $hash;
+    Carp::croak("$hash not a HASH") unless ref $hash eq 'HASH';
+    Carp::croak('need at least two elements in the stack') unless @stack > 1;
+
+    my ($k, $v) = splice @stack, 0, 2;
+    return $hash->{$k} = $v unless @stack;
+
+    my $x = $hash->{$k} ||= {};
+    _nested_hash_put($x, $v, @stack);
+}
+
+sub plot2 {
+    my ($self, %p) = MooseX::Params::Validate::validated_hash(
+        \@_,
+        nodes  => { isa => HashRef  },
+        edges  => { isa => ArrayRef },
+        active => { isa => HashRef, coerce => 1, optional => 1 },
+    );
+
+    # generate intermediate data structures
+
+    my (%nodes, %edges, %ostubs, %istubs, %oedges, %iedges);
+
+    # start with the nodes
+    while (my ($k, $v) = each %{$p{nodes}}) {
+        # copy
+        my $x = $nodes{$k} = {%$v};
+
+        # duplicate the key into the structure if it isn't already there
+        $x->{id} = $k unless defined $x->{id};
+
+        # add a degree element
+        $x->{degree} ||= 0;
+    }
+
+    # then proceed to the edges
+    for my $edge (@{$p{edges}}) {
+        my ($s, $o) = @{$edge}{qw(source target)};
+
+        # skip over self-references
+        next if $s eq $o;
+
+        # edge (predicate) type (not to be confused with node type)
+        my $p = $edge->{type};
+        $p = '' unless defined $p;
+
+        # duplicate the edge with unit weight
+        my %e = (weight => 1, %$edge);
+
+        if ($nodes{$s}) {
+            if (my $ops = _nested_hash_get(\%oedges, $o, $p, $s)) {
+                my @x = ref $ops eq 'ARRAY' ? @$ops : ($ops);
+
+                # declare these symmetric if they aren't already
+                map { $_->{symmetric} ||= 1 } @x;
+                next;
+            }
+
+            my $oe = $oedges{$s} ||= {};
+            $oe = $oe->{$p}      ||= {};
+            unless ($oe->{$o}) {
+                $oe->{$o} = \%e;
+
+                # increment the degree(-ish measure as it is weighted)
+                $nodes{$s}{degree} += $e{weight};
+
+                # tally up a set of outbound counts
+                my $oc = $nodes{$s}{ocounts} ||= {};
+                $oc->{$p}++;
+
+                # do the same for the other side if present
+                if ($nodes{$o}) {
+                    my $ie = $iedges{$o} ||= {};
+                    $ie = $ie->{$p}      ||= {};
+
+                    unless ($ie->{$s}) {
+                        $ie->{$s} = \%e;
+                        $nodes{$o}{degree} += $e{weight};
+                        my $ic = $nodes{$o}{icounts} ||= {};
+                        $ic->{$p}++;
+                    }
+                }
+            }
+        }
+        elsif ($nodes{$o}) {
+            if (my $spo = _nested_hash_get(\%iedges, $s, $p, $o)) {
+                my @x = ref $spo eq 'ARRAY' ? @$spo : ($spo);
+
+                # declare these symmetric if they aren't already
+                map { $_->{symmetric} ||= 1 } @x;
+                next;
+            }
+
+            my $ie = $iedges{$o} ||= {};
+            $ie = $ie->{$p}      ||= {};
+            unless ($ie->{$s}) {
+                $ie->{$s} = \%e;
+
+                # increment the degree(-ish measure as it is weighted)
+                $nodes{$o}{degree} += $e{weight};
+
+                # tally up a set of inbound counts
+                my $ic = $nodes{$o}{icounts} ||= {};
+                $ic->{$p}++;
+            }
+        }
+        else {
+            # noop; no nodes exist for this edge
+        }
+
+    #     if ($nodes{$s}) {
+    #         if ($nodes{$o}) {
+    #             # this is a connected/directed edge
+
+    #             # remove redundant symmetric edges
+    #             #if ($edges{$o} and $edges{$o}{$p} and $edges{$o}{$p}{$s}) {
+    #             if (my $ops = _nested_hash_get(\%edges, $o, $p, $s)) {
+    #                 my @x = ref $ops eq 'ARRAY' ? @$ops : ($ops);
+
+    #                 # declare these symmetric if they aren't already
+    #                 map { $_->{symmetric} ||= 1 } @x;
+    #                 next;
+    #             }
+
+    #             # generate the structure
+
+    #             my $x = $edges{$s} ||= {};
+    #             my $y = $x->{$p}   ||= {};
+    #             unless ($y->{$o}) {
+    #                 # XXX yo why are we doing an arrayref at the end again?
+    #                 #my $z = $y->{$o}   ||= [];
+    #                 #push @$z, \%e;
+    #                 $y->{$o} ||= \%e;
+
+    #                 # increment the degree on both nodes
+    #                 $nodes{$s}{degree} += $e{weight};
+    #                 $nodes{$o}{degree} += $e{weight};
+
+    #                 # tally up a set of outbound/inbound counts for
+    #                 # each node by predicate type, so we can use that
+    #                 # information later to sort by.
+    #                 my $oc = $nodes{$s}{ocounts} ||= {};
+    #                 my $ic = $nodes{$o}{icounts} ||= {};
+    #                 $oc->{$p}++;
+    #                 $ic->{$p}++;
+    #             }
+    #         }
+    #         else {
+    #             # this is an ostub (outgoing stub)
+    #             my $x = $ostubs{$s} ||= {};
+    #             my $y = $x->{$p}    ||= {};
+    #             unless ($y->{$o}) {
+    #                 $y->{$o} ||= \%e;
+
+    #                 # increment the degree on the subject node
+    #                 $nodes{$s}{degree} += $e{weight};
+
+    #                 warn 'outbound stub ', Data::Dumper::Dumper(\%e);
+
+    #                 my $oc = $nodes{$s}{ocounts} ||= {};
+    #                 $oc->{$p}++;
+    #             }
+    #         }
+    #     }
+    #     elsif ($nodes{$o}) {
+    #         # this is an istub (incoming stub)
+    #         my $x = $istubs{$o} ||= {};
+    #         my $y = $x->{$p}    ||= {};
+    #         unless ($y->{$s}) {
+    #             $y->{$s} ||= \%e;
+
+    #             # increment the degree on the object node
+    #             $nodes{$o}{degree} += $e{weight};
+
+    #             warn 'inbound stub ', Data::Dumper::Dumper(\%e);
+
+    #             my $ic = $nodes{$o}{icounts} ||= {};
+    #             $ic->{$p}++;
+    #         }
+    #     }
+    #     else {
+    #         # noop; throw away the edge
+    #         warn sprintf 'wat %s %s', $e{source}, $e{target};
+    #     }
+
+    }
+
+    # now we create the node sequence
+
+    my @seq = $self->_make_node_seq(\%nodes);
+
+    # now we do some math
+
+    # (graph) degree sum and node count
+    my $dsum  = List::Util::sum(0, map { $nodes{$_}{degree} || 0 } @seq);
+    my $nodes = scalar @seq;
+    my $r     = $self->radius;
+    my $gap   = 2*asin($self->gap/(2*$r)); # chord -> angle in radians
+    my $gaps  = $nodes * $gap;             # total angle of all gaps
+
+    # OK we have to figure out how many degrees (of arc) is one degree
+    # (of graph).
+
+    my $arcd = fmod($self->end - $self->start, 360); # arc length in degrees
+    my $arcr = $arcd * pi/180; # arc length in radians
+    my $dlen = $gap; # set degree length to gap initally
+    my $plen = $gap; # set padding length too
+
+    my $dsumr = $dsum * $dlen; # degree sum expressed in gap angle radians
+    if ($dsumr > $arcr) {
+        # the degree sum * gap length is longer than the arc length,
+        # so do away with the idea of padding and gaps entirely.
+        $gap  = 0;
+        $plen = 0;
+        $dlen = $arcr / $dsum;
+    }
+    else {
+        # otherwise there is padding and gaps, but how big are they?
+
+        my $glen = $nodes * $gap;
+        my $rest = $arcr - $dsumr;
+
+        if (!$nodes) {
+            # noop to eliminate division by zero
+        }
+        elsif ($rest > 2 * $glen) {
+            # the pad length is the same as degree length
+            $dlen = $plen = ($arcr - $glen) / ($nodes + $dsum);
+
+            my $thick = $self->thickness / $r;
+            if ($dlen > $thick) {
+                $dlen = $thick;
+                $plen = ($arcr - $glen - ($dlen * $dsum)) / $nodes;
+            }
+        }
+        else {
+            # split the remaining length between padding and gap
+            $gap = $plen = $rest / (2 * $nodes);
+        }
+    }
+
+    # now we generate the svg for the nodes
+    my @nodes = $self->_make_nodes(
+        nodes    => \%nodes,
+        edges    => \%oedges, # $p{edges},
+        oedges   => \%oedges,
+        iedges   => \%iedges,
+        istubs   => \%istubs,
+        ostubs   => \%ostubs,
+        active   => $p{active},
+        sequence => \@seq,
+        dlen     => $dlen,
+        plen     => $plen,
+        gap      => $gap,
+    );
+
+    # now we generate the svg for the edges
+    my @edges = $self->_make_edges2(
+        nodes    => \%nodes,
+        edges    => \%oedges,
+        oedges   => \%oedges,
+        iedges   => \%iedges,
+        istubs   => \%istubs,
+        ostubs   => \%ostubs,
+        active   => $p{active},
+        sequence => \@seq,
+        dlen     => $dlen,
+    );
+
+    # now we punt out the document
+    $self->_make_doc(\@nodes, \@edges);
+}
+
+sub _edge_sort_func {
+    my ($self, $edges, $es) = @_;
+
+    my %es = $es ? %$es :
+        map { $self->edge_seq->[$_] => $_ } (0..$#{$self->edge_seq});
+
+    return sub {
+        my ($l, $r) = @_;
+        my $lk = keys %{$edges->{$l}};
+        my $rk = keys %{$edges->{$r}};
+        return ($rk <=> $lk) ||  ($es{$l} <=> $es{$r});
+    };
+}
+
+sub _edge_sort_func2 {
+    my ($self, $seq) = @_;
+
+    my %seq = map { $seq->[$_] => $_ } (0..$#$seq);
+
+    return sub {
+        my ($l, $r) = @_;
+        my $dl = defined $seq{$l};
+        my $dr = defined $seq{$r};
+        return $seq{$r} <=> $seq{$l} if $dl && $dr;
+        return -1 if $dl;
+        return  1 if $dr;
+        return  0;
+    };
+}
+
+sub _make_nodes {
+    my ($self, %p) = @_;
+
+    $p{active} ||= {};
+
+    # get neighbours
+    # my %neighbours;
+    # for my $edge (@{$p{edges}}) {
+    #     $neighbours{$edge->{source}} = 1 if $p{active}{$edge->{target}};
+    #     $neighbours{$edge->{target}} = 1 if $p{active}{$edge->{source}};
+    # }
+
+    my $r     = $self->radius;
+    my @seq   = @{$p{sequence} || []};
+    my $large = int(@seq == 1);
+    my $angle = fmod($self->start + $self->rotate, 360); # angle in DEGREES
+    my %es    = map { $self->edge_seq->[$_] => $_ } (0..$#{$self->edge_seq});
+    my $esort = $self->_edge_sort_func2(\@seq);
+
+    # come backwards through the sequence first to populate inbound
+    # link offsets as well as active neighbours. we *could* do this in
+    # the main loop except that 
+    # for my $o (reverse @seq) {
+    #     next unless my $ie = $p{iedges}{$o};
+
+    #     my $sub = $self->_edge_sort_func($ie, \%es);
+
+    #     for my $p (sort { $sub->($a, $b) } keys %$ie) {
+    #         my $iep = $ie->{$p};
+    #         my $pos = 0;
+    #         for my $s (sort { $esort->($b, $a) } keys %$iep) {
+    #             my $edge = $iep->{$s};
+    #             $edge->{eoff} = $pos--;
+    #             $pos -= $edge->{weight} || 1;
+
+    #             $neighbours{$o} = 1 if $p{active}{$s};
+    #         }
+    #     }
+    # }
+
+    my @nodes;
+    for my $s (@seq) {
+        my $rec = $p{nodes}{$s};
+        # XXX the degree-age here should be the total sweep from the params
+        my $deg = ($rec->{degree} ||= 0) * $p{dlen};
+
+        # set this so we can come back to it
+        $rec->{angle} = $angle;
+
+        my $arad = deg2rad($angle);
+        my $hgap = $p{gap}  / 2;
+        my $hpad = $p{plen} / 2;
+
+        my $start = $arad + $hgap;
+        $rec->{soff} = $start + $hpad;
+
+        my $x1 = cos($start);
+        my $y1 = sin($start);
+
+        my $end = $start + $deg + $p{plen};
+        $rec->{eoff} = $rec->{soff} + $deg;
+
+        my $x2 = cos($end);
+        my $y2 = sin($end);
+
+        my $r2 = $r + $self->thickness;
+
+        my $points = sprintf(
+            'M%g,%g A%g,%g %g %d,1 %g,%g L %g,%g A%g,%g, %g %d,0 %g,%g z',
+            $x1*$r, $y1*$r, $r, $r, $angle, $large, $x2*$r, $y2*$r,
+            $x2*$r2, $y2*$r2, $r2, $r2, $angle + $deg, $large, $x1*$r2, $y1*$r2,
+        );
+
+        # calculate offsets for edges
+        my $neighbour;
+        if (my $oe = $p{oedges}{$s}) {
+            my $sub = $self->_edge_sort_func($oe, \%es);
+            my $pos = 0;
+
+            for my $p (sort { $sub->($a, $b) } keys %$oe) {
+                my $oep = $oe->{$p};
+
+                # this one goes forwards
+                for my $o (sort { $esort->($a, $b) } keys %$oep) {
+                    my $edge = $oep->{$o};
+                    $edge->{soff} = $pos;
+                    $pos += $edge->{weight} || 1;
+
+                    # $s is a neighbour if this guy is active
+                    $neighbour = 1 if $p{active}{$o};
+                }
+            }
+        }
+
+        # aaand the same thing in reverse
+        if (my $ie = $p{iedges}{$s}) {
+            my $sub = $self->_edge_sort_func($ie, \%es);
+            my $pos = 0;
+
+            for my $p (sort { $sub->($a, $b) } keys %$ie) {
+                my $iep = $ie->{$p};
+
+                # this one goes backwards
+                for my $o (sort { $esort->($b, $a) } keys %$iep) {
+                    my $edge = $iep->{$o};
+                    $edge->{eoff} = $pos;
+                    $pos -= $edge->{weight} || 1;
+
+                    # $s is a neighbour if this guy is active
+                    $neighbour = 1 if $p{active}{$o};
+                }
+            }
+        }
+
+        # add css hooks for highlighting
+        my @css = qw(node);
+        if ($p{active}{$s}) {
+            push @css, 'subject';
+        }
+        elsif ($neighbour) {
+            push @css, 'neighbour';
+        }
+        else {
+            # noop
+        }
+
+        #warn $points;
+
+        push @nodes, {
+            -name          => 'a',
+            'target'       => '_parent',
+            'xlink:target' => '_parent',
+            'xlink:href'   => $s,
+            'xlink:title'  => $rec->{label} || '',
+            -content => {
+                -name => 'path',
+                d => $points,
+                class => join(' ', @css),
+                #stroke => 'none',
+                #fill   => sprintf('#%02x%02x%02x', ($i * 3) x 3),
+                about  => $s,
+                typeof => $self->ns->abbreviate($rec->{type}) || $rec->{type},
+            }
+        };
+
+        # increment the angle (in degrees) by padding and gap
+        $angle += rad2deg($deg + $p{plen} + $p{gap});
+    }
+
+    @nodes;
+}
+
+sub _make_edges2 {
+    my ($self, %p) = @_;
+    $p{active} ||= {};
+
+    my $r   = $self->radius;
+    my @seq = @{$p{sequence} || []};
+    my %seq = map { $seq[$_] => $_ } (0..$#seq);
+    my %es  = map { $self->edge_seq->[$_] => $_ } (0..$#{$self->edge_seq});
+
+    my $dlen  = $p{dlen};
+    my $esort = $self->_edge_sort_func2(\@seq);
+
+    my @edges;
+    for my $s (@seq) {
+        my $src = $p{nodes}{$s};
+
+        # do outbound edges
+        if (my $oe = $p{oedges}{$s}) {
+            my $sub = $self->_edge_sort_func($oe, \%es);
+            for my $p (sort { $sub->($a, $b) } keys %$oe) {
+                my $oep = $oe->{$p};
+
+                my @g;
+
+                # this one goes forwards
+                for my $o (sort { $esort->($a, $b) } keys %$oep) {
+                    my $edge = $oep->{$o};
+
+                    my $soff = $dlen * $edge->{soff} + $src->{soff};
+
+                    my $points;
+
+                    if (my $trg = $p{nodes}{$o}) {
+                        # full arc
+                        my $eoff = $dlen * $edge->{eoff} + $trg->{eoff};
+
+                        if ($edge->{symmetric}) {
+                            $points = $self->_symmetric_points(
+                                length => $dlen,
+                                weight => $edge->{weight} || 1,
+                                radius => $r,
+                                start  => $soff,
+                                end    => $eoff,
+                            );
+                        }
+                        else {
+                            $points = $self->_directed_points(
+                                length => $dlen,
+                                weight => $edge->{weight} || 1,
+                                radius => $r,
+                                start  => $soff,
+                                end    => $eoff,
+                            );
+                        }
+                    }
+                    elsif ($edge->{symmetric}) {
+                        # symmetric stub
+                        $points = $self->_stub_points(
+                            length => $dlen,
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            start  => $soff,
+                        );
+                    }
+                    else {
+                        # asymmetric stub
+                        $points = $self->_stub_points(
+                            length => $dlen,
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            start  => $soff,
+                        );
+                    }
+
+                    my %elem = (
+                        -name    => 'path',
+                        d        => $points,
+                        about    => $s,
+                        resource => $o,
+                    );
+
+                    if (my $rel = $self->ns->abbreviate($p)) {
+                        $elem{rel} = $rel;
+                    }
+                    else {
+                        #warn $pred;
+                    }
+
+                    my @css;
+                    push @css, 'subject' if ($p{active}{$s} or $p{active}{$o});
+                    $elem{class} = join ' ', @css if @css;
+                    $elem{title} = $elem{'xlink:title'} = $edge->{label}
+                        if defined $edge->{label};
+
+                    push @g, \%elem;
+
+                }
+
+                push @edges, { -name => 'g', -content => \@g } if @g;
+            }
+        }
+
+        # do inbound edges (rather, stubs)
+        if (my $ie = $p{iedges}{$s}) {
+            my $sub = $self->_edge_sort_func($ie, \%es);
+            for my $p (sort { $sub->($a, $b) } keys %$ie) {
+                my $iep = $ie->{$p};
+
+                my @g;
+
+                # this one goes backwards
+                for my $o (sort { $esort->($b, $a) } keys %$iep) {
+                    # we only do stubs here
+                    next if $p{nodes}{$o};
+
+                    my $edge = $iep->{$o};
+                    my $eoff = $edge->{eoff} * $dlen + $src->{eoff};
+
+                    my $points;
+
+                    if ($edge->{symmetric}) {
+                        # symmetric stub
+                        $points = $self->_stub_points(
+                            length => $dlen,
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            end    => $eoff,
+                        );
+                    }
+                    else {
+                        # asymmetric stub
+                        $points = $self->_reverse_stub_points(
+                            length => $dlen,
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            end    => $eoff,
+                        );
+                    }
+
+                    my %elem = (
+                        -name    => 'path',
+                        d        => $points,
+                        about    => $s,
+                        resource => $o,
+                    );
+
+                    if (my $rel = $self->ns->abbreviate($p)) {
+                        $elem{rel} = $rel;
+                    }
+                    else {
+                        #warn $pred;
+                    }
+
+                    my @css;
+                    push @css, 'subject' if $p{active}{$s};
+                    $elem{class} = join ' ', @css if @css;
+                    $elem{title} = $elem{'xlink:title'} = $edge->{label}
+                        if defined $edge->{label};
+
+                    push @g, \%elem;
+
+                }
+
+                push @edges, { -name => 'g', -content => \@g } if @g;
+            }
+        }
+    }
+
+    @edges;
+}
+
+sub _make_edges {
+    my ($self, %p) = @_;
+
+    $p{active} ||= {};
+
+    my $r   = $self->radius;
+    my @seq = @{$p{sequence} || []};
+    my %es  = map { $self->edge_seq->[$_] => $_ } (0..$#{$self->edge_seq});
+
+    my @edges;
+    for my $s (@seq) {
+        my $x = $p{edges}{$s};
+        next unless defined $x;
+
+        my $src = $p{nodes}{$s};
+
+        #warn $s;
+
+        # XXX yo ass these are not types these are predicates
+
+        # sort types by source clustering
+        my %t;
+        for my $t (keys %$x) {
+            my $y = $x->{$t};
+            for my $o (keys %$y) {
+                $t{$t} += ref $y->{$o} eq 'ARRAY' ? scalar @{$y->{$o}} : 1;
+            }
+        }
+        # # also do the stubs
+        # for my $t (keys %{$src->{stubs} || {}}) {
+        #     $t{$t} += scalar keys %{$src->{stubs}{$t}};
+        # }
+        # for my $t (keys %{$src->{rstubs} || {}}) {
+        #     $t{$t} += scalar keys %{$src->{rstubs}{$t}};
+        # }
+
+        for my $pred (sort { $t{$b} <=> $t{$a}
+                                 or $es{$a} <=> $es{$b} } keys %t) {
+            my @g;
+            my $objs = $x->{$pred};
+            # XXX sort this more intelligently
+            for my $o (reverse @seq) {
+                next unless $objs->{$o};
+                # i am not sure why i did multi-edges
+                for my $edge (ref $objs->{$o} eq 'ARRAY'
+                                  ? @{$objs->{$o}} : ($objs->{$o})) {
+                    #my $src = $p{nodes}{$s};
+                    my $trg = $p{nodes}{$o};
+
+
+                    # point-generating functions
+                    my $points;
+
+                    if ($edge->{symmetric}) {
+                        $points = $self->_symmetric_points(
+                            length => $p{dlen},
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            start  => $src->{soff},
+                            end    => $trg->{eoff},
+                        );
+                    }
+                    else {
+                        $points = $self->_directed_points(
+                            length => $p{dlen},
+                            weight => $edge->{weight} || 1,
+                            radius => $r,
+                            start  => $src->{soff},
+                            end    => $trg->{eoff},
+                        );
+                    }
+
+                    my @css;
+                    push @css, 'subject' if $p{active}
+                        and ($p{active}{$s} or $p{active}{$o});
+
+                    # wat
+                    my %elem = (
+                        -name    => 'path',
+                        d        => $points,
+                        #fill     => 'black',
+                        #stroke   => 'none',
+                        #opacity  => '0.5',
+                        #class    => join(' ', @css),
+                        about    => $s,
+                        resource => $o,
+                    );
+
+                    if (my $rel = $self->ns->abbreviate($pred)) {
+                        $elem{rel} = $rel;
+                    }
+                    else {
+                        #warn $pred;
+                    }
+
+                    $elem{class} = join ' ', @css if @css;
+                    $elem{title} = $elem{'xlink:title'} = $edge->{label}
+                        if defined $edge->{label};
+
+                    push @g, \%elem;
+
+                    # this is the arc width in radians
+                    my $w = $p{dlen} * ($edge->{weight} || 1);
+                    $src->{soff} += $w;
+                    $trg->{eoff} -= $w;
+                }
+            }
+
+            if ($p{ostubs}{$s} and my $stubs = $p{ostubs}{$s}{$pred}) {
+                for my $o (keys %$stubs) {
+                    warn 'lol outbound';
+                }
+            }
+
+            if ($p{istubs}{$s} and my $stubs = $p{istubs}{$s}{$pred}) {
+                for my $o (keys %$stubs) {
+                    warn 'lol inbound';
+                }
+            }
+
+            # # now we do stubs
+            # my $node = $p{nodes}{$s};
+            # if ($node->{stubs} and $node->{stubs}{$pred}
+            #         and keys %{$node->{stubs}{$pred}}) {
+
+            #     for my $o (values %{$node->{stubs}{$pred}}) {
+            #         my $trg = $p{nodes}{$o};
+            #     }
+
+            #     # warn "fwd stub $s $pred";
+            #     # warn Data::Dumper::Dumper($node->{stubs}{$pred});
+            # }
+            # if ($node->{rstubs} and $node->{rstubs}{$pred}
+            #         and keys %{$node->{rstubs}{$pred}}) {
+            #     # warn "rev stub $s $pred";
+            #     # warn Data::Dumper::Dumper($node->{rstubs}{$pred});
+            # }
+
+            push @edges, { -name => 'g', -content => \@g };
+        }
+    }
+
+    @edges;
 }
 
 __PACKAGE__->meta->make_immutable;

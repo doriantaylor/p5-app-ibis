@@ -267,7 +267,7 @@ sub ci2 :Local {
             my $isfwd = !!$fp{$pv};
 
             # XXX note this line obviates most of the code in this block
-            next unless $isfwd;
+            #next unless $isfwd;
 
             # reverse node
             unless ($isfwd) {
@@ -357,7 +357,7 @@ sub ci2 :Local {
 
     #warn Data::Dumper::Dumper(\%nodes, \@edges);
 
-    my $doc = $circos->plot(
+    my $doc = $circos->plot2(
         nodes  => \%nodes,
         edges  => \@edges,
         active => $suri,
@@ -498,7 +498,7 @@ sub concepts :Local {
     #warn Data::Dumper::Dumper(\%lit);
 
 
-    my $doc = $circos->plot(
+    my $doc = $circos->plot2(
         nodes  => \%nodes,
         edges  => \@edges,
         active => \%lit,
