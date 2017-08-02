@@ -9,50 +9,62 @@
 #nodes path[typeof]:hover {
    opacity: 1;
 }
-#nodes path[typeof~='ibis:Issue'] {
-   fill: #c99;
+#nodes path[typeof~="ibis:Issue"] {
+   /*fill: #c99;*/
+   fill: #d39e9e;
 }
-#nodes path[typeof~='ibis:Issue'].subject {
-   fill: #ffd8d8;
-}
-
-/*
-#nodes path[typeof~='ibis:Issue'].neighbour {
-   fill: #e5dada;
-}
-*/
-
-
-#nodes path[typeof~='ibis:Position'] {
-   fill: #9c9;
-}
-#nodes path[typeof~='ibis:Position'].subject {
-   fill: #d8ffd8;
-}
-#nodes path[typeof~='ibis:Argument'] {
-   fill: #99c;
-}
-#nodes path[typeof~='ibis:Argument'].subject {
-   fill: #d8d8ff;
-}
-#nodes path[typeof~='ibis:Issue']:hover {
-   fill: #ffd8d8;
-}
-#nodes path[typeof~='ibis:Position']:hover {
-   fill: #d8ffd8;
-}
-#nodes path[typeof~='ibis:Argument']:hover {
-   fill: #d8d8ff;
+#nodes path[typeof~="ibis:Issue"].subject {
+   /*fill: #ffd8d8;*/
+   /*fill: #ffdada;*/
+   fill: #f4dddd;
 }
 
-#nodes path[typeof~='skos:Concept'] {
-   fill: #c9c;
+#nodes path[typeof~="ibis:Position"] {
+   /*fill: #9c9;*/
+   fill: #84b883;
 }
-#nodes path[typeof~='skos:Concept'].subject {
-   fill: #ffd8ff;
+#nodes path[typeof~="ibis:Position"].subject {
+   /*fill: #d8ffd8;*/
+   fill: #a7f5a5;
 }
-#nodes path[typeof~='skos:Concept']:hover {
-   fill: #ffd8ff;
+#nodes path[typeof~="ibis:Argument"] {
+   /*fill: #99c;*/
+   fill: #a8a8ce;
+}
+#nodes path[typeof~="ibis:Argument"].subject {
+   /*fill: #d8d8ff;*/
+   /*fill: #e0e0ff;*/
+   fill: #e1e1f4;
+}
+#nodes path[typeof~="ibis:Issue"]:hover {
+   /*fill: #ffd8d8;*/
+   /*fill: #ffdada;*/
+   fill: #f4dddd;
+}
+#nodes path[typeof~="ibis:Position"]:hover {
+   /*fill: #d8ffd8;*/
+   /*fill: #73ff6e;*/
+   fill: #a7f5a5;
+}
+#nodes path[typeof~="ibis:Argument"]:hover {
+   /*fill: #d8d8ff;*/
+   /*fill: #e0e0ff;*/
+   fill: #e1e1f4;
+}
+
+#nodes path[typeof~="skos:Concept"] {
+   /*fill: #c9c;*/
+   fill: #cd9bce;
+}
+#nodes path[typeof~="skos:Concept"].subject {
+   /*fill: #ffd8ff;*/
+   /*fill: #fed6ff;*/
+   fill: #f3dbf4;
+}
+#nodes path[typeof~="skos:Concept"]:hover {
+   /*fill: #ffd8ff;*/
+   /*fill: #fed6ff;*/
+   fill: #f3dbf4;
 }
 
 
@@ -67,116 +79,116 @@
    opacity: 0.5;
 }
 
-path[rel~='ibis:generalizes'] {
+path[rel~="ibis:generalizes"] {
    fill: #5f7fff;
 }
-path[rel~='ibis:generalizes'].subject {
+path[rel~="ibis:generalizes"].subject {
    fill: #abbcff;
 }
 
-path[rel~='ibis:specializes'] {
+path[rel~="ibis:specializes"] {
    fill: #0033ff;
 }
-path[rel~='ibis:specializes'].subject {
+path[rel~="ibis:specializes"].subject {
    fill: #4c70ff;
 }
 
 /*
-path[rel~='ibis:replaces'], path[rel~='ibis:replaced-by'] {
+path[rel~="ibis:replaces"], path[rel~="ibis:replaced-by"] {
    fill: blue;
 }
 */
 
-path[rel~='ibis:suggests'] {
+path[rel~="ibis:suggests"] {
    fill: #ffcd40;
 }
-path[rel~='ibis:suggests'].subject {
+path[rel~="ibis:suggests"].subject {
    fill: #ffe08c;
 }
 
-path[rel~='ibis:suggested-by'] {
+path[rel~="ibis:suggested-by"] {
    fill: #ffbc00;
 }
-path[rel~='ibis:suggested-by'].subject {
+path[rel~="ibis:suggested-by"].subject {
    fill: #ffcf4c;
 }
 
-path[rel~='ibis:questions'] {
+path[rel~="ibis:questions"] {
    fill: #ff9a40;
 }
-path[rel~='ibis:questions'].subject {
+path[rel~="ibis:questions"].subject {
    fill: #ffc18c;
 }
 
-path[rel~='ibis:questioned-by'] {
+path[rel~="ibis:questioned-by"] {
    fill: #ff7800;
 }
-path[rel~='ibis:questioned-by'].subject {
+path[rel~="ibis:questioned-by"].subject {
    fill: #ff9f4c;
 }
 
-path[rel~='ibis:response'] {
+path[rel~="ibis:response"] {
    fill: #8a0041;
 }
-path[rel~='ibis:response'].subject {
+path[rel~="ibis:response"].subject {
    fill: #d64086;
 }
 
-path[rel~='ibis:responds-to'] {
+path[rel~="ibis:responds-to"] {
    fill: #d50065;
 }
-path[rel~='ibis:responds-to'].subject {
+path[rel~="ibis:responds-to"].subject {
    fill: #ff4c9f;
 }
 
-path[rel~='ibis:supports'] {
+path[rel~="ibis:supports"] {
    fill: #4dde00;
 }
-path[rel~='ibis:supports'].subject {
+path[rel~="ibis:supports"].subject {
    fill: #8aff4c;
 }
-path[rel~='ibis:supported-by'] {
+path[rel~="ibis:supported-by"] {
    fill: #55a62a;
 }
-path[rel~='ibis:supported-by'].subject {
+path[rel~="ibis:supported-by"].subject {
    fill: #acf286;
 }
 
-path[rel~='ibis:opposes'] {
+path[rel~="ibis:opposes"] {
    fill: #ec0033;
 }
-path[rel~='ibis:opposes'].subject {
+path[rel~="ibis:opposes"].subject {
    fill: #ff4c70;
 }
-path[rel~='ibis:opposed-by'] {
+path[rel~="ibis:opposed-by"] {
    fill: #b12c49;
 }
-path[rel~='ibis:opposed-by'].subject {
+path[rel~="ibis:opposed-by"].subject {
    fill: #fd8ba3;
 }
 
 /* skos arrows */
 
-path[rel~='skos:related'] {
+path[rel~="skos:related"] {
    fill: #ffcccc;
 }
-path[rel~='skos:related'].subject {
+path[rel~="skos:related"].subject {
    fill: #fd8ba3;
 }
 
 /* make these the same as ibis */
 
-path[rel~='skos:narrower'] {
+path[rel~="skos:narrower"] {
    fill: #5f7fff;
 }
-path[rel~='skos:narrower'].subject {
+path[rel~="skos:narrower"].subject {
    fill: #abbcff;
 }
 
-path[rel~='skos:broader'] {
+path[rel~="skos:broader"] {
    fill: #0033ff;
 }
-path[rel~='skos:broader'].subject {
+path[rel~="skos:broader"].subject {
    fill: #4c70ff;
 }
 

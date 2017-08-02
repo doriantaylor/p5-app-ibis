@@ -147,10 +147,13 @@ my %MAP = (
         position => [
             [$NS->ibis->supports,                  'Supports'],
             [$NS->ibis->opposes,                    'Opposes'],
+            [$NS->ibis->response,                  'Response'],
         ],
         argument => [
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
+            [$NS->ibis->suggests,                  'Suggests'],
+            [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],
     },
     'skos:Concept' => {

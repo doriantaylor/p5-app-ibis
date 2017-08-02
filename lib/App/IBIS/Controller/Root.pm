@@ -11,6 +11,9 @@ BEGIN {
     extends 'Catalyst::Controller';
     with    'App::IBIS::Role::Schema';
     with    'Role::Markup::XML';
+#    require Devel::Gladiator;
+#    require Devel::FindRef;
+#    $RDF::Redland::Debug = 1;
 }
 
 # constants
@@ -99,10 +102,66 @@ sub index :Path :Args(0) {
     my $req  = $c->req;
     my $resp = $c->res;
 
+    my $ns = $self->ns;
+    my $m  = $c->model('RDF');
+
+    my %concepts;
+    for my $s ($m->subjects($ns->rdf->type, $ns->skos->Concept)) {
+        next unless $s->is_resource;
+        next unless $s->uri_value =~ /^urn:uuid:/i;
+        my $uri     = URI->new($s->uri_value);
+        my ($label) = $m->objects($s, $ns->skos->prefLabel);
+        next unless $label->is_literal;
+        my $x = $concepts{$label->literal_value} ||= {};
+        $x->{$uri} = $uri;
+    }
+
+    my @li;
+    for my $c (sort keys %concepts) {
+        for my $uuid (sort values %{$concepts{$c}}) {
+            push @li, { -name => 'li',
+                        -content => {
+                            href => '/' . $uuid->uuid, -content => $c } };
+        }
+    }
+
+    my $new ||= '/' . $self->uuid4;
+
     my $doc = $self->_doc(
         uri => $req->base,
         title => 'Welcome to App::IBIS: We Have Issues.',
-        content => [$self->_do_index($c)]);
+        content => [
+            { -name => 'section', class => 'index ibis',
+              -content => [
+                  { -name => 'h1', -content => 'Argumentation Structure' },
+                  { -name => 'figure',
+                    -content => { -name => 'object',
+                                  type => 'image/svg+xml', data => '/ci2' } },
+                  $self->_do_404($new), # not really a 404 but whatev
+              ] },
+            { -name => 'section', class => 'index skos',
+              -content => [
+                  { -name => 'h1', -content => 'Concept Scheme' },
+                  { -name => 'figure',
+                    -content => { -name => 'object',
+                                  type => 'image/svg+xml',
+                                  data => '/concepts?rotate=180' } },
+                  { %FORMBP, action => $new,
+                    -content => { -name => 'fieldset', -content => [
+                        { -name => 'legend',
+                          -content => 'Start a new Concept' },
+                        { -name => 'input', type => 'text',
+                          name => '= skos:prefLabel' },
+                        { -name => 'button', name => '= rdf:type :',
+                          value => 'skos:Concept', -content => 'Go' } ] } },
+              ] },
+            { -name => 'section', class => 'index list',
+              -content => [$self->_do_index($c),
+                           { -name => 'section', -content => [
+                               { -name => 'h2', -content => 'Concepts' },
+                               { -name => 'ul', -content => \@li } ] },
+                       ] },
+        ]);
 
     $resp->body($doc);
 }
@@ -119,9 +178,13 @@ sub ci2 :Local {
     # get some input. innnnnnn putttttt
     my $req = $c->req;
     my $ns  = $self->ns;
-    my $b   = $req->base;
+    my $bs  = $req->base;
     my $q   = $req->query_parameters;
-    my $ref = $q->{subject} || $q->{referrer} || $q->{referer} || $req->referer;
+    my $ref = $q->{subject}; # || $q->{referrer} || $q->{referer} || $req->referer;
+    # i knew that would bite me in the ass
+
+    my $deg = $q->{degrees} || 360;
+    my $rot = $q->{rotate}  || 0;
 
     # other handy things
     my $lab = $self->labels;
@@ -135,7 +198,7 @@ sub ci2 :Local {
     my ($snode, $suri);
     if ($ref) {
         $ref = $ref->[0] if ref $ref eq 'ARRAY'; # lol got all that?
-        $ref = URI->new_abs($ref, $b);
+        $ref = URI->new_abs($ref, $bs);
 
         if (my ($uuid) = ($ref->path =~ $UUID_RE)) {
             $snode = iri('urn:uuid:' . lc $uuid);
@@ -196,7 +259,7 @@ sub ci2 :Local {
         # XXX warn this maybe?
         next unless $uu->isa('URI::urn::uuid');
 
-        my $su = URI->new_abs($uu->uuid, $b);
+        my $su = URI->new_abs($uu->uuid, $bs);
         next if $nodes{$su};
 
         my $n = $nodes{$su} ||= {};
@@ -280,7 +343,7 @@ sub ci2 :Local {
 
             for my $ov (keys %$nodes) {
                 my $ou = URI->new($ov);
-                $ou = URI->new_abs($ou->uuid, $b);
+                $ou = URI->new_abs($ou->uuid, $bs);
 
                 push @edges, {
                     source => $isfwd ? $su : $ou,
@@ -328,7 +391,7 @@ sub ci2 :Local {
                 #$stubs{$pv} ||= {};
                 for my $ov (keys %$x) {
                     my $ou = URI->new($ov);
-                    $ou = URI->new_abs($ou->uuid, $b);
+                    $ou = URI->new_abs($ou->uuid, $bs);
                     $y->{$ou} = $ou;
                     #$stubs{$pv}{$ou} = $ou;
                 }
@@ -340,15 +403,15 @@ sub ci2 :Local {
 
     # now generate the graphic
     my $circos = App::IBIS::Circos->new(
-        start     => 0,   # initial degree offset
-        end       => 240, # terminal degree offset
-        rotate    => 60,  # offset to previous two values
-        gap       => 2,   # units of whitespace between arc slices
-        thickness => 50,  # thickness of arc slices
-        margin    => 20,  # gap between outer edge and viewbox
-        size      => 200, # overall width/height of the viewbox
+        start     => 0,    # initial degree offset
+        end       => $deg, # terminal degree offset
+        rotate    => $rot, # offset to previous two values
+        gap       => 2,    # units of whitespace between arc slices
+        thickness => 50,   # thickness of arc slices
+        margin    => 20,   # gap between outer edge and viewbox
+        size      => 200,  # overall width/height of the viewbox
         radius    => 270,
-        base      => $b,
+        base      => $bs,
         css       => $c->uri_for('/asset/circos.css'),
         ns        => $self->uns,
         node_seq  => [map { $_->uri_value} @t],
@@ -357,7 +420,7 @@ sub ci2 :Local {
 
     #warn Data::Dumper::Dumper(\%nodes, \@edges);
 
-    my $doc = $circos->plot2(
+    my $doc = $circos->plot(
         nodes  => \%nodes,
         edges  => \@edges,
         active => $suri,
@@ -365,7 +428,57 @@ sub ci2 :Local {
 
     $c->res->content_type('image/svg+xml');
     $c->res->body($doc);
+    # okay so we have approximately 3400 scalar refs going missing.
+    # this is almost certainly the xml thinger
+    #$c->log->debug(Devel::Gladiator::arena_table());
+    # my $all = Devel::Gladiator::walk_arena();
+    # # #$c->log->debug(Data::Dumper::Dumper($all->[0]));
+    # my %wtf;
+    # for my $sv (@$all) {
+    #     #next unless ref $sv eq 'SCALAR';
+    #     next unless ref($sv) =~ /rdf/i;
+    #     #my $x = Data::Dumper::Dumper($sv);
+    #     my $x = ref $sv;
+    #     $wtf{$x} ||= 0;
+    #     $wtf{$x}++;
+    #     #$c->log->debug(Data::Dumper::Dumper($sv));
+    #     #warn Data::Dumper::Dumper($sv);
+    #     #$c->log->debug($sv);
+    #     #warn Devel::FindRef::track($sv)
+    #     #    if defined $$sv and !ref $$sv and $$sv eq '1';
+    #     #warn Devel::FindRef::track($sv) unless defined $$sv;
+    # }
+    # undef $all;
+
+    # for my $k (sort { $wtf{$b} <=> $wtf{$a} } keys %wtf) {
+    #     #next if $wtf{$k} < 500;
+    #     warn "$wtf{$k} => $k";
+    # }
+
+    $c->log->debug(sprintf 'node %d statement %d stream %d',
+                   scalar keys %_p_librdf_node_s::OWNER,
+                   scalar keys %_p_librdf_statement_s::OWNER,
+                   scalar keys %_p_librdf_stream_s::OWNER);
+
+    # for my $k (keys %_p_librdf_node_s::OWNER) {
+    #     warn sprintf "%s => %s", $k, $_p_librdf_node_s::OWNER{$k};
+    # }
+
+    # my %ftw;
+    # while (my ($k, $v) = each %wtf) {
+    #     my $x = $ftw{$v} ||= [];
+    #     push @$x, $k;
+    # }
+
+    # for my $n (sort { $b <=> $a } keys %ftw) {
+    #     warn ($n, ' ', @{$ftw{$n}});
+    # }
 }
+
+# sub _wtfsort {
+#     my ($obj, $l, $r) = @_;
+#     return ($obj->{$r} || 0) <=> ($obj->{$l} || 0);
+# }
 
 sub concepts :Local {
     my ($self, $c) = @_;
@@ -375,7 +488,11 @@ sub concepts :Local {
     my $ns  = $self->ns;
     my $b   = $req->base;
     my $q   = $req->query_parameters;
-    my $ref = $q->{subject} || $q->{referrer} || $q->{referer} || $req->referer;
+    my $ref = $q->{subject}; # || $q->{referrer} || $q->{referer} || $req->referer;
+    # ditto
+
+    my $deg = $q->{degrees} || 360;
+    my $rot = $q->{rotate}  || 0;
 
     # other handy things
     my $lab = $self->labels;
@@ -479,13 +596,13 @@ sub concepts :Local {
     }
 
     my $circos = App::IBIS::Circos->new(
-        start     => 0,   # initial degree offset
-        end       => 240, # terminal degree offset
-        rotate    => 60,  # offset to previous two values
-        gap       => 2,   # units of whitespace between arc slices
-        thickness => 50,  # thickness of arc slices
-        margin    => 20,  # gap between outer edge and viewbox
-        size      => 200, # overall width/height of the viewbox
+        start     => 0,    # initial degree offset
+        end       => $deg, # terminal degree offset
+        rotate    => $rot, # offset to previous two values
+        gap       => 2,    # units of whitespace between arc slices
+        thickness => 50,   # thickness of arc slices
+        margin    => 20,   # gap between outer edge and viewbox
+        size      => 200,  # overall width/height of the viewbox
         radius    => 270,
         base      => $b,
         css       => $c->uri_for('/asset/circos.css'),
@@ -498,7 +615,7 @@ sub concepts :Local {
     #warn Data::Dumper::Dumper(\%lit);
 
 
-    my $doc = $circos->plot2(
+    my $doc = $circos->plot(
         nodes  => \%nodes,
         edges  => \@edges,
         active => \%lit,
@@ -780,10 +897,12 @@ sub _get_concept :Private {
             { -name => 'figure', class => 'aside', -content => [
                 { -name => 'object', class => 'baby hiveplot',
                   type => 'image/svg+xml',
-                  data => $c->uri_for('ci2', { subject => 'nil' }) },
+                  data => $c->uri_for('ci2',
+                                      { degrees => 240, rotate => 60 }) },
                 { -name => 'object', class => 'hiveplot',
                   type => 'image/svg+xml',
-                  data => $c->uri_for(concepts => { subject => $uu->uuid }) },
+                  data => $c->uri_for(concepts => {
+                      subject => $uu->uuid, degrees => 240, rotate => 60 }) },
             ] },
             { -name => 'article', -content => [
                 { -name => 'section', -content => [
@@ -1073,7 +1192,8 @@ sub _get_ibis :Private {
         push @concepts, $cu->uuid;
     }
 
-    my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid });
+    my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid,
+                                   degrees => 240, rotate => 60, });
 
     my (undef, $doc) = $self->_XHTML(
         ns    => $self->uns,
@@ -1092,7 +1212,9 @@ sub _get_ibis :Private {
             { -name => 'figure', class => 'aside', -content => [
                 { -name => 'object', class => 'other baby hiveplot',
                   type => 'image/svg+xml',
-                  data => $c->uri_for('concepts', { subject => \@concepts }) },
+                  data => $c->uri_for('concepts',
+                                      { subject => \@concepts,
+                                        degrees => 240, rotate => 60, }) },
                 { -name => 'object', class => 'hiveplot', data => $ci2,
                   type => 'image/svg+xml', -content => '(Circos Plot)' }
             ]},
@@ -1744,16 +1866,20 @@ sub _do_collection_form {
 sub _do_404 {
     my ($self, $new) = @_;
     $new ||= '/' . $self->uuid4;
-    return { %FORMBP, id => 'blank-page', action => $new,
+
+    # new thing types
+    my @types = map +["ibis:$_" => $_ ], qw(Issue Position Argument);
+    #push @types, ['skos:Concept' => 'Concept'];
+
+    return { %FORMBP, class => "new-ibis", action => $new,
              -content => {
                  -name => 'fieldset', -content => [
                      { -name => 'legend', -content => [
                          { -name => 'span', -content => 'Start a new ' },
                          { -name => 'select', name => 'rdf:type :',
-                           -content => [map +{ -name => 'option',
-                                               value => "ibis:$_",
-                                               -content => $_ },
-                                        qw(Issue Position Argument)] } ] },
+                           -content => [map +{
+                               -name => 'option', value => $_->[0],
+                               -content => $_->[1] }, @types] } ] },
                      { -name => 'input', class => 'new-value',
                        type => 'text', name => '= rdf:value' },
                      { -name => 'button', -content => 'Go' } ] } };

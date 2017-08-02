@@ -35,7 +35,7 @@ use Convert::Color   ();
 use HTTP::Negotiate  ();
 use Unicode::Collate ();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05_03';
 
 my (@LABELS, @ALT_LAB);
 

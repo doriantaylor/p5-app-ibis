@@ -4,13 +4,16 @@ rect[typeof] {
    opacity: 1;
 }
 rect[typeof~='ibis:Issue'] {
-   fill: #c99;
+   /*fill: #c99;*/
+   fill: #d39e9e;
 }
 rect[typeof~='ibis:Position'] {
-   fill: #9c9;
+   /*fill: #9c9;*/
+   fill: #84b883;
 }
 rect[typeof~='ibis:Argument'] {
-   fill: #99c;
+   /*fill: #99c;*/
+   fill: #a8a8ce;
 }
 .arc {
    opacity: 1;

@@ -1,4 +1,4 @@
-@import url('/asset/font-awesome.css');
+@import url("/asset/font-awesome.css");
 
 html {
    width: 100%;
@@ -18,7 +18,7 @@ body {
    left: 0;
    right: 0;
    /*min-width: 100%;*/
-   min-height: 100%;
+   height: 100%;
    /*width: 70ex;*/
    padding: 0;
    margin: 0;
@@ -63,7 +63,7 @@ fieldset.relation ul {
    list-style-type: none;
 }
 
-input[type='text'], input[type='submit'], input[type='reset'], select, button {
+input[type="text"], input[type="submit"], input[type="reset"], select, button {
    font-family: inherit;
    font-size: inherit;
    font-weight: inherit;
@@ -156,13 +156,16 @@ a {
    text-decoration: none;
 }
 a:link {
-   color: #99a;
+   /*color: #99a;*/
+   color: #cd9bce;
 }
 a:visited {
-   color: #a9a;
+   /*color: #a9a;*/
+   color: #b280b2;
 }
 a:hover {
-   color: #aab;
+   /*color: #aab;*/
+   color: #ddbcde;
    text-decoration: underline;
 }
 
@@ -184,26 +187,34 @@ article {
    right: 0;
 }
 
-figure {
+figure.aside {
    position: absolute;
    top: 0;
    left: 0;
-   /*right: 0;*/
    display: inline-block;
-   /*float: right;*/
+   max-width: 65%;
    width: 40%;
    height: 50%;
    margin: 0;
-   /*padding: 3em;*/
    overflow: visible;
-   position: absolute;
    width: 100%;
    height: 100%;
    z-index: 1;
 }
-figure.aside {
-   max-width: 65%;
+
+figure > object {
+   display: block;
+   max-width: 100%;
+   height: 100%;
 }
+
+/*
+object[type="image/svg+xml"] {
+   display: inline-block;
+   width: auto;
+   height: auto;
+}*/
+
 
 object.hiveplot {
    display: block;
@@ -237,6 +248,7 @@ aside.predicate, td.predicate {
    border-radius: 1em;
    margin-bottom: 0.5em;
 }
+
 td.predicate {
    vertical-align: top;
    display: table-cell;
@@ -279,7 +291,7 @@ aside.predicate.link ul li a, aside.predicate.concept ul li a  {
    white-space: nowrap;
 }
 
-*[property='rdfs:label'], h3.label {
+*[property="rdfs:label"], h3.label {
    color: #ddd;
    padding: 0.1em 0.3em;
    display: inline-block;
@@ -287,109 +299,165 @@ aside.predicate.link ul li a, aside.predicate.concept ul li a  {
    border-radius: 0.4em;
 }
 
-*[about='http://privatealpha.com/ontology/ibis/1#generalizes'] {
+*[about="http://privatealpha.com/ontology/ibis/1#generalizes"] {
    background-color: #5f7fff;
 }
 
-*[about='http://privatealpha.com/ontology/ibis/1#specializes'] {
+*[about="http://privatealpha.com/ontology/ibis/1#specializes"] {
    background-color: #0033ff;
 }
 
 /*
-dt[about='http://privatealpha.com/ontology/ibis/1#replaces'], dt[about='http://privatealpha.com/ontology/ibis/1#replaced-by'] {
+dt[about="http://privatealpha.com/ontology/ibis/1#replaces"], dt[about="http://privatealpha.com/ontology/ibis/1#replaced-by"] {
    color: blue;
 }
 */
 
-*[about='http://privatealpha.com/ontology/ibis/1#suggests'] {
+*[about="http://privatealpha.com/ontology/ibis/1#suggests"] {
    color: #666;
    background-color: #ffcd40;
 }
-*[about='http://privatealpha.com/ontology/ibis/1#suggested-by'] {
+*[about="http://privatealpha.com/ontology/ibis/1#suggested-by"] {
    color: #888;
    background-color: #ffbc00;
 }
 
-*[about='http://privatealpha.com/ontology/ibis/1#questions'] {
+*[about="http://privatealpha.com/ontology/ibis/1#questions"] {
    background-color: #ff9a40;
 }
-*[about='http://privatealpha.com/ontology/ibis/1#questioned-by'] {
+*[about="http://privatealpha.com/ontology/ibis/1#questioned-by"] {
    background-color: #ff7800;
 }
 
-*[about='http://privatealpha.com/ontology/ibis/1#response'] {
+*[about="http://privatealpha.com/ontology/ibis/1#response"] {
    background-color: #8a0041;
 }
-*[about='http://privatealpha.com/ontology/ibis/1#responds-to'] {
+*[about="http://privatealpha.com/ontology/ibis/1#responds-to"] {
    background-color: #d50065;
 }
 
-*[about='http://privatealpha.com/ontology/ibis/1#supports'] {
+*[about="http://privatealpha.com/ontology/ibis/1#supports"] {
    background-color: #4dde00;
 }
-*[about='http://privatealpha.com/ontology/ibis/1#supported-by'] {
+*[about="http://privatealpha.com/ontology/ibis/1#supported-by"] {
    background-color: #55a62a;
 }
 
-*[about='http://privatealpha.com/ontology/ibis/1#opposes'] {
+*[about="http://privatealpha.com/ontology/ibis/1#opposes"] {
    background-color: #ec0033;
 }
-*[about='http://privatealpha.com/ontology/ibis/1#opposed-by'] {
+*[about="http://privatealpha.com/ontology/ibis/1#opposed-by"] {
    background-color: #b12c49;
 }
 
-body[typeof~='ibis:Issue'], fieldset.issue, body[typeof~='ibis:Issue'] aside.predicate {
-   background-color: #322;
+body[typeof~="ibis:Issue"], fieldset.issue, body[typeof~="ibis:Issue"] aside.predicate {
+   /* background-color: #322;*/
+   background-color: #41191a;
 }
 
-body[typeof~='ibis:Issue'] h1, fieldset.issue {
-   color: #988;
+body[typeof~="ibis:Issue"] h1, fieldset.issue {
+   /*color: #988;*/
+   /*color: #bd5758;*/
+   color: #dac1c1;
 }
 
-body[typeof~='ibis:Position'], fieldset.position, body[typeof~='ibis:Position'] aside.predicate  {
-   background-color: #232;
+body[typeof~="ibis:Position"], fieldset.position, body[typeof~="ibis:Position"] aside.predicate  {
+   /*background-color: #232; */
+   background-color: #192a19;
 }
 
-body[typeof~='ibis:Position'] h1, fieldset.position {
-   color: #898;
+body[typeof~="ibis:Position"] h1, fieldset.position {
+   /*color: #898;*/
+   /*color: #568156;*/
+   color: #a6d2a5;
 }
 
-body[typeof~='ibis:Argument'], fieldset.argument, body[typeof~='ibis:Argument'] aside.predicate {
-   background-color: #223;
+body[typeof~="ibis:Argument"], fieldset.argument, body[typeof~="ibis:Argument"] aside.predicate {
+   /*background-color: #223;*/
+   background-color: #21214c;
 }
 
-body[typeof~='ibis:Argument'] h1, fieldset.argument  {
-   color: #889;
+body[typeof~="ibis:Argument"] h1, fieldset.argument  {
+   /*color: #889;*/
+   /*color: #7170b3;*/
+   color: #c5c5d8;
 }
 
-body[typeof~='skos:Concept'], fieldset.concept, body[typeof~='skos:Concept'] aside.predicate {
-   background-color: #323;
+body[typeof~="skos:Concept"], fieldset.concept, body[typeof~="skos:Concept"] aside.predicate {
+   /*background-color: #323;*/
+   background-color: #361d36;
 }
 
-body[typeof~='skos:Concept'] h1, fieldset.argument  {
-   color: #989;
+body[typeof~="skos:Concept"] h1, fieldset.concept  {
+   /*color: #989;*/
+   /*color: #a060a1;*/
+   color: #d7bfd8;
 }
 
-/*
-dd[typeof~='ibis:Issue'] {
-   background-color: #300;
+button[value="ibis:Issue"].set-type {
+   /*background-color: #600;*/
+   color: #41191a;
+   border-color: #41191a;
+   background-color: #703535;
 }
-dd[typeof~='ibis:Position'] {
-   background-color: #030;
+button[value="ibis:Issue"][disabled].set-type {
+   color: #703535;
+   border-color: #703535;
+   background-color: #41191a;
 }
-dd[typeof~='ibis:Argument'] {
-   background-color: #003;
-}
-*/
 
-li[typeof~='ibis:Issue'] a {
-   color: #c99;
+button[value="ibis:Position"].set-type {
+   /*background-color: #060;*/
+   color: #192a19;
+   border-color: #192a19;
+   background-color: #354c34;
 }
-li[typeof~='ibis:Position'] a {
-   color: #9c9;
+button[value="ibis:Position"][disabled].set-type {
+   color: #354c34;
+   border-color: #354c34;
+   background-color: #192a19;
 }
-li[typeof~='ibis:Argument'] a {
-   color: #99c;
+
+button[value="ibis:Argument"].set-type {
+   /*background-color: #006;*/
+   color: #21214c;
+   border-color: #21214c;
+   background-color: #40407e;
+}
+button[value="ibis:Argument"][disabled].set-type {
+   color: #40407e;
+   border-color: #40407e;
+   background-color: #21214c;
+}
+
+button[value="skos:Concept"].set-type {
+   color: #361d36;
+   border-color: #361d36;
+   background-color: #5e3a5f;
+}
+
+li[typeof~="ibis:Issue"] a {
+   /*color: #c99;*/
+   color: #d39e9e;
+}
+li[typeof~="ibis:Issue"] a:hover {
+   color: #f4dddd;
+}
+
+li[typeof~="ibis:Position"] a {
+   /*color: #9c9;*/
+   color: #84b883;
+}
+li[typeof~="ibis:Position"] a:hover {
+   color: #a7f5a5;
+}
+
+li[typeof~="ibis:Argument"] a {
+   /*color: #99c;*/
+   color: #a8a8ce;
+}
+li[typeof~="ibis:Argument"] a:hover {
+   color: #e1e1f4;
 }
 
 input, select, option, textarea, button {
@@ -449,18 +517,31 @@ article h1 {
    padding-left: 2.5em;
 }*/
 
-body[typeof~='ibis:Issue'] article {
-   background-color: #443333;
+body[typeof~="ibis:Issue"] article {
+   /*background-color: #443333;*/
+   /*background-color: #703535;*/
+   /*background-color: #673a3a;*/
+   /*background-color: #5e3e3e;*/
+   background-color: #4e2324;
 }
-body[typeof~='ibis:Position'] article {
-   background-color: #334433;
+body[typeof~="ibis:Position"] article {
+   /*background-color: #334433;*/
+   /*background-color: #354c34;*/
+   /*background-color: #3a4b39;*/
+   /*background-color: #3e4a3e;*/
+   background-color: #233523;
 }
-body[typeof~='ibis:Argument'] article {
-   background-color: #333344;
+body[typeof~="ibis:Argument"] article {
+   /*background-color: #333344;*/
+   /*background-color: #40407e;*/
+   /*background-color: #44426f;*/
+   background-color: #2b2b59;
 }
 
-body[typeof~='skos:Concept'] article {
-   background-color: #443344;
+body[typeof~="skos:Concept"] article {
+   /*background-color: #443344;*/
+   /*background-color: #5e3a5f;*/
+   background-color: #412742;
 }
 
 button.update {
@@ -601,7 +682,84 @@ span.date {
 }
 
 /* XXX remove when home page is designed */
+/*
 body > section > ul {
    height: 10em;
    overflow-y: auto;
+}
+*/
+
+section.index {
+   position: absolute;
+   top: 0px;
+   width: 50%;
+   height: 66.66%;
+   padding: 0px;
+}
+
+section.index h1 {
+   text-align: center;
+}
+
+section.index figure {
+   width: 100%;
+   margin: auto;
+   height: 70%;
+   /*position: absolute;*/
+   display: block;
+   /*top: 16.666%;*/
+}
+
+section.index figure > object {
+   display: block;
+   height: 100%;
+   margin: auto;
+}
+
+section.index.ibis {
+   left: 0px;
+}
+
+section.index.skos {
+   right: 0px;
+}
+
+section.index.list {
+   width: 100%;
+   height: 33.33%;
+   top: unset;
+   bottom: 0;
+}
+
+section.index.list > section {
+   float: left;
+   width: 25%;
+   height: 100%;
+   bottom: 0;
+   box-sizing: border-box;
+   font-size: 75%;
+}
+
+section.index ul {
+   overflow-y: auto;
+   padding-left: 1.5em;
+   padding-right: 0.5em;
+   height: 80%;
+}
+
+section.index li {
+   text-align: left;
+   hyphens: auto;
+}
+
+/*
+section.index > section > section {
+   width: 33%;
+   float: left;
+   font-size: 75%;
+   height: 100%;
+}*/
+
+section.index.list > section > h2 {
+   text-align: center;
 }
