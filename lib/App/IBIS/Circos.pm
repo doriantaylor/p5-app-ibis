@@ -6,7 +6,7 @@ use warnings FATAL => 'all';
 use Moose;
 use namespace::autoclean;
 
-use MooseX::Types -declare => [qw(Angle URIObject)];
+use App::IBIS::Types qw(Angle URIObject);
 use MooseX::Types::Moose qw(Maybe Defined Str Num HashRef ArrayRef);
 
 use MooseX::Params::Validate;
@@ -15,17 +15,7 @@ with 'Role::Markup::XML';
 
 use List::Util;
 use Math::Trig;
-use POSIX                    qw(fmod);
-
-class_type URIObject, { class => 'URI' };
-coerce URIObject, from Str, via { URI->new($_) };
-
-subtype Angle, as Num,   where { $_ >= 0 && $_ <= 360 };
-coerce  Angle, from Num, via { fmod($_, 360) };
-
-coerce HashRef, from Maybe[Str|URIObject],
-    via { defined $_[0] ? {$_[0] => $_[0]} : {} };
-coerce HashRef, from ArrayRef, via { { map ($_ => $_), @{$_[0]} } };
+use POSIX qw(fmod);
 
 has title => (
     is      => 'ro',

@@ -107,8 +107,8 @@ my %MAP = (
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
             [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
-            [$NS->ibis->replaces,                  'Replaces'],
-            [$NS->ibis->uri('replaced-by'),     'Replaced by'],
+            #[$NS->ibis->replaces,                  'Replaces'],
+            #[$NS->ibis->uri('replaced-by'),     'Replaced by'],
         ],
         position => [
             [$NS->ibis->questions,                'Questions'],
@@ -118,8 +118,10 @@ my %MAP = (
         argument => [
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
-            [$NS->ibis->questions,                'Questions'],
+            [$NS->ibis->suggests,                  'Suggests'],
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->questions,                'Questions'],
+            [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],
     },
     position => {
@@ -142,6 +144,8 @@ my %MAP = (
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],
         position => [
@@ -153,6 +157,8 @@ my %MAP = (
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],
     },

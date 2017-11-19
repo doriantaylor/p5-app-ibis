@@ -1,5 +1,9 @@
 @import url("/asset/font-awesome.css");
 
+* {
+   border-color: inherit;
+}
+
 html {
    width: 100%;
    min-height: 100%;
@@ -33,8 +37,8 @@ figure {
 }
 
 fieldset {
-   border: 1px solid #444;
-   border: none;
+   border-style: inherit;
+   border-width: inherit;
    margin: 0;
    padding: 0;
 }
@@ -59,7 +63,7 @@ fieldset.relation legend {
 }
 
 fieldset.relation ul {
-   padding: 0;
+   padding: 0 0 0 0.5em;
    list-style-type: none;
 }
 
@@ -69,10 +73,14 @@ input[type="text"], input[type="submit"], input[type="reset"], select, button {
    font-weight: inherit;
    background-color: inherit;
    color: inherit;
-   border: 1px solid #444;
+   border-width: 1px;
+   border-style: solid;
+   border-radius: 0.25em;
 }
 
-
+form {
+   border-color: inherit;
+}
 
 form#blank-page {
    margin: 5em auto;
@@ -91,6 +99,15 @@ form#toggle-which label {
    font-size: 80%;
    font-weight: bold;
    text-align: center;
+}
+
+fieldset.issue {
+   border-top-left-radius: 0.5em;
+   border-bottom-left-radius: 0.5em;
+}
+fieldset.argument {
+   border-top-right-radius: 0.5em;
+   border-bottom-right-radius: 0.5em;
 }
 
 fieldset.interaction {
@@ -126,7 +143,7 @@ button:hover, label:hover {
 }
 
 button[disabled] {
-   border-color: #222;
+   /*border-color: #222;*/
    color: #222;
 }
 button[disabled]:hover, label[disabled]:hover {
@@ -292,7 +309,7 @@ aside.predicate.link ul li a, aside.predicate.concept ul li a  {
 }
 
 *[property="rdfs:label"], h3.label {
-   color: #ddd;
+   /* color: #ddd; */
    padding: 0.1em 0.3em;
    display: inline-block;
    -moz-border-radius: 0.4em;
@@ -300,101 +317,99 @@ aside.predicate.link ul li a, aside.predicate.concept ul li a  {
 }
 
 *[about="http://privatealpha.com/ontology/ibis/1#generalizes"] {
+   color: #00164d;
    background-color: #5f7fff;
 }
 
 *[about="http://privatealpha.com/ontology/ibis/1#specializes"] {
+   color: #bec1fe;
    background-color: #0033ff;
 }
 
-/*
-dt[about="http://privatealpha.com/ontology/ibis/1#replaces"], dt[about="http://privatealpha.com/ontology/ibis/1#replaced-by"] {
-   color: blue;
-}
-*/
-
 *[about="http://privatealpha.com/ontology/ibis/1#suggests"] {
-   color: #666;
+   color: #3d2e00;
    background-color: #ffcd40;
 }
 *[about="http://privatealpha.com/ontology/ibis/1#suggested-by"] {
-   color: #888;
+   color: #402d00;
    background-color: #ffbc00;
 }
 
 *[about="http://privatealpha.com/ontology/ibis/1#questions"] {
+   color: #4b2700;
    background-color: #ff9a40;
 }
 *[about="http://privatealpha.com/ontology/ibis/1#questioned-by"] {
+   color: #522200;
    background-color: #ff7800;
 }
 
 *[about="http://privatealpha.com/ontology/ibis/1#response"] {
+   color: #feb0c4;
    background-color: #8a0041;
 }
 *[about="http://privatealpha.com/ontology/ibis/1#responds-to"] {
+   color: #ffd8e1;
    background-color: #d50065;
 }
 
 *[about="http://privatealpha.com/ontology/ibis/1#supports"] {
+   color: #0d3800;
    background-color: #4dde00;
 }
 *[about="http://privatealpha.com/ontology/ibis/1#supported-by"] {
+   color: #0b2002;
    background-color: #55a62a;
 }
 
 *[about="http://privatealpha.com/ontology/ibis/1#opposes"] {
+   color: #400006;
    background-color: #ec0033;
 }
 *[about="http://privatealpha.com/ontology/ibis/1#opposed-by"] {
+   color: #f9dbde;
    background-color: #b12c49;
 }
 
 body[typeof~="ibis:Issue"], fieldset.issue, body[typeof~="ibis:Issue"] aside.predicate {
    /* background-color: #322;*/
    background-color: #41191a;
-}
-
-body[typeof~="ibis:Issue"] h1, fieldset.issue {
-   /*color: #988;*/
-   /*color: #bd5758;*/
+   border-color: #703535;
    color: #dac1c1;
 }
 
 body[typeof~="ibis:Position"], fieldset.position, body[typeof~="ibis:Position"] aside.predicate  {
    /*background-color: #232; */
    background-color: #192a19;
-}
-
-body[typeof~="ibis:Position"] h1, fieldset.position {
-   /*color: #898;*/
-   /*color: #568156;*/
+   border-color: #354c34;
    color: #a6d2a5;
 }
 
 body[typeof~="ibis:Argument"], fieldset.argument, body[typeof~="ibis:Argument"] aside.predicate {
    /*background-color: #223;*/
    background-color: #21214c;
-}
-
-body[typeof~="ibis:Argument"] h1, fieldset.argument  {
-   /*color: #889;*/
-   /*color: #7170b3;*/
+   border-color: #40407e;
    color: #c5c5d8;
 }
 
 body[typeof~="skos:Concept"], fieldset.concept, body[typeof~="skos:Concept"] aside.predicate {
    /*background-color: #323;*/
    background-color: #361d36;
-}
-
-body[typeof~="skos:Concept"] h1, fieldset.concept  {
-   /*color: #989;*/
-   /*color: #a060a1;*/
+   border-color: #361d36;
    color: #d7bfd8;
 }
 
-button[value="ibis:Issue"].set-type {
+/* maybe later
+li[typeof="ibis:Issue"] {
+   background-color: #d39e9e;
+   border-width: 1px;
+   border-color: #703535;
+   border-style: solid;
+   border-radius: 0.25em;
+   box-sizing: border-box;
+}*/
+
+button[value="ibis:Issue"].set-type, *[typeof~="ibis:Issue"] button {
    /*background-color: #600;*/
    color: #41191a;
    border-color: #41191a;
@@ -406,7 +421,7 @@ button[value="ibis:Issue"][disabled].set-type {
    background-color: #41191a;
 }
 
-button[value="ibis:Position"].set-type {
+button[value="ibis:Position"].set-type, body[typeof~="ibis:Position"] button {
    /*background-color: #060;*/
    color: #192a19;
    border-color: #192a19;
@@ -418,7 +433,7 @@ button[value="ibis:Position"][disabled].set-type {
    background-color: #192a19;
 }
 
-button[value="ibis:Argument"].set-type {
+button[value="ibis:Argument"].set-type, body[typeof~="ibis:Argument"] button {
    /*background-color: #006;*/
    color: #21214c;
    border-color: #21214c;
@@ -430,7 +445,7 @@ button[value="ibis:Argument"][disabled].set-type {
    background-color: #21214c;
 }
 
-button[value="skos:Concept"].set-type {
+button[value="skos:Concept"].set-type, body[typeof~="skos:Concept"] button {
    color: #361d36;
    border-color: #361d36;
    background-color: #5e3a5f;

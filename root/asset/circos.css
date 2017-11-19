@@ -80,10 +80,12 @@
 }
 
 path[rel~="ibis:generalizes"] {
-   fill: #5f7fff;
+   /*fill: #5f7fff;*/
+   fill: #6f87fe;
 }
 path[rel~="ibis:generalizes"].subject {
-   fill: #abbcff;
+   /*fill: #abbcff;*/
+   fill: #bac2fe;
 }
 
 path[rel~="ibis:specializes"] {
@@ -101,9 +103,11 @@ path[rel~="ibis:replaces"], path[rel~="ibis:replaced-by"] {
 
 path[rel~="ibis:suggests"] {
    fill: #ffcd40;
+   /*fill: #b28b00;*/
 }
 path[rel~="ibis:suggests"].subject {
    fill: #ffe08c;
+   /*fill: #f3bf00;*/
 }
 
 path[rel~="ibis:suggested-by"] {
@@ -115,9 +119,11 @@ path[rel~="ibis:suggested-by"].subject {
 
 path[rel~="ibis:questions"] {
    fill: #ff9a40;
+   /*fill: #d67900;*/
 }
 path[rel~="ibis:questions"].subject {
    fill: #ffc18c;
+   /*fill: #feb68a;*/
 }
 
 path[rel~="ibis:questioned-by"] {
