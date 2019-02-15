@@ -1,5 +1,6 @@
 package App::IBIS;
 
+use 5.012;
 use strict;
 use warnings FATAL => 'all';
 
@@ -35,7 +36,7 @@ use Convert::Color   ();
 use HTTP::Negotiate  ();
 use Unicode::Collate ();
 
-our $VERSION = '0.05_03';
+our $VERSION = '0.05_04';
 
 my (@LABELS, @ALT_LAB);
 

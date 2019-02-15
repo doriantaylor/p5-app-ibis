@@ -752,9 +752,10 @@ sub bulk :Local {
         #$c->log->debug($up->charset);
         #$fh->binmode(':raw');
 
+        # RDF::Trine 1.019 apparently no longer fucks up utf8
         my $p = RDF::Trine::Parser->new('turtle');
         $p->parse_into_model
-            (undef, $up->decoded_slurp(':raw'), $m);
+            (undef, $up->decoded_slurp(':utf8'), $m);
 
         $c->res->redirect('/');
         return;
@@ -1443,6 +1444,16 @@ sub _menu {
     @out;
 }
 
+sub _coerce_datetime {
+    my $d = shift;
+    return unless $d and Scalar::Util::blessed($d) and
+        $d->isa('RDF::Trine::Node::Literal') and $d->has_datatype and
+        $d->literal_datatype =~
+        qr!^http://www.w3.org/2001/XMLSchema#date(?:Time)?$!;
+
+    DateTime::Format::W3CDTF->parse_datetime($d->literal_value);
+}
+
 sub _do_index {
     my ($self, $c, @collections) = @_;
     my $m = $c->model('RDF');
@@ -1460,7 +1471,8 @@ sub _do_index {
                 my ($d) = $m->objects($o, $ns->dct->created);
                 my ($v) = $m->objects($o, $ns->rdf->value);
                 my $x = $set{$t->value} ||= [];
-                push @$x, [$o, $v || $o, $d];
+
+                push @$x, [$o, $v || $o, _coerce_datetime($d)];
             }
         }
     }
@@ -1471,22 +1483,26 @@ sub _do_index {
                 my ($d) = $m->objects($o, $ns->dct->created);
                 my ($v) = $m->objects($o, $ns->rdf->value);
                 my $x = $set{$t->value} ||= [];
-                push @$x, [$o, $v || $o, $d];
+                push @$x, [$o, $v || $o, _coerce_datetime($d)];
             }
         }
     }
+
+    my $cl = $c->collator;
+
+    # janky comparison function that does reverse chrono
+    my $cmp = sub {
+        my $x = int (defined $_[0][2] && defined $_[1][2] &&
+                         $_[1][2] <=> $_[0][2]);
+        $x || $cl->cmp($_[0][1]->value, $_[1][1]->value);
+    };
 
     my @out;
     for my $i (0..$#labels) {
         my @triads = @{$set{$types[$i]->value} || []};
 
-        # my %d = map {
-        #     $_->[0]->value => defined $_->[2] ? $_->[2]->value : undef
-        # } @triads;
-
         my @x;
-        my $cl = $c->collator;
-        for my $x (sort { $cl->cmp($a->[1]->value, $b->[1]->value) } @triads) {
+        for my $x (sort { $cmp->($a, $b) } @triads) {
             my ($s, $v) = @{$x}[0,1];
             my $uu = URI->new($s->value);
             push @x, {
