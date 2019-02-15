@@ -36,7 +36,7 @@ use Convert::Color   ();
 use HTTP::Negotiate  ();
 use Unicode::Collate ();
 
-our $VERSION = '0.05_04';
+our $VERSION = '0.06';
 
 my (@LABELS, @ALT_LAB);
 
@@ -81,7 +81,7 @@ after setup_finalize => sub {
     my $m  = $app->model('RDF');
     my $ns = $m->ns;
 
-    $app->log->debug('Contexts: ', $m->get_contexts);
+    $app->log->debug('Contexts: ' . join ' ', $m->get_contexts);
 
     @LABELS  = grep { defined $_ } map { $ns->uri($_) }
         qw(skos:prefLabel rdfs:label foaf:name dct:title
@@ -136,7 +136,7 @@ sub label_for {
     return unless $s->is_resource or $s->is_blank;
 
     my $m  = $c->model('RDF');
-    my $g  = $m->graph;
+    my $g  = $c->graph;
     my $ns = $m->ns;
 
     # get the sequence of candidates
@@ -146,7 +146,7 @@ sub label_for {
     my %out;
     for my $p (@candidates) {
         my @coll = grep { $_->is_literal and $_->literal_value !~ /^\s*$/ }
-            $m->objects($s, $p);
+            $m->objects($s, $p, $g);
 
         $out{$p->uri_value} = \@coll if @coll;
     }
@@ -172,6 +172,56 @@ sub label_for {
     else {
         return $s;
     }
+}
+
+=head2 rdf_cache [ $RESET ]
+
+Retrieve an in-memory cache of everything in C<< $c->graph >>,
+optionally resetting it.
+
+=cut
+
+sub rdf_cache {
+    my ($c, $reset) = @_;
+
+    my $g = $c->graph;
+
+    my $cache = $c->stash->{graph} ||= {};
+    my $model = $cache->{$g->value};
+
+    return $model if $model and !$reset;
+
+    $model = $cache->{$g->value} = RDF::Trine::Model->new
+        (RDF::Trine::Store::Hexastore->new);
+
+    $model->add_iterator
+        ($c->model('RDF')->get_statements(undef, undef, undef, $g));
+
+    $model;
+}
+
+=head2 graph
+
+Return the context graph of the instance. The graph defaults to
+C<< $c->req->base >> unless it is overridden directly in the
+configuration, or otherwise mapped to a different URI.
+
+(We can come back and lock the context down to the user or something
+later.)
+
+=cut
+
+sub graph {
+    my $c = shift;
+
+    my $g = $c->req->base;
+
+    if (my $cfg = $c->config->{graph}) {
+        $g = (ref $cfg eq 'HASH' and $cfg->{$g}) ? $cfg->{$g} : $cfg;
+    }
+
+    # i suppose this oculd theoretically
+    RDF::Trine::Node::Resource->new("$g");
 }
 
 =head1 SEE ALSO

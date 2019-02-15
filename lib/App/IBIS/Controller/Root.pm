@@ -103,7 +103,7 @@ sub index :Path :Args(0) {
     my $resp = $c->res;
 
     my $ns = $self->ns;
-    my $m  = $c->model('RDF');
+    my $m  = $c->rdf_cache;
 
     my %concepts;
     for my $s ($m->subjects($ns->rdf->type, $ns->skos->Concept)) {
@@ -180,7 +180,7 @@ sub ci2 :Local {
     my $ns  = $self->ns;
     my $bs  = $req->base;
     my $q   = $req->query_parameters;
-    my $ref = $q->{subject}; # || $q->{referrer} || $q->{referer} || $req->referer;
+    my $ref = $q->{subject};
     # i knew that would bite me in the ass
 
     my $deg = $q->{degrees} || 360;
@@ -189,8 +189,7 @@ sub ci2 :Local {
     # other handy things
     my $lab = $self->labels;
     my $inv = $self->inverse;
-    my $m   = $c->model('RDF');
-    my $g   = $m->graph;
+    my $m   = $c->rdf_cache;
 
     # first we obtain the subject either from the query string or from
     # the referrer
@@ -488,7 +487,7 @@ sub concepts :Local {
     my $ns  = $self->ns;
     my $b   = $req->base;
     my $q   = $req->query_parameters;
-    my $ref = $q->{subject}; # || $q->{referrer} || $q->{referer} || $req->referer;
+    my $ref = $q->{subject};
     # ditto
 
     my $deg = $q->{degrees} || 360;
@@ -497,8 +496,8 @@ sub concepts :Local {
     # other handy things
     my $lab = $self->labels;
     my $inv = $self->inverse;
-    my $m   = $c->model('RDF');
-    my $g   = $m->graph;
+    my $m   = $c->rdf_cache;
+    my $g   = $c->graph;
 
     # these are the nodes we want lit up; we get them from QS or Referer
     my %lit;
@@ -654,8 +653,8 @@ sub uuid :Private {
         $resp->content_type('application/xhtml+xml');
         # check model for subject
         my $m = $c->model('RDF');
-        my $g = $m->graph;
-        if (my @o = $m->objects($uuid, $self->ns->rdf->type)) {
+        my $g = $c->graph;
+        if (my @o = $m->objects($uuid, $self->ns->rdf->type, $g)) {
             # GHETTO FRESNEL
             my $d = $self->_dispatch;
             my ($handler) = map { $d->{$_->value} } grep { $d->{$_->value} } @o;
@@ -691,15 +690,15 @@ sub uuid :Private {
 sub _delete_uuid :Private {
     my ($self, $c, $uuid) = @_;
     my $m = $c->model('RDF');
-    my $g = $m->graph;
+    my $g = $c->graph;
 
     $c->log->debug($g);
 
     $c->log->debug(sprintf 'Model size: %d', $m->size);
 
     $m->begin_bulk_ops;
-    $m->remove_statements($uuid, undef, undef);
-    $m->remove_statements(undef, undef, $uuid);
+    $m->remove_statements($uuid, undef, undef, $g);
+    $m->remove_statements(undef, undef, $uuid, $g);
     $m->end_bulk_ops;
 
     $c->log->debug(sprintf 'New size: %d', $m->size);
@@ -719,7 +718,7 @@ sub dump :Local {
     $resp->content_type('text/plain');
     my $serializer = RDF::Trine::Serializer->new
         ('turtle', namespaces => $self->ns);
-    $resp->body($serializer->serialize_model_to_string($c->model('RDF')));
+    $resp->body($serializer->serialize_model_to_string($c->rdf_cache));
 }
 
 sub bulk :Local {
@@ -747,15 +746,16 @@ sub bulk :Local {
         my $up = $req->upload('data');
 
         my $m = $c->model('RDF');
-        my $g = $m->graph;
+        my $g = $c->graph;
         #my $fh = $up->decoded_fh(':raw');
         #$c->log->debug($up->charset);
         #$fh->binmode(':raw');
 
         # RDF::Trine 1.019 apparently no longer fucks up utf8
         my $p = RDF::Trine::Parser->new('turtle');
-        $p->parse_into_model
-            (undef, $up->decoded_slurp(':utf8'), $m);
+
+        $p->parse(undef, $up->decoded_slurp(':utf8'),
+                  sub { $m->add_statement(shift, $g) });
 
         $c->res->redirect('/');
         return;
@@ -785,8 +785,7 @@ sub feed :Local {
     my ($self, $c) = @_;
 
     my $ns = $self->ns;
-    my $m  = $c->model('RDF');
-    my $g  = $m->graph;
+    my $m  = $c->rdf_cache;
 
     # specify relevant types
     my @t  = map { $ns->ibis->uri($_) } qw(Issue Position Argument);
@@ -880,8 +879,7 @@ sub feed :Local {
 sub _get_concept :Private {
     my ($self, $c, $subject) = @_;
 
-    my $m  = $c->model('RDF');
-    my $g  = $m->graph;
+    my $m  = $c->rdf_cache;
     my $ns = $self->ns;
 
     my ($label) = $m->objects($subject, $ns->skos->prefLabel);
@@ -894,38 +892,44 @@ sub _get_concept :Private {
         uri   => $c->req->uri,
         title => $label->value,
         attr  => { typeof => 'skos:Concept' },
-        content => { -name => 'main', -content => [
-            { -name => 'figure', class => 'aside', -content => [
-                { -name => 'object', class => 'baby hiveplot',
-                  type => 'image/svg+xml',
-                  data => $c->uri_for('ci2',
-                                      { degrees => 240, rotate => 60 }) },
-                { -name => 'object', class => 'hiveplot',
-                  type => 'image/svg+xml',
-                  data => $c->uri_for(concepts => {
-                      subject => $uu->uuid, degrees => 240, rotate => 60 }) },
-            ] },
-            { -name => 'article', -content => [
-                { -name => 'section', -content => [
-                    { -name => 'h1', -content => { %FORMBP, -content => [
-                        { -name => 'input', type => 'text',
-                          name => '= skos:prefLabel',
-                          value => $label->literal_value },
-                        { -name => 'button', class => 'fa fa-repeat',
-                          -content => '', } ] } },
-                    { %FORMBP, -content => [
-                        { -name => 'textarea', class => 'description',
-                          name => '= skos:description', -content => $desc },
-                        { -name => 'button', class => 'update fa fa-repeat',
-                          -content => '' } ] },
-                    $self->_do_link_form($c, $subject),
-                    $self->_do_link_form($c, $subject, 1),
+        content => [
+            { -name => 'main', -content => [
+                { -name => 'figure', class => 'aside', -content => [
+                    { -name => 'object', class => 'baby hiveplot',
+                      type => 'image/svg+xml',
+                      data => $c->uri_for('ci2',
+                                          { degrees => 240, rotate => 60 }) },
+                    { -name => 'object', class => 'hiveplot',
+                      type => 'image/svg+xml',
+                      data => $c->uri_for(concepts => {
+                          subject => $uu->uuid,
+                          degrees => 240, rotate => 60 }) },
+                ] },
+                { -name => 'article', -content => [
+                    { -name => 'section', -content => [
+                        { -name => 'h1', -content => { %FORMBP, -content => [
+                            { -name => 'input', type => 'text',
+                              name => '= skos:prefLabel',
+                              value => $label->literal_value },
+                            { -name => 'button', class => 'fa fa-repeat',
+                              -content => '', } ] } },
+                        { %FORMBP, -content => [
+                            { -name => 'textarea', class => 'description',
+                              name => '= skos:description', -content => $desc },
+                            { -name => 'button', class => 'update fa fa-repeat',
+                              -content => '' } ] },
+                        $self->_do_link_form($c, $subject),
+                        $self->_do_link_form($c, $subject, 1),
                     ] },
-                $self->_do_concept_neighbours($c, $subject),
-                TOGGLE,
-                $self->_do_concept_create_form($c, $subject),
-                $self->_do_concept_connect_form($c, $subject),
-            ] } ] }
+                    $self->_do_concept_neighbours($c, $subject),
+                    TOGGLE,
+                    $self->_do_concept_create_form($c, $subject),
+                    $self->_do_concept_connect_form($c, $subject),
+                ] },
+            ] },
+            { -name => 'footer',
+              -content => { href => '/', -content => 'Overview' } },
+        ],
     );
 
     $c->res->body($doc);
@@ -945,8 +949,7 @@ sub _do_concept_neighbours {
     my ($self, $c, $subject) = @_;
 
     my $bs  = $c->req->base;
-    my $m   = $c->model('RDF');
-    my $g   = $m->graph;
+    my $m   = $c->rdf_cache;
     my $ns  = $self->ns;
     my $inv = $self->inverse;
     my $sv  = $subject->uri_value;
@@ -1087,8 +1090,7 @@ sub _do_concept_create_form {
 sub _do_concept_connect_form {
     my ($self, $c, $subject) = @_;
     my $ns = $self->ns;
-    my $m  = $c->model('RDF');
-    my $g  = $m->graph;
+    my $m  = $c->rdf_cache;
 
     my %c;
     for my $c ($m->subjects($ns->rdf->type, $ns->skos->Concept)) {
@@ -1118,8 +1120,7 @@ sub _get_collection :Private {
 
     my $uri = $c->req->uri;
 
-    my $m = $c->model('RDF');
-    my $g = $m->graph;
+    my $m = $c->rdf_cache;
 
     #warn $subject;
     my $rns = $self->ns;
@@ -1159,8 +1160,7 @@ sub _get_ibis :Private {
     my $uu  = URI->new($subject->uri_value);
     my $su  = URI->new_abs($uu->uuid, $uri);
 
-    my $m = $c->model('RDF');
-    my $g = $m->graph;
+    my $m = $c->rdf_cache;
 
     #warn $subject;
     my $rns = $self->ns;
@@ -1265,14 +1265,14 @@ sub _post_uuid {
     });
 
     my $rns = $self->ns;
-    my $m = $c->model('RDF');
-    my $g = $m->graph;
+    my $m = $c->model('RDF'); # this actually needs the writable one
+    my $g = $c->graph;
 
     my $kv = RDF::KV->new(
         #subject    => 'http://deuce:5000/' . $uuid->uuid,
         subject    => $c->req->base . $uuid->uuid,
         namespaces => $ns,
-        #graph      => $g->value,
+        graph      => $g->value,
         callback   => \&_to_urn,
    );
 
@@ -1289,19 +1289,22 @@ sub _post_uuid {
 
     # XXX HACK this should really apply to all subjects (resources?)
     # in the graph but RDF::KV has no way of spitting them all out
-    unless ($m->count_statements($subject, $rns->dct->created, undef)) {
+    unless ($m->count_statements($subject, $rns->dct->created, undef, $g)) {
         my $now = literal(DateTime->now . 'Z', undef, $rns->xsd->dateTime);
-        $patch->add_this($subject, $rns->dct->created, $now);
+        $patch->add_this($subject, $rns->dct->created, $now, $g);
     }
 
+    $m->begin_bulk_ops;
     eval { $patch->apply($m) };
     if ($@) {
         $c->log->error("cannot apply patch: $@");
     }
+    else {
+        $m->end_bulk_ops;
+        $c->log->debug("New size: " .$m->size);
+    }
 
-    $m->_store->_model->sync;
-    $c->log->debug("New size: " .$m->size);
-
+    #$m->_store->_model->sync;
 }
 
 =head2 default
@@ -1330,12 +1333,12 @@ sub default :Path {
 
 sub _naive_typeof {
     my ($self, $c, @types) = @_;
-    my $m = $c->model('RDF');
+    my $m = $c->rdf_cache;
     my %out;
     for my $t (@types) {
         my $v = $t->value;
         $out{$v} ||= {};
-        for my $s ($m->subjects($self->ns->rdf->type, $t)) {
+        for my $s ($m->subjects($self->ns->rdf->type, $t, $c->graph)) {
             $out{$v}{$s->value} = 1;
         }
     }
@@ -1353,7 +1356,7 @@ sub _select {
     my @labels = qw(Issue Position Argument);
     my @types  = map { $self->ns->ibis->uri($_) } @labels;
     my $map    = $self->_naive_typeof($c, @types);
-    my $model  = $c->model('RDF');
+    my $model  = $c->rdf_cache;
     my @opts;
     for my $i (0..$#labels) {
         my $l = $labels[$i];
@@ -1456,7 +1459,7 @@ sub _coerce_datetime {
 
 sub _do_index {
     my ($self, $c, @collections) = @_;
-    my $m = $c->model('RDF');
+    my $m  = $c->rdf_cache;
     my $ns = $self->ns;
 
 
@@ -1523,8 +1526,8 @@ sub _do_content {
     my ($self, $c, $subject, $demote) = @_;
     my (%in, %res, %lit, $iter);
 
-    my $m = $c->model('RDF');
-    my $g = $m->graph;
+    my $m = $c->rdf_cache;
+
     my $ns      = $self->ns;
     my $inverse = $self->inverse;
     my $labels  = $self->labels;
@@ -1677,7 +1680,7 @@ sub _do_content {
 sub _do_link_form {
     my ($self, $c, $subject, $reverse, $name) = @_;
 
-    my $m  = $c->model('RDF');
+    my $m  = $c->rdf_cache;
     my $ns = $self->ns;
     my $bs  = $c->req->base;
 
@@ -1729,7 +1732,7 @@ sub _do_link_form {
 sub _do_concept_form {
     my ($self, $c, $subject, $name) = @_;
 
-    my $m  = $c->model('RDF');
+    my $m  = $c->rdf_cache;
     my $ns = $self->ns;
     my $bs = $c->req->base;
 
@@ -1810,7 +1813,7 @@ sub _do_concept_form {
 sub _do_collection_form {
     my ($self, $c, $subject) = @_;
 
-    my $m = $c->model('RDF');
+    my $m = $c->rdf_cache;
     my $ns = $self->ns;
 
     my @has = $m->subjects($ns->skos->member, $subject);
@@ -1917,7 +1920,7 @@ sub _do_connect_form {
 sub _do_create_form {
     my ($self, $c, $subject, $type) = @_;
 
-    my $m  = $c->model('RDF');
+    my $m  = $c->rdf_cache;
     my $ns = $self->ns;
 
     my $s = $subject->isa('RDF::Trine::Node') ? $subject : iri("$subject");
