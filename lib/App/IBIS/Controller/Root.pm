@@ -1209,7 +1209,7 @@ sub _get_ibis :Private {
             map +{ -name => 'script', type => 'text/javascript', src => $_ },
             qw(/asset/jquery.js /asset/main.js) ],
         attr  => \%attrs,
-        content => { -name => 'main', -content => [
+        content => [ { -name => 'main', -content => [
             { -name => 'figure', class => 'aside', -content => [
                 { -name => 'object', class => 'other baby hiveplot',
                   type => 'image/svg+xml',
@@ -1227,6 +1227,9 @@ sub _get_ibis :Private {
                     $self->_do_connect_form($c, $subject, $type),
                     $self->_do_create_form($c, $uri, $type) ] },
             ] } ] },
+            { -name => 'footer',
+              -content => { href => '/', -content => 'Overview' } },
+        ],
     );
 
     # XXX forward this maybe?
@@ -1239,7 +1242,6 @@ sub _to_urn {
     if (my ($uuid) = ($path =~ $UUID_RE)) {
         #warn $uuid;
         my $out = URI->new("urn:uuid:$uuid");
-        warn $out;
         return $out;
     }
     return $path;

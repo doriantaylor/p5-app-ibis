@@ -189,7 +189,12 @@ sub rdf_cache {
     my $cache = $c->stash->{graph} ||= {};
     my $model = $cache->{$g->value};
 
-    return $model if $model and !$reset;
+    if ($model) {
+        return $model unless $reset;
+        # make sure we empty this thing before overwriting it in case
+        # there are cyclical references
+        $model->nuke;
+    }
 
     $model = $cache->{$g->value} = RDF::Trine::Model->new
         (RDF::Trine::Store::Hexastore->new);

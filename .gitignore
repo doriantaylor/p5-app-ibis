@@ -21,3 +21,5 @@ MYMETA.json
 nytprof*
 *.db
 *.orig
+root/asset/jq*
+root/asset/font*

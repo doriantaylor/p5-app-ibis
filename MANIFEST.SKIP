@@ -112,3 +112,4 @@ nytprof\.out$
 nytprof/.*
 App-IBIS.*\.tar\.gz
 \.db
+\.ttl
