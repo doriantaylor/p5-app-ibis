@@ -7,6 +7,11 @@ use warnings FATAL => 'all';
 use Moose;
 use namespace::autoclean;
 
+use Convert::Color   ();
+use HTTP::Negotiate  ();
+use Unicode::Collate ();
+use RDF::Trine       ();
+
 use Catalyst::Runtime 5.80;
 
 # Set flags and add plugins for the application.
@@ -32,9 +37,9 @@ use Catalyst qw/
 
 extends 'Catalyst';
 
-use Convert::Color   ();
-use HTTP::Negotiate  ();
-use Unicode::Collate ();
+# XXX this thing is dumb; no need to be a role, it's just data
+with 'App::IBIS::Role::Schema';
+with 'Role::Markup::XML';
 
 our $VERSION = '0.06';
 
@@ -227,6 +232,34 @@ sub graph {
 
     # i suppose this oculd theoretically
     RDF::Trine::Node::Resource->new("$g");
+}
+
+=head2 stub %PARAMS
+
+Generate a stub document with all the trimmings.
+
+=cut
+
+sub stub {
+    my ($c, %p) = @_;
+
+    #my %ns = (%{$self->uns}, %{$p{ns} || {}});
+
+    my $css = $c->config->{css} || '/asset/main.css';
+
+    my ($body, $doc) = $c->_XHTML(
+        %p,
+        link  => [
+            { rel => 'stylesheet', type => 'text/css', href => $css },
+            { rel => 'alternate', type => 'application/atom+xml',
+              href => '/feed' } ],
+        head  => [
+            map +{ -name => 'script', type => 'text/javascript', src => $_ },
+            qw(/asset/jquery.js /asset/main.js) ],
+        ns => $c->uns,
+    );
+
+    wantarray ? ($body, $doc) : $doc;
 }
 
 =head1 SEE ALSO

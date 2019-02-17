@@ -20,7 +20,7 @@ BEGIN {
 use RDF::Trine qw(iri blank literal);
 use RDF::Trine::Namespace qw(RDF);
 use constant IBIS => RDF::Trine::Namespace->new
-    ('http://privatealpha.com/ontology/ibis/1#');
+    ('https://privatealpha.com/ontology/ibis/1#');
 
 use RDF::KV;
 use DateTime;
@@ -127,7 +127,7 @@ sub index :Path :Args(0) {
 
     my $new ||= '/' . $self->uuid4;
 
-    my $doc = $self->_doc(
+    my $doc = $c->stub(
         uri => $req->base,
         title => 'Welcome to App::IBIS: We Have Issues.',
         content => [
@@ -454,10 +454,10 @@ sub ci2 :Local {
     #     warn "$wtf{$k} => $k";
     # }
 
-    $c->log->debug(sprintf 'node %d statement %d stream %d',
-                   scalar keys %_p_librdf_node_s::OWNER,
-                   scalar keys %_p_librdf_statement_s::OWNER,
-                   scalar keys %_p_librdf_stream_s::OWNER);
+    # $c->log->debug(sprintf 'node %d statement %d stream %d',
+    #                scalar keys %_p_librdf_node_s::OWNER,
+    #                scalar keys %_p_librdf_statement_s::OWNER,
+    #                scalar keys %_p_librdf_stream_s::OWNER);
 
     # for my $k (keys %_p_librdf_node_s::OWNER) {
     #     warn sprintf "%s => %s", $k, $_p_librdf_node_s::OWNER{$k};
@@ -497,7 +497,6 @@ sub concepts :Local {
     my $lab = $self->labels;
     my $inv = $self->inverse;
     my $m   = $c->rdf_cache;
-    my $g   = $c->graph;
 
     # these are the nodes we want lit up; we get them from QS or Referer
     my %lit;
@@ -657,11 +656,18 @@ sub uuid :Private {
         if (my @o = $m->objects($uuid, $self->ns->rdf->type, $g)) {
             # GHETTO FRESNEL
             my $d = $self->_dispatch;
-            my ($handler) = map { $d->{$_->value} } grep { $d->{$_->value} } @o;
-            #warn $handler;
-            $resp->status(200);
-            $c->forward($handler, [$uuid]);
-            #$resp->body($self->_get_uuid($c, $req->uri, $uuid));
+            if (my ($handler) = map { $d->{$_->value} }
+                    grep { $d->{$_->value} } @o) {
+                $resp->status(200);
+                $c->forward($handler, [$uuid]);
+            }
+            else {
+                $c->log->debug('no handler for type(s) ' . join ' ', @o);
+                $resp->status(501);
+
+                my $msg = $c->stub(content => 'sorry boss');
+                $resp->body($msg);
+            }
         }
         else {
             # 404
@@ -669,7 +675,7 @@ sub uuid :Private {
             $c->log->debug("failed to identify $new");
             $new =~ s!urn:uuid:!/!;
             $resp->status(404);
-            my $msg = $self->_doc(
+            my $msg = $c->stub(
                 uri => $req->base,
                 title => 'Nothing here. Make something?',
                 content => $self->_do_404($new));
@@ -729,7 +735,7 @@ sub bulk :Local {
 
     if ($rm eq 'GET' or $rm eq 'HEAD') {
 
-        my $doc = $self->_doc(
+        my $doc = $c->stub(
             title => 'Load a (Turtle) data file',
             uri   => $req->uri,
             content => {
@@ -858,7 +864,7 @@ sub feed :Local {
             };
         }
 
-        my $doc = $self->_DOC;
+        my $doc = $c->stub;
         $self->_XML(
             doc => $doc,
             spec => {
@@ -888,7 +894,7 @@ sub _get_concept :Private {
 
     my $uu = URI->new($subject->uri_value);
 
-    my $doc = $self->_doc(
+    my $doc = $c->stub(
         uri   => $c->req->uri,
         title => $label->value,
         attr  => { typeof => 'skos:Concept' },
@@ -928,7 +934,11 @@ sub _get_concept :Private {
                 ] },
             ] },
             { -name => 'footer',
-              -content => { href => '/', -content => 'Overview' } },
+              -content => [
+                  { href => '/', -content => 'Overview' },
+                  { -name => 'button', id => 'toggle-full-screen',
+                    -content => 'Full Screen' },
+              ] },
         ],
     );
 
@@ -1135,7 +1145,7 @@ sub _get_collection :Private {
 
     my $maybetitle = $title ? $title->value : '';
 
-    my $doc = $self->_doc(
+    my $doc = $c->stub(
         uri   => $uri,
         title => $maybetitle || $subject->value,
         attr  => \%attrs,
@@ -1196,13 +1206,14 @@ sub _get_ibis :Private {
     my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid,
                                    degrees => 240, rotate => 60, });
 
+    my $css = $c->config->{css} || '/asset/main.css';
+
     my (undef, $doc) = $self->_XHTML(
         ns    => $self->uns,
         uri   => $uri,
         title => $label . $title ? $title->value : '',
         link  => [
-            { rel => 'stylesheet', type => 'text/css',
-              href => '/asset/main.css' },
+            { rel => 'stylesheet', type => 'text/css', href => $css },
             { rel => 'alternate', type => 'application/atom+xml',
               href => '/feed' } ],
         head  => [
@@ -1228,7 +1239,11 @@ sub _get_ibis :Private {
                     $self->_do_create_form($c, $uri, $type) ] },
             ] } ] },
             { -name => 'footer',
-              -content => { href => '/', -content => 'Overview' } },
+              -content => [
+                  { href => '/', -content => 'Overview' },
+                  { -name => 'button', id => 'toggle-full-screen',
+                    -content => 'Full Screen' },
+              ] },
         ],
     );
 
@@ -1261,7 +1276,7 @@ sub _post_uuid {
     # XXX lame
     my $ns = URI::NamespaceMap->new({
         rdf  => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        ibis => 'http://privatealpha.com/ontology/ibis/1#',
+        ibis => 'https://privatealpha.com/ontology/ibis/1#',
         skos => 'http://www.w3.org/2004/02/skos/core#',
         dct  => 'http://purl.org/dc/terms/',
     });
@@ -1325,7 +1340,7 @@ sub default :Path {
 
     $c->log->debug(@p);
     $c->res->status(404);
-    my $doc = $self->_doc(
+    my $doc = $c->stub(
         title => 'Nothing here. Make something?',
         uri => $c->req->base, content => $self->_do_404);
 
@@ -1340,7 +1355,7 @@ sub _naive_typeof {
     for my $t (@types) {
         my $v = $t->value;
         $out{$v} ||= {};
-        for my $s ($m->subjects($self->ns->rdf->type, $t, $c->graph)) {
+        for my $s ($m->subjects($self->ns->rdf->type, $t)) {
             $out{$v}{$s->value} = 1;
         }
     }
@@ -1952,26 +1967,6 @@ sub _do_create_form {
           } ] } };
 }
 
-sub _doc {
-    my ($self, %p) = @_;
-
-    #my %ns = (%{$self->uns}, %{$p{ns} || {}});
-
-    my ($body, $doc) = $self->_XHTML(
-        %p,
-        link  => [
-            { rel => 'stylesheet', type => 'text/css',
-              href => '/asset/main.css' },
-            { rel => 'alternate', type => 'application/atom+xml',
-              href => '/feed' } ],
-        head  => [
-            map +{ -name => 'script', type => 'text/javascript', src => $_ },
-            qw(/asset/jquery.js /asset/main.js) ],
-        ns => $self->uns,
-    );
-
-    wantarray ? ($body, $doc) : $doc;
-}
 
 =head2 config
 

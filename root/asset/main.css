@@ -1,787 +1,801 @@
 @import url("/asset/font-awesome.css");
-
 * {
-   border-color: inherit;
+  border-color: inherit;
 }
 
 html {
-   width: 100%;
-   min-height: 100%;
-   /*overflow-y: scroll;*/
-   overflow: hidden;
-   font-family: Roboto, Helvetica Neue, sans-serif;
-   background-color: #333;
-   color: #999;
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  font-family: Roboto, Helvetica Neue, sans-serif;
+  background-color: #333;
+  color: #999;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 main {
-   position: absolute;
-   overflow: hidden;
-   top: 0;
-   /*bottom: 0;*/
-   left: 0;
-   right: 0;
-   /*min-width: 100%;*/
-   height: 100%;
-   /*width: 70ex;*/
-   padding: 0;
-   margin: 0;
-   -moz-box-shadow: inset 0px 0px 40px #000;
-   -webkit-box-shadow: inset 0px 0px 40px #000;
-   box-shadow: inset 0px 0px 40px #000;
-   /*padding: 3em auto; */
+  position: absolute;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 2em;
+  padding: 0;
+  margin: 0;
+  -webkit-box-shadow: inset 0px 0px 40px #000;
+  -moz-box-shadow: inset 0px 0px 40px #000;
+  -ms-box-shadow: inset 0px 0px 40px #000;
+  -o-box-shadow: inset 0px 0px 40px #000;
+  box-shadow: inset 0px 0px 40px #000;
+}
+
+article {
+  -webkit-border-radius: 1em;
+  -moz-border-radius: 1em;
+  -ms-border-radius: 1em;
+  -o-border-radius: 1em;
+  border-radius: 1em;
+  display: inline-block;
+  position: absolute;
+  margin: 1em 1em 1em 5%;
+  padding: 0 1em;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 45%;
+  max-width: 70ex;
+  z-index: 2;
+  overflow: visible auto;
 }
 
 footer {
-   position: absolute;
-   bottom: 0;
-   width: 45%;
-   text-align: right;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5em;
+  text-align: right;
+  padding: 0.25em 0.5em;
+  background-color: black;
+  line-height: 1.5em;
+}
+
+footer > a {
+  display: inline-block;
+  height: 100%;
 }
 
 figure {
-   display: inline-block;
-}
-
-fieldset {
-   border-style: inherit;
-   border-width: inherit;
-   margin: 0;
-   padding: 0;
-}
-
-fieldset.relation {
-   font-size: 75%;
-   float: left;
-   /*width: 25%;*/
-   width: 33.33%;
-   /*height: 15em; */
-   height: 12em;
-   /*margin: 2%;*/
-   overflow: hidden;
-}
-
-fieldset.skos.relation {
-   height: 6em;
-}
-
-fieldset.relation legend {
-   font-weight: bold;
-}
-
-fieldset.relation ul {
-   padding: 0 0 0 0.5em;
-   list-style-type: none;
-}
-
-input[type="text"], input[type="submit"], input[type="reset"], select, button {
-   font-family: inherit;
-   font-size: inherit;
-   font-weight: inherit;
-   background-color: inherit;
-   color: inherit;
-   border-width: 1px;
-   border-style: solid;
-   border-radius: 0.25em;
-}
-
-form {
-   border-color: inherit;
-}
-
-form#blank-page {
-   margin: 5em auto;
-   width: 70ex;
-}
-
-form#toggle-which {
-   padding: 0.25em;
-}
-
-form#toggle-which label {
-   display: inline-block;
-   /*float: left;*/
-   width: 40%;
-   margin: 0 2%;
-   font-size: 80%;
-   font-weight: bold;
-   text-align: center;
-}
-
-fieldset.issue {
-   border-top-left-radius: 0.5em;
-   border-bottom-left-radius: 0.5em;
-}
-fieldset.argument {
-   border-top-right-radius: 0.5em;
-   border-bottom-right-radius: 0.5em;
-}
-
-fieldset.interaction {
-   height: 2em;
-   margin: auto;
-   padding: 1em;
-}
-
-select.target, input.new-value {
-   min-width: 75%;
-   max-width: 32ex;
-}
-
-select.target option {
-   max-width: 70ex;
-   overflow-x: hidden;
-   text-overflow: ellipsis;
-}
-
-/*
-optgroup {
-   font-size: 75%;
-   line-height: 1.33em;
-   padding-left: 0.5em;
-}*/
-
-option {
-   padding: 0 0 0 1ex;
-}
-
-button:hover, label:hover {
-   cursor: pointer;
-}
-
-button[disabled] {
-   /*border-color: #222;*/
-   color: #222;
-}
-button[disabled]:hover, label[disabled]:hover {
-   cursor: auto;
-}
-
-button.disconnect {
-   font-size: 75%;
-   display: inline-block;
-   float: right;
-   margin: 0 0 0.5em 1em;
-   padding: 0.25em;
-   border-radius: 0.25em;
-}
-
-form.set-type {
-   margin: auto;
-   text-align: right;
-}
-
-button.set-type {
-   font-size: 75%;
-   vertical-align: middle;
-}
-
-a {
-   text-decoration: none;
-}
-a:link {
-   /*color: #99a;*/
-   color: #cd9bce;
-}
-a:visited {
-   /*color: #a9a;*/
-   color: #b280b2;
-}
-a:hover {
-   /*color: #aab;*/
-   color: #ddbcde;
-   text-decoration: underline;
-}
-
-main {
-   display: block;
-   width: 100%;
-   min-height: 100%;
-}
-
-article {
-   /*float: left;*/
-   display: inline-block;
-   position: absolute;
-   width: 45%;
-   overflow: visible;
-   margin-left: 5%;
-   z-index: 2  ;
-   position: absolute;
-   right: 0;
+  display: inline-block;
 }
 
 figure.aside {
-   position: absolute;
-   top: 0;
-   left: 0;
-   display: inline-block;
-   max-width: 65%;
-   width: 40%;
-   height: 50%;
-   margin: 0;
-   overflow: visible;
-   width: 100%;
-   height: 100%;
-   z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  max-width: 65%;
+  width: 40%;
+  height: 50%;
+  margin: 0;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 figure > object {
-   display: block;
-   max-width: 100%;
-   height: 100%;
-}
-
-/*
-object[type="image/svg+xml"] {
-   display: inline-block;
-   width: auto;
-   height: auto;
-}*/
-
-
-object.hiveplot {
-   display: block;
-   width: 100%;
-   height: 100%;
-}
-
-object.baby.hiveplot {
-   display: block;
-   position: absolute;
-   top: 0;
-   left: 0;
-   width: auto;
-   height: 25%;
-   transform: rotate(45deg);
-}
-
-object.other.baby.hiveplot {
-   top: unset;
-   bottom: 0;
-   width: auto;
-   height: 25%;
-   transform: rotate(-45deg);
-}
-
-aside.predicate, td.predicate {
-   display: block;
-   background-color: black;
-   padding: 0.5em;
-   -moz-border-radius: 1em;
-   border-radius: 1em;
-   margin-bottom: 0.5em;
-}
-
-td.predicate {
-   vertical-align: top;
-   display: table-cell;
+  display: block;
+  max-width: 100%;
+  height: 100%;
 }
 
 dl.predicates, aside.predicate, td.predicate {
-   font-size: 80%;
+  font-size: 80%;
 }
 
-aside.predicate h3, td.predicate h3 {
-   margin: 0 0 0.5em 0.25em;
-}
-
-aside.predicate ul, td.predicate ul {
-   margin: 0;
-   padding-left: 1em;
-}
-
-aside.predicate li, td.predicate li {
-   list-style-type: none;
-}
-
-dt {
-   font-weight: bold;
-}
-
-dd, aside.predicate li, td.predicate li {
-   margin-left: 0.5em;
-   padding: 0.2em;
-   margin-bottom: 0.5em;
-}
-
-/* uhh this is a terrible designation */
-
-aside.predicate.link ul li a, aside.predicate.concept ul li a  {
-   display: inline-block;
-   max-width: 80%;
-   overflow: hidden;
-   text-overflow: ellipsis;
-   white-space: nowrap;
-}
-
-*[property="rdfs:label"], h3.label {
-   /* color: #ddd; */
-   padding: 0.1em 0.3em;
-   display: inline-block;
-   -moz-border-radius: 0.4em;
-   border-radius: 0.4em;
-}
-
-*[about="http://privatealpha.com/ontology/ibis/1#generalizes"] {
-   color: #00164d;
-   background-color: #5f7fff;
-}
-
-*[about="http://privatealpha.com/ontology/ibis/1#specializes"] {
-   color: #bec1fe;
-   background-color: #0033ff;
-}
-
-*[about="http://privatealpha.com/ontology/ibis/1#suggests"] {
-   color: #3d2e00;
-   background-color: #ffcd40;
-}
-*[about="http://privatealpha.com/ontology/ibis/1#suggested-by"] {
-   color: #402d00;
-   background-color: #ffbc00;
-}
-
-*[about="http://privatealpha.com/ontology/ibis/1#questions"] {
-   color: #4b2700;
-   background-color: #ff9a40;
-}
-*[about="http://privatealpha.com/ontology/ibis/1#questioned-by"] {
-   color: #522200;
-   background-color: #ff7800;
-}
-
-*[about="http://privatealpha.com/ontology/ibis/1#response"] {
-   color: #feb0c4;
-   background-color: #8a0041;
-}
-*[about="http://privatealpha.com/ontology/ibis/1#responds-to"] {
-   color: #ffd8e1;
-   background-color: #d50065;
-}
-
-*[about="http://privatealpha.com/ontology/ibis/1#supports"] {
-   color: #0d3800;
-   background-color: #4dde00;
-}
-*[about="http://privatealpha.com/ontology/ibis/1#supported-by"] {
-   color: #0b2002;
-   background-color: #55a62a;
-}
-
-*[about="http://privatealpha.com/ontology/ibis/1#opposes"] {
-   color: #400006;
-   background-color: #ec0033;
-}
-*[about="http://privatealpha.com/ontology/ibis/1#opposed-by"] {
-   color: #f9dbde;
-   background-color: #b12c49;
-}
-
-body[typeof~="ibis:Issue"], fieldset.issue, body[typeof~="ibis:Issue"] aside.predicate {
-   /* background-color: #322;*/
-   background-color: #41191a;
-   border-color: #703535;
-   color: #dac1c1;
-}
-
-body[typeof~="ibis:Position"], fieldset.position, body[typeof~="ibis:Position"] aside.predicate  {
-   /*background-color: #232; */
-   background-color: #192a19;
-   border-color: #354c34;
-   color: #a6d2a5;
-}
-
-body[typeof~="ibis:Argument"], fieldset.argument, body[typeof~="ibis:Argument"] aside.predicate {
-   /*background-color: #223;*/
-   background-color: #21214c;
-   border-color: #40407e;
-   color: #c5c5d8;
-}
-
-body[typeof~="skos:Concept"], fieldset.concept, body[typeof~="skos:Concept"] aside.predicate {
-   /*background-color: #323;*/
-   background-color: #361d36;
-   border-color: #361d36;
-   color: #d7bfd8;
-}
-
-/* maybe later
-li[typeof="ibis:Issue"] {
-   background-color: #d39e9e;
-   border-width: 1px;
-   border-color: #703535;
-   border-style: solid;
-   border-radius: 0.25em;
-   box-sizing: border-box;
-}*/
-
-button[value="ibis:Issue"].set-type, *[typeof~="ibis:Issue"] button {
-   /*background-color: #600;*/
-   color: #41191a;
-   border-color: #41191a;
-   background-color: #703535;
-}
-button[value="ibis:Issue"][disabled].set-type {
-   color: #703535;
-   border-color: #703535;
-   background-color: #41191a;
-}
-
-button[value="ibis:Position"].set-type, body[typeof~="ibis:Position"] button {
-   /*background-color: #060;*/
-   color: #192a19;
-   border-color: #192a19;
-   background-color: #354c34;
-}
-button[value="ibis:Position"][disabled].set-type {
-   color: #354c34;
-   border-color: #354c34;
-   background-color: #192a19;
-}
-
-button[value="ibis:Argument"].set-type, body[typeof~="ibis:Argument"] button {
-   /*background-color: #006;*/
-   color: #21214c;
-   border-color: #21214c;
-   background-color: #40407e;
-}
-button[value="ibis:Argument"][disabled].set-type {
-   color: #40407e;
-   border-color: #40407e;
-   background-color: #21214c;
-}
-
-button[value="skos:Concept"].set-type, body[typeof~="skos:Concept"] button {
-   color: #361d36;
-   border-color: #361d36;
-   background-color: #5e3a5f;
-}
-
-li[typeof~="ibis:Issue"] a {
-   /*color: #c99;*/
-   color: #d39e9e;
-}
-li[typeof~="ibis:Issue"] a:hover {
-   color: #f4dddd;
-}
-
-li[typeof~="ibis:Position"] a {
-   /*color: #9c9;*/
-   color: #84b883;
-}
-li[typeof~="ibis:Position"] a:hover {
-   color: #a7f5a5;
-}
-
-li[typeof~="ibis:Argument"] a {
-   /*color: #99c;*/
-   color: #a8a8ce;
-}
-li[typeof~="ibis:Argument"] a:hover {
-   color: #e1e1f4;
-}
-
-input, select, option, textarea, button {
-   background-color: transparent;
-}
-button {
-   padding: 1pt 1ex;
-}
-
-textarea.heading, textarea.description {
-   border: none;
-   color: inherit;
-   font-family: inherit;
-   font-size: inherit;
-   font-weight: inherit;
-   font-style: inherit;
-   width: 100%;
-   resize: none;
-   overflow: visible;
-   height: 5em;
-   white-space: pre-wrap;
+td.predicate {
+  vertical-align: top;
+  display: table-cell;
 }
 
 aside.collection {
-   display: none;
-   
+  display: none;
+}
+
+aside.predicate, td.predicate {
+  display: block;
+  background-color: black;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  -webkit-border-radius: 1em;
+  -moz-border-radius: 1em;
+  -ms-border-radius: 1em;
+  -o-border-radius: 1em;
+  border-radius: 1em;
+}
+
+aside.predicate h3, td.predicate h3 {
+  margin: 0 0 0.5em 0.25em;
+}
+
+aside.predicate ul, td.predicate ul {
+  margin: 0;
+  padding-left: 0.5em;
+}
+
+aside.predicate li, td.predicate li {
+  list-style-type: none;
+  margin-left: 0.25em;
+  padding: 0.2em;
+  margin-bottom: 0.5em;
+}
+
+aside.predicate.link ul li a, aside.predicate.concept ul li a, td.predicate.link ul li a, td.predicate.concept ul li a {
+  display: inline-block;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+dt {
+  font-weight: bold;
+}
+
+dd {
+  margin-left: 0.5em;
+  padding: 0.2em;
+  margin-bottom: 0.5em;
 }
 
 div.class-selector {
-   display: inline-block;
-   float: left;
+  display: inline-block;
+  float: left;
 }
 
 div.class-selector > button {
-   display: block;
-   margin: 0.5em 0;
-   line-height: 1.5em;
-   -moz-border-radius: 0.5em;
-   border-radius: 0.5em;
+  display: block;
+  margin: 0.5em 0;
+  line-height: 1.5em;
+  -webkit-border-radius: 0.5em;
+  -moz-border-radius: 0.5em;
+  -ms-border-radius: 0.5em;
+  -o-border-radius: 0.5em;
+  border-radius: 0.5em;
 }
 
-article {
-   -moz-border-radius: 1em;
-   border-radius: 1em;
-   position: absolute;
-   top: 0em;
-   right: 0em;
-   bottom: 0em;
-   max-width: 70ex;
-   margin: 1em;
-   padding: 0 1em;
-   overflow-y: auto;
-}
-
-/*
-article h1 {
-   padding-left: 2.5em;
-}*/
-
-body[typeof~="ibis:Issue"] article {
-   /*background-color: #443333;*/
-   /*background-color: #703535;*/
-   /*background-color: #673a3a;*/
-   /*background-color: #5e3e3e;*/
-   background-color: #4e2324;
-}
-body[typeof~="ibis:Position"] article {
-   /*background-color: #334433;*/
-   /*background-color: #354c34;*/
-   /*background-color: #3a4b39;*/
-   /*background-color: #3e4a3e;*/
-   background-color: #233523;
-}
-body[typeof~="ibis:Argument"] article {
-   /*background-color: #333344;*/
-   /*background-color: #40407e;*/
-   /*background-color: #44426f;*/
-   background-color: #2b2b59;
-}
-
-body[typeof~="skos:Concept"] article {
-   /*background-color: #443344;*/
-   /*background-color: #5e3a5f;*/
-   background-color: #412742;
-}
-
-button.update {
-   display: inline-block;
-   width: 1.5em;
-   padding: 0.25em;
-   border-radius: 0.25em;
-   position: absolute;
-   top: 4em;
-   right: 1.5em;
+*[property="rdfs:label"], h3.label {
+  padding: 0.1em 0.3em;
+  display: inline-block;
+  -webkit-border-radius: 0.4em;
+  -moz-border-radius: 0.4em;
+  -ms-border-radius: 0.4em;
+  -o-border-radius: 0.4em;
+  border-radius: 0.4em;
 }
 
 hr.separator {
-   border: none;
-   margin: 1em;
+  border: none;
+  margin: 1em;
 }
 
-section.self {
-   position: absolute;
-   top: 1em;
-   left: 1em;
-   right: 1em;
+/* inline stuff */
+a {
+  text-decoration: none;
 }
 
-section.self form.types {
-   position: absolute;
-   /*
-   top: 0.25em;
-   left: 0.25em;*/
-   width: 2.25em;
+a:link {
+  color: #cd9bce;
 }
 
-section.self form.types button {
-   -moz-border-radius: 0.25em;
-   -webkit-border-radius: 0.25em;
-   border-radius: 0.25em;
-   height: 1.5em;
+a:visited {
+  color: #b280b2;
 }
 
-section.self h1 {
-   margin: 0;
-   height: 4em;
-   font-size: 133.3%;
+a:hover, a:active {
+  color: #ddbcde;
+  text-decoration: underline;
 }
 
-section.self form.description {
-   position: absolute;
-   /*top: 0.25em;*/
-   top: 0;
-   left: 2.25em;
-   right: 0.25em;
+object.hiveplot {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-section.self form.description textarea {
-   box-sizing: border-box;
-   padding-right: 2.5em;
-   height: 4em;
+object.hiveplot.baby {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: auto;
+  height: 25%;
+  transform: rotate(45deg);
 }
 
-section.self form.description button {
-   position: absolute;
-   top: 0;
-   right: 0;
-   height: 4em;
-   width: 2em;
-   -moz-border-radius: 0.25em;
-   -webkit-border-radius: 0.25em;
-   border-radius: 0.25em;
-}
-
-section.self aside.predicate {
-   height: 6em;
-   position: absolute;
-}
-
-section.self aside.predicate.concept {
-   top: 7.5em;
-   left: 0;
-   width: 40%;
-   /*right: 26.5em;*/
-}
-
-section.self aside.predicate ul {
-   overflow-y: auto;
-   height: 3.33em;
-}
-
-section.self aside.predicate.link {
-   top: 7.5em;
-   right: 0;
-   width: 53.5%;
-   /*left: 20em;*/
-}
-
-section.self aside.predicate li input, section.self aside.predicate li select {
-   width: 78%;
-   display: block;
-   float: left;
-   height: 100%;
-   line-height: inherit;
-}
-section.self aside.predicate li button {
-   width: 18%;
-   display: block;
-   float: right;
-   height: 100%;
-   line-height: inherit;
-   margin: 0;
-}
-
-section.relations {
-   position: absolute;
-   top: 13em;
-   bottom: 15em;
-   overflow-y: auto;
-   border-radius: 0.8em;
-   -moz-border-radius: 0.8em;
-   -webkit-border-radius: 0.8em;
-   /*padding-right: 1em; */
-   left: 1em;
-   right: 1em;
-}
-
-section.edit {
-   position: absolute;
-   bottom: 0;
-   left: 1em;
-   right: 1em;
-   height: 15em;
+object.hiveplot.baby.other {
+  top: unset;
+  bottom: 0;
+  width: auto;
+  height: 25%;
+  transform: rotate(-45deg);
 }
 
 span.date {
-   position: absolute;
-   bottom: 0;
-   right: 5em;
-   font-size: 66.6%;
-   opacity: 0.3;
+  position: absolute;
+  bottom: 0;
+  right: 5em;
+  font-size: 66.6%;
+  opacity: 0.3;
 }
 
-/* XXX remove when home page is designed */
-/*
-body > section > ul {
-   height: 10em;
-   overflow-y: auto;
+/* form stuff */
+form {
+  border-color: inherit;
 }
-*/
+
+form#blank-page {
+  margin: 5em auto;
+  width: 70ex;
+}
+
+form#toggle-which {
+  padding: 0.25em;
+}
+
+form#toggle-which label {
+  display: inline-block;
+  width: 40%;
+  margin: 0 2%;
+  font-size: 80%;
+  font-weight: bold;
+  text-align: center;
+}
+
+fieldset {
+  border-style: inherit;
+  border-width: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+fieldset.relation {
+  font-size: 75%;
+  float: left;
+  width: 33.33%;
+  height: 12em;
+  overflow: hidden;
+}
+
+fieldset.relation.skos {
+  height: 6em;
+}
+
+fieldset.relation legend {
+  font-weight: bold;
+}
+
+fieldset.relation ul {
+  padding: 0 0 0 0.5em;
+  list-style-type: none;
+}
+
+fieldset.relation li > label {
+  display: block;
+}
+
+fieldset.issue {
+  border-top-left-radius: 0.5em;
+  border-bottom-left-radius: 0.5em;
+}
+
+fieldset.argument {
+  border-top-right-radius: 0.5em;
+  border-bottom-right-radius: 0.5em;
+}
+
+fieldset.interaction {
+  height: 2em;
+  margin: auto;
+  padding: 1em;
+}
+
+textarea.heading, textarea.description {
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  width: 100%;
+  resize: none;
+  overflow: visible;
+  height: 5em;
+  white-space: pre-wrap;
+}
+
+input, select, option, textarea, button {
+  background-color: transparent;
+}
+
+input[type="text"], input[type="submit"], input[type="reset"], select, button {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  background-color: inherit;
+  color: inherit;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 0.25em;
+}
+
+select.target, input.new-value {
+  min-width: 75%;
+  max-width: 32ex;
+}
+
+select.target option {
+  max-width: 70ex;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+option {
+  padding: 0 0 0 1ex;
+}
+
+button:hover, label:hover {
+  cursor: pointer;
+}
+
+button[disabled], label[disabled] {
+  cursor: auto;
+}
+
+button {
+  padding: 1pt 1ex;
+}
+
+button[disabled] {
+  color: #222;
+}
+
+button.disconnect {
+  font-size: 75%;
+  display: inline-block;
+  float: right;
+  margin: 0 0 0.5em 1em;
+  padding: 0.25em;
+  -webkit-border-radius: 0.25em;
+  -moz-border-radius: 0.25em;
+  -ms-border-radius: 0.25em;
+  -o-border-radius: 0.25em;
+  border-radius: 0.25em;
+}
+
+button.set-type {
+  font-size: 75%;
+  vertical-align: middle;
+}
+
+button.update {
+  display: inline-block;
+  width: 1.5em;
+  padding: 0.25em;
+  border-radius: 0.25em;
+  position: absolute;
+  top: 4em;
+  right: 1.5em;
+}
+
+button#toggle-full-screen {
+  display: none;
+}
+
+/* palette stuff */
+*[about="https://privatealpha.com/ontology/ibis/1#generalizes"] {
+  background-color: #5f7fff;
+  color: #00164d;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#specializes"] {
+  background-color: #0033ff;
+  color: #bec1fe;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#suggests"] {
+  background-color: #ffcd40;
+  color: #3d2e00;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#suggested-by"] {
+  background-color: #ffbc00;
+  color: #402d00;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#questions"] {
+  background-color: #ff9a40;
+  color: #4b2700;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#questioned-by"] {
+  background-color: #ff7800;
+  color: #522200;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#response"] {
+  background-color: #8a0041;
+  color: #feb0c4;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#responds-to"] {
+  background-color: #d50065;
+  color: #ffd8e1;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#supports"] {
+  background-color: #4dde00;
+  color: #0d3800;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#supported-by"] {
+  background-color: #55a62a;
+  color: #0b2002;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#opposes"] {
+  background-color: #ec0033;
+  color: #400006;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#opposed-by"] {
+  background-color: #b12c49;
+  color: #f9dbde;
+}
+
+body[typeof~="ibis:Issue"] main, fieldset.issue,
+body[typeof~="ibis:Issue"] aside.predicate {
+  background-color: #41191a;
+  border-color: #703535;
+  color: #dac1c1;
+}
+
+body[typeof~="ibis:Issue"] article {
+  background-color: #4e2324;
+}
+
+button[value="ibis:Issue"].set-type,
+[typeof~="ibis:Issue"] button, li[typeof~="ibis:Issue"] button {
+  color: #41191a;
+  border-color: #41191a;
+  background-color: #703535;
+}
+
+button[value="ibis:Issue"][disabled] {
+  color: #703535;
+  border-color: #703535;
+  background-color: #41191a;
+}
+
+li[typeof~="ibis:Issue"] {
+  background-color: #41191a;
+  border-color: #703535;
+}
+
+li[typeof~="ibis:Issue"] a {
+  color: #d39e9e;
+}
+
+li[typeof~="ibis:Issue"] a:hover {
+  color: #f4dddd;
+}
+
+body[typeof~="ibis:Position"] main, fieldset.position,
+body[typeof~="ibis:Position"] aside.predicate {
+  background-color: #192a19;
+  border-color: #354c34;
+  color: #a6d2a5;
+}
+
+body[typeof~="ibis:Position"] article {
+  background-color: #233523;
+}
+
+button[value="ibis:Position"].set-type,
+[typeof~="ibis:Position"] button, li[typeof~="ibis:Position"] button {
+  color: #192a19;
+  border-color: #192a19;
+  background-color: #354c34;
+}
+
+button[value="ibis:Position"][disabled] {
+  color: #354c34;
+  border-color: #354c34;
+  background-color: #192a19;
+}
+
+li[typeof~="ibis:Position"] {
+  background-color: #192a19;
+  border-color: #354c34;
+}
+
+li[typeof~="ibis:Position"] a {
+  color: #84b883;
+}
+
+li[typeof~="ibis:Position"] a:hover {
+  color: #a7f5a5;
+}
+
+body[typeof~="ibis:Argument"] main, fieldset.argument,
+body[typeof~="ibis:Argument"] aside.predicate {
+  background-color: #21214c;
+  border-color: #40407e;
+  color: #c5c5d8;
+}
+
+body[typeof~="ibis:Argument"] article {
+  background-color: #2b2b59;
+}
+
+button[value="ibis:Argument"].set-type,
+[typeof~="ibis:Argument"] button, li[typeof~="ibis:Argument"] button {
+  color: #21214c;
+  border-color: #21214c;
+  background-color: #40407e;
+}
+
+button[value="ibis:Argument"][disabled] {
+  color: #40407e;
+  border-color: #40407e;
+  background-color: #21214c;
+}
+
+li[typeof~="ibis:Argument"] {
+  background-color: #21214c;
+  border-color: #40407e;
+}
+
+li[typeof~="ibis:Argument"] a {
+  color: #a8a8ce;
+}
+
+li[typeof~="ibis:Argument"] a:hover {
+  color: #e1e1f4;
+}
+
+body[typeof~="skos:Concept"] main, fieldset.concept,
+body[typeof~="skos:Concept"] aside.predicate {
+  background-color: #361d36;
+  border-color: #361d36;
+  color: #d7bfd8;
+}
+
+body[typeof~="skos:Concept"] article {
+  background-color: #412742;
+}
+
+button[value="skos:Concept"].set-type,
+[typeof~="skos:Concept"] button, li[typeof~="skos:Concept"] button {
+  color: #361d36;
+  border-color: #361d36;
+  background-color: #361d36;
+}
+
+button[value="skos:Concept"][disabled] {
+  color: #361d36;
+  border-color: #361d36;
+  background-color: #361d36;
+}
+
+li[typeof~="skos:Concept"] {
+  background-color: #361d36;
+  border-color: #361d36;
+}
+
+li[typeof~="skos:Concept"] a {
+  color: #cb9bcd;
+}
+
+li[typeof~="skos:Concept"] a:hover {
+  color: #f2dbf3;
+}
+
+/* idiosyncratic layout stuff */
+section.self {
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  right: 1em;
+}
+
+section.self form.types {
+  position: absolute;
+  width: 2.25em;
+}
+
+section.self form.types button {
+  -webkit-border-radius: 0.25em;
+  -moz-border-radius: 0.25em;
+  -ms-border-radius: 0.25em;
+  -o-border-radius: 0.25em;
+  border-radius: 0.25em;
+  height: 1.5em;
+}
+
+section.self h1 {
+  margin: 0;
+  height: 4em;
+  font-size: 133.3%;
+}
+
+section.self form.description {
+  position: absolute;
+  top: 0;
+  left: 2.25em;
+  right: 0.25em;
+}
+
+section.self form.description textarea {
+  box-sizing: border-box;
+  padding-right: 2.5em;
+  height: 4em;
+}
+
+section.self form.description button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 4em;
+  width: 2em;
+  -webkit-border-radius: 0.25em;
+  -moz-border-radius: 0.25em;
+  -ms-border-radius: 0.25em;
+  -o-border-radius: 0.25em;
+  border-radius: 0.25em;
+}
+
+section.self aside.predicate {
+  height: 6em;
+  position: absolute;
+}
+
+section.self aside.predicate.concept {
+  top: 7.5em;
+  left: 0;
+  width: 40%;
+}
+
+section.self aside.predicate ul {
+  overflow-y: auto;
+  height: 3.33em;
+}
+
+section.self aside.predicate.link {
+  top: 7.5em;
+  right: 0;
+  width: 53.5%;
+}
+
+section.self aside.predicate li input, section.self aside.predicate li select {
+  width: 78%;
+  display: block;
+  float: left;
+  height: 100%;
+  line-height: inherit;
+}
+
+section.self aside.predicate li button {
+  width: 18%;
+  display: block;
+  float: right;
+  height: 100%;
+  line-height: inherit;
+  margin: 0;
+}
+
+section.relations {
+  position: absolute;
+  top: 13em;
+  bottom: 15em;
+  overflow-y: auto;
+  left: 1em;
+  right: 1em;
+  -webkit-border-radius: 0.8em;
+  -moz-border-radius: 0.8em;
+  -ms-border-radius: 0.8em;
+  -o-border-radius: 0.8em;
+  border-radius: 0.8em;
+}
+
+section.relations li {
+  -webkit-border-radius: 0.375em;
+  -moz-border-radius: 0.375em;
+  -ms-border-radius: 0.375em;
+  -o-border-radius: 0.375em;
+  border-radius: 0.375em;
+  border-style: solid;
+  border-width: 0.05em;
+}
+
+section.edit {
+  position: absolute;
+  bottom: 0;
+  left: 1em;
+  right: 1em;
+  height: 15em;
+}
 
 section.index {
-   position: absolute;
-   top: 0px;
-   width: 50%;
-   height: 66.66%;
-   padding: 0px;
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 66.66%;
+  padding: 0;
 }
 
 section.index h1 {
-   text-align: center;
+  text-align: center;
 }
 
 section.index figure {
-   width: 100%;
-   margin: auto;
-   height: 70%;
-   /*position: absolute;*/
-   display: block;
-   /*top: 16.666%;*/
+  width: 100%;
+  margin: auto;
+  height: 70%;
+  display: block;
 }
 
 section.index figure > object {
-   display: block;
-   height: 100%;
-   margin: auto;
+  display: block;
+  height: 100%;
+  margin: auto;
 }
 
 section.index.ibis {
-   left: 0px;
+  left: 0;
 }
 
 section.index.skos {
-   right: 0px;
+  right: 0;
 }
 
 section.index.list {
-   width: 100%;
-   height: 33.33%;
-   top: unset;
-   bottom: 0;
+  width: 100%;
+  height: 33.33%;
+  top: unset;
+  bottom: 0;
 }
 
 section.index.list > section {
-   float: left;
-   width: 25%;
-   height: 100%;
-   bottom: 0;
-   box-sizing: border-box;
-   font-size: 75%;
+  float: left;
+  width: 25%;
+  height: 100%;
+  bottom: 0;
+  box-sizing: border-box;
+  font-size: 75%;
+}
+
+section.index.list > section > h2 {
+  text-align: center;
 }
 
 section.index ul {
-   overflow-y: auto;
-   padding-left: 1.5em;
-   padding-right: 0.5em;
-   height: 80%;
+  overflow-y: auto;
+  padding-left: 1.5em;
+  padding-right: 0.5em;
+  height: 80%;
 }
 
 section.index li {
-   text-align: left;
-   hyphens: auto;
-}
-
-/*
-section.index > section > section {
-   width: 33%;
-   float: left;
-   font-size: 75%;
-   height: 100%;
-}*/
-
-section.index.list > section > h2 {
-   text-align: center;
+  text-align: left;
+  hyphens: auto;
 }

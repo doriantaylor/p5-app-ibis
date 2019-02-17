@@ -1,0 +1,672 @@
+// all this can come out of the app
+$CLASSES: ("ibis:Issue", "ibis:Position", "ibis:Argument", "skos:Concept");
+$PROPERTIES: (
+   "ibis:generalizes", "ibis:specializes",
+   "ibis:suggests", "ibis:suggested-by",
+   "ibis:questions", "ibis:questioned-by",
+   "ibis:response", "ibis:responds-to",
+   "ibis:supports", "ibis:supported-by",
+   "ibis:opposes", "ibis:opposed-by"
+);
+
+$FIELDSETS: ("ibis:Issue": issue, "ibis:Position": position,
+   "ibis:Argument": argument, "skos:Concept": concept);
+
+$PREFIXES: (
+   ibis: "https://privatealpha.com/ontology/ibis/1#",
+      skos: "http://www.w3.org/2004/02/skos/core#"
+);
+
+// the palette can/should come out of the app too:
+// background foreground border link hover lozenge
+$PALETTE: (
+   "ibis:Issue":         (#41191a, #dac1c1, #703535, #d39e9e, #f4dddd, #4e2324),
+   "ibis:Position":      (#192a19, #a6d2a5, #354c34, #84b883, #a7f5a5, #233523),
+   "ibis:Argument":      (#21214c, #c5c5d8, #40407e, #a8a8ce, #e1e1f4, #2b2b59),
+   "skos:Concept":       (#361d36, #d7bfd8, #361d36, #cb9bcd, #f2dbf3, #412742),
+   "ibis:generalizes":   (#5f7fff, #00164d),
+   "ibis:specializes":   (#0033ff, #bec1fe),
+   "ibis:suggests":      (#ffcd40, #3d2e00),
+   "ibis:suggested-by":  (#ffbc00, #402d00),
+   "ibis:questions":     (#ff9a40, #4b2700),
+   "ibis:questioned-by": (#ff7800, #522200),
+   "ibis:response":      (#8a0041, #feb0c4),
+   "ibis:responds-to":   (#d50065, #ffd8e1),
+   "ibis:supports":      (#4dde00, #0d3800),
+   "ibis:supported-by":  (#55a62a, #0b2002),
+   "ibis:opposes":       (#ec0033, #400006),
+   "ibis:opposed-by":    (#b12c49, #f9dbde)
+);
+
+@mixin vendor ($directive, $params...) {
+   @each $p in webkit, moz, ms, o {
+      -#{$p}-#{$directive}: $params;
+   }
+   #{$directive}: $params;
+}
+
+@import url("/asset/font-awesome.css");
+
+* {
+   border-color: inherit;
+}
+
+html {
+   width: 100%;
+   min-height: 100%;
+   overflow: hidden;
+   font-family: Roboto, Helvetica Neue, sans-serif;
+   background-color: #333;
+   color: #999;
+}
+
+body {
+   width: 100%;
+   height: 100%;
+   border: 0;
+   margin: 0;
+   padding: 0;
+   overflow: hidden;
+}
+
+main {
+   position: absolute;
+   overflow: hidden;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 2em;
+   padding: 0;
+   margin: 0;
+   @include vendor(box-shadow, inset 0px 0px 40px #000);
+}
+
+article {
+   @include vendor(border-radius, 1em);
+   display: inline-block;
+   position: absolute;
+   margin: 1em 1em 1em 5%;
+   padding: 0 1em;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   width: 45%;
+   max-width: 70ex;
+   z-index: 2;
+   overflow: visible auto;
+}
+
+footer {
+   position: absolute;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   height: 1.5em;
+   text-align: right;
+   padding: 0.25em 0.5em;
+   background-color: black;
+   line-height: 1.5em;
+   > a {
+      display: inline-block;
+      height: 100%;
+   }
+}
+
+figure {
+   display: inline-block;
+
+   &.aside {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: inline-block;
+      max-width: 65%;
+      width: 40%;
+      height: 50%;
+      margin: 0;
+      overflow: visible;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+   }
+
+   > object {
+      display: block;
+      max-width: 100%;
+      height: 100%;
+   }
+}
+
+dl.predicates, aside.predicate, td.predicate {
+   font-size: 80%;
+}
+
+td.predicate {
+   vertical-align: top;
+   display: table-cell;
+}
+
+aside.collection {
+   display: none;
+}
+
+aside, td {
+   &.predicate {
+      display: block;
+      background-color: black;
+      padding: 0.5em;
+      margin-bottom: 0.5em;
+      @include vendor(border-radius, 1em);
+
+      h3 {
+         margin: 0 0 0.5em 0.25em;
+      }
+
+      ul {
+         margin: 0;
+         padding-left: 0.5em;
+      }
+
+      li {
+         list-style-type: none;
+         margin-left: 0.25em;
+         padding: 0.2em;
+         margin-bottom: 0.5em;
+      }
+
+      &.link, &.concept {
+         ul li a {
+            display: inline-block;
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+         }
+      }
+   }
+}
+
+dt {
+   font-weight: bold;
+}
+
+dd {
+   margin-left: 0.5em;
+   padding: 0.2em;
+   margin-bottom: 0.5em;
+}
+
+div.class-selector {
+   display: inline-block;
+   float: left;
+
+   > button {
+      display: block;
+      margin: 0.5em 0;
+      line-height: 1.5em;
+      @include vendor(border-radius, 0.5em);
+   }
+}
+
+*[property="rdfs:label"], h3.label {
+   padding: 0.1em 0.3em;
+   display: inline-block;
+   @include vendor(border-radius, 0.4em);
+}
+
+hr.separator {
+   border: none;
+   margin: 1em;
+}
+
+/* inline stuff */
+
+a {
+   text-decoration: none;
+
+   &:link {
+      color: #cd9bce;
+   }
+
+   &:visited {
+      color: #b280b2;
+   }
+
+   &:hover, &:active {
+      color: #ddbcde;
+      text-decoration: underline;
+   }
+}
+
+object {
+   &.hiveplot {
+      display: block;
+      width: 100%;
+      height: 100%;
+
+      &.baby {
+         display: block;
+         position: absolute;
+         top: 0;
+         left: 0;
+         width: auto;
+         height: 25%;
+         transform: rotate(45deg);
+
+         &.other {
+            top: unset;
+            bottom: 0;
+            width: auto;
+            height: 25%;
+            transform: rotate(-45deg);
+         }
+      }
+   }
+}
+
+span.date {
+   position: absolute;
+   bottom: 0;
+   right: 5em;
+   font-size: 66.6%;
+   opacity: 0.3;
+}
+
+/* form stuff */
+
+form {
+   border-color: inherit;
+
+   &#blank-page {
+      margin: 5em auto;
+      width: 70ex;
+   }
+
+   &#toggle-which {
+      padding: 0.25em;
+
+      label {
+         display: inline-block;
+         width: 40%;
+         margin: 0 2%;
+         font-size: 80%;
+         font-weight: bold;
+         text-align: center;
+      }
+   }
+}
+
+fieldset {
+   border-style: inherit;
+   border-width: inherit;
+   margin: 0;
+   padding: 0;
+
+   &.relation {
+      font-size: 75%;
+      float: left;
+      width: 33.33%;
+      height: 12em;
+      overflow: hidden;
+
+      &.skos {
+         height: 6em;
+      }
+
+      legend {
+         font-weight: bold;
+      }
+
+      ul {
+         padding: 0 0 0 0.5em;
+         list-style-type: none;
+      }
+
+      li > label {
+         display: block;
+      }
+   }
+
+   &.issue {
+      border-top-left-radius: 0.5em;
+      border-bottom-left-radius: 0.5em;
+   }
+
+   &.argument {
+      border-top-right-radius: 0.5em;
+      border-bottom-right-radius: 0.5em;
+   }
+
+   &.interaction {
+      height: 2em;
+      margin: auto;
+      padding: 1em;
+   }
+}
+
+textarea {
+   &.heading, &.description {
+      border: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      font-style: inherit;
+      width: 100%;
+      resize: none;
+      overflow: visible;
+      height: 5em;
+      white-space: pre-wrap;
+   }
+}
+
+input, select, option, textarea, button {
+   background-color: transparent;
+}
+
+input[type="text"], input[type="submit"], input[type="reset"], select, button {
+   font-family: inherit;
+   font-size: inherit;
+   font-weight: inherit;
+   background-color: inherit;
+   color: inherit;
+   border-width: 1px;
+   border-style: solid;
+   border-radius: 0.25em;
+}
+
+select.target, input.new-value {
+      min-width: 75%;
+      max-width: 32ex;
+}
+
+select.target option {
+   max-width: 70ex;
+   overflow-x: hidden;
+   text-overflow: ellipsis;
+}
+
+option {
+   padding: 0 0 0 1ex;
+}
+
+button, label {
+   &:hover {
+      cursor: pointer;
+   }
+   &[disabled] {
+      cursor: auto;
+   }
+}
+
+button {
+   padding: 1pt 1ex;
+
+   &[disabled] {
+      color: #222;
+   }
+
+   &.disconnect {
+      font-size: 75%;
+      display: inline-block;
+      float: right;
+      margin: 0 0 0.5em 1em;
+      padding: 0.25em;
+      @include vendor(border-radius, 0.25em);
+   }
+
+   &.set-type {
+      font-size: 75%;
+      vertical-align: middle;
+   }
+
+   &.update {
+      display: inline-block;
+      width: 1.5em;
+      padding: 0.25em;
+      border-radius: 0.25em;
+      position: absolute;
+      top: 4em;
+      right: 1.5em;
+   }
+
+   &#toggle-full-screen {
+      display: none;
+   }
+}
+
+/* palette stuff */
+
+@each $prop in $PROPERTIES {
+   $idx: str-index($prop, ":");
+   $suf: str-slice($prop, $idx + 1);
+   $uri: map-get($PREFIXES, str-slice($prop, 1, $idx - 1));
+   $pal: map-get($PALETTE, $prop);
+
+   *[about="#{$uri}#{$suf}"] {
+      background-color: nth($pal, 1);
+      color: nth($pal, 2);
+   }
+
+   //aside[rel~="#{$prop}"].predicate {
+   //   background-color: nth($pal, 1) !important;
+   //}
+}
+
+@each $class, $fieldset in $FIELDSETS {
+   $pal : map-get($PALETTE, $class);
+   body[typeof~="#{$class}"] main, fieldset.#{$fieldset},
+      body[typeof~="#{$class}"] aside.predicate {
+      background-color: nth($pal, 1);
+      border-color: nth($pal, 3);
+      color: nth($pal, 2);
+   }
+
+   body[typeof~="#{$class}"] article {
+      background-color: nth($pal, 6);
+   }
+
+   button[value="#{$class}"].set-type,
+      [typeof~="#{$class}"] button, li[typeof~="#{$class}"] button {
+      color: nth($pal, 1);
+      border-color: nth($pal, 1);
+      background-color: nth($pal, 3);
+   }
+
+   button[value="#{$class}"][disabled] {
+      color: nth($pal, 3);
+      border-color: nth($pal, 3);
+      background-color: nth($pal, 1);
+   }
+
+   li[typeof~="#{$class}"] {
+      background-color: nth($pal, 1);
+      border-color: nth($pal, 3);
+      a {
+         color: nth($pal, 4);
+
+         &:hover {
+            color: nth($pal, 5);
+         }
+      }
+   }
+}
+
+/* idiosyncratic layout stuff */
+
+section {
+   &.self {
+      position: absolute;
+      top: 1em;
+      left: 1em;
+      right: 1em;
+
+      form.types {
+         position: absolute;
+         width: 2.25em;
+
+         button {
+            @include vendor(border-radius, 0.25em);
+            height: 1.5em;
+         }
+      }
+
+      h1 {
+         margin: 0;
+         height: 4em;
+         font-size: 133.3%;
+      }
+
+      form.description {
+         position: absolute;
+         top: 0;
+         left: 2.25em;
+         right: 0.25em;
+
+         textarea {
+            box-sizing: border-box;
+            padding-right: 2.5em;
+            height: 4em;
+         }
+
+         button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 4em;
+            width: 2em;
+            @include vendor(border-radius, 0.25em);
+         }
+      }
+
+      aside.predicate {
+         height: 6em;
+         position: absolute;
+
+         &.concept {
+            top: 7.5em;
+            left: 0;
+            width: 40%;
+         }
+
+         ul {
+            overflow-y: auto;
+            height: 3.33em;
+         }
+
+         &.link {
+            top: 7.5em;
+            right: 0;
+            width: 53.5%;
+         }
+
+         li {
+            input, select {
+               width: 78%;
+               display: block;
+               float: left;
+               height: 100%;
+               line-height: inherit;
+            }
+
+            button {
+               width: 18%;
+               display: block;
+               float: right;
+               height: 100%;
+               line-height: inherit;
+               margin: 0;
+            }
+         }
+      }
+   }
+
+   &.relations {
+      position: absolute;
+      top: 13em;
+      bottom: 15em;
+      overflow-y: auto;
+      left: 1em;
+      right: 1em;
+      @include vendor(border-radius, 0.8em);
+
+      li {
+         @include vendor(border-radius, 0.375em);
+         border-style: solid;
+         border-width: 0.05em;
+      }
+   }
+
+   &.edit {
+      position: absolute;
+      bottom: 0;
+      left: 1em;
+      right: 1em;
+      height: 15em;
+   }
+
+   &.index {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 66.66%;
+      padding: 0;
+
+      h1 {
+         text-align: center;
+      }
+
+      figure {
+         width: 100%;
+         margin: auto;
+         height: 70%;
+         display: block;
+
+         > object {
+            display: block;
+            height: 100%;
+            margin: auto;
+         }
+      }
+
+      &.ibis {
+         left: 0;
+      }
+
+      &.skos {
+         right: 0;
+      }
+
+      &.list {
+         width: 100%;
+         height: 33.33%;
+         top: unset;
+         bottom: 0;
+
+         > section {
+            float: left;
+            width: 25%;
+            height: 100%;
+            bottom: 0;
+            box-sizing: border-box;
+            font-size: 75%;
+
+            > h2 {
+               text-align: center;
+            }
+         }
+      }
+
+      ul {
+         overflow-y: auto;
+         padding-left: 1.5em;
+         padding-right: 0.5em;
+         height: 80%;
+      }
+
+      li {
+         text-align: left;
+         hyphens: auto;
+      }
+   }
+}

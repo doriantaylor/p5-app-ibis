@@ -1,6 +1,6 @@
 var NS = {
-    'ibis': 'http://privatealpha.com/ontology/ibis/1#'
-}
+    'ibis': 'https://privatealpha.com/ontology/ibis/1#'
+};
 
 var OTHER = {
     'rdf-type':   'rdf:type :',
@@ -135,10 +135,10 @@ $(document).ready(function () {
     switchForm($("input[name='new-item']:checked").val());
 
     /* attach toggle event to toggle buttons */
-    $("input[name='new-item']").change(function () { switchForm(this.value) });
+    $("input[name='new-item']").change(function () { switchForm(this.value); });
 
     /* "create new" form likewise */
-    $("#create-new .type-toggle").change(function () { toggleForm(this) });
+    $("#create-new .type-toggle").change(function () { toggleForm(this); });
 
     /* the "connect existing" form needs a little extra something */
     $("#connect-existing .type-toggle").change(function () {
@@ -148,8 +148,69 @@ $(document).ready(function () {
 
     /* add the toggle to the checkboxes */
     $("#create-new, #connect-existing").find("input[type=checkbox]").change(
-        function () { toggleCheckBox(this) } );
+        function () { toggleCheckBox(this); } );
 
     /* */
     $('.type-toggle:checked').first().trigger('change');
 });
+
+function toggleFullscreen () {
+    var doc = this.ownerDocument;
+    if (doc.fullscreenElement || doc.webkitfullScreenElement
+        || doc.msFullscreenElement) {
+        console.log('full screen');
+        if (doc.exitFullscreen) {
+            doc.exitFullscreen();
+        }
+        else if (doc.mozExitFullscreen) {
+            doc.mozExitFullscreen();
+        }
+    }
+    else {
+        console.log('not full screen');
+        if (doc.body.requestFullscreen) {
+            doc.body.requestFullscreen();
+        }
+        else if (doc.body.mozRequestFullscreen) {
+            doc.body.mozRequestFullscreen();
+        }
+    }
+}
+
+window.addEventListener('load', function () {
+    /*
+    var butt = document.getElementById('toggle-full-screen');
+    if (butt && document.fullscreenEnabled) {
+        butt.style.display = 'initial';
+        butt.toggleFullscreen = toggleFullscreen;
+        butt.addEventListener('click',
+                              function () { this.toggleFullscreen(); }, false);
+    }
+    */
+    /*
+    document.body.addEventListener('toggle-full-screen', function (e) {
+        return true;
+    }, false);
+
+    document.body.addEventListener('touchstart', function (e) {
+        if (!this.longPressTimer) {
+            this.longPressTimer = null;
+            this.longPressTimer = window.setTimeout(function () {
+                var ev = new Event('toggle-full-screen');
+                document.body.dispatchEvent(ev);
+            }, 500);
+        }
+        return true;
+    }, false);
+
+    document.body.addEventListener('touchend', function (e) {
+        if (this.longPressTimer) {
+            console.log('clearing');
+            window.clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+        return true;
+    }, false);
+    */
+    return true;
+}, false);
