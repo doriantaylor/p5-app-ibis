@@ -113,11 +113,11 @@ my %MAP = (
         position => [
             [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
-            [$NS->ibis->response,                  'Response'],
+            [$NS->ibis->response,              'Has Response'],
         ],
         argument => [
-            [$NS->ibis->generalizes,            'Generalizes'],
-            [$NS->ibis->specializes,            'Specializes'],
+            #[$NS->ibis->generalizes,            'Generalizes'],
+            #[$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
             [$NS->ibis->questions,                'Questions'],
@@ -137,12 +137,13 @@ my %MAP = (
         argument => [
             [$NS->ibis->uri('supported-by'),   'Supported by'],
             [$NS->ibis->uri('opposed-by'),       'Opposed by'],
+            [$NS->ibis->uri('responds-to'),     'Responds to'],
         ],
     },
     argument => {
         issue => [
-            [$NS->ibis->generalizes,            'Generalizes'],
-            [$NS->ibis->specializes,            'Specializes'],
+            #[$NS->ibis->generalizes,            'Generalizes'],
+            #[$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
             [$NS->ibis->uri('suggested-by'),   'Suggested by'],
             [$NS->ibis->questions,                'Questions'],
@@ -151,7 +152,9 @@ my %MAP = (
         position => [
             [$NS->ibis->supports,                  'Supports'],
             [$NS->ibis->opposes,                    'Opposes'],
-            [$NS->ibis->response,                  'Response'],
+            [$NS->ibis->questions,                'Questions'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->response,              'Has Response'],
         ],
         argument => [
             [$NS->ibis->generalizes,            'Generalizes'],
@@ -167,8 +170,8 @@ my %MAP = (
             [$NS->skos->related,            'Is Related'],
             [$NS->skos->narrower,           'Has Narrower'],
             [$NS->skos->broader,            'Has Broader'],
-            [$NS->skos->narrowerTransitive, 'Has Narrower (Transitive)'],
-            [$NS->skos->broaderTransitive,  'Has Broader (Transitive)'],
+            #[$NS->skos->narrowerTransitive, 'Has Narrower (Transitive)'],
+            #[$NS->skos->broaderTransitive,  'Has Broader (Transitive)'],
             [$NS->skos->narrowMatch,        'Has Narrower Match'],
             [$NS->skos->broadMatch,         'Has Broader Match'],
             [$NS->skos->closeMatch,         'Has Close Match'],

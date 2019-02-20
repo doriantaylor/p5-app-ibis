@@ -19,24 +19,44 @@ $PREFIXES: (
 
 // the palette can/should come out of the app too:
 // background foreground border link hover lozenge
+// $PALETTE: (
+//    "ibis:Issue":         (#41191a, #dac1c1, #703535, #d39e9e, #f4dddd, #4e2324),
+//    "ibis:Position":      (#192a19, #a6d2a5, #354c34, #84b883, #a7f5a5, #233523),
+//    "ibis:Argument":      (#21214c, #c5c5d8, #40407e, #a8a8ce, #e1e1f4, #2b2b59),
+//    "skos:Concept":       (#361d36, #d7bfd8, #361d36, #cb9bcd, #f2dbf3, #412742),
+//    "ibis:generalizes":   (#5f7fff, #00164d),
+//    "ibis:specializes":   (#0033ff, #bec1fe),
+//    "ibis:suggests":      (#ffcd40, #3d2e00),
+//    "ibis:suggested-by":  (#ffbc00, #402d00),
+//    "ibis:questions":     (#ff9a40, #4b2700),
+//    "ibis:questioned-by": (#ff7800, #522200),
+//    "ibis:response":      (#8a0041, #feb0c4),
+//    "ibis:responds-to":   (#d50065, #ffd8e1),
+//    "ibis:supports":      (#4dde00, #0d3800),
+//    "ibis:supported-by":  (#55a62a, #0b2002),
+//    "ibis:opposes":       (#ec0033, #400006),
+//    "ibis:opposed-by":    (#b12c49, #f9dbde)
+// );
+
 $PALETTE: (
-   "ibis:Issue":         (#41191a, #dac1c1, #703535, #d39e9e, #f4dddd, #4e2324),
-   "ibis:Position":      (#192a19, #a6d2a5, #354c34, #84b883, #a7f5a5, #233523),
-   "ibis:Argument":      (#21214c, #c5c5d8, #40407e, #a8a8ce, #e1e1f4, #2b2b59),
-   "skos:Concept":       (#361d36, #d7bfd8, #361d36, #cb9bcd, #f2dbf3, #412742),
-   "ibis:generalizes":   (#5f7fff, #00164d),
-   "ibis:specializes":   (#0033ff, #bec1fe),
-   "ibis:suggests":      (#ffcd40, #3d2e00),
-   "ibis:suggested-by":  (#ffbc00, #402d00),
-   "ibis:questions":     (#ff9a40, #4b2700),
-   "ibis:questioned-by": (#ff7800, #522200),
-   "ibis:response":      (#8a0041, #feb0c4),
-   "ibis:responds-to":   (#d50065, #ffd8e1),
-   "ibis:supports":      (#4dde00, #0d3800),
-   "ibis:supported-by":  (#55a62a, #0b2002),
-   "ibis:opposes":       (#ec0033, #400006),
-   "ibis:opposed-by":    (#b12c49, #f9dbde)
+   "ibis:Issue":         (#210909, #401919, #733232, #974444, #d79c9c, #f4dddd, #ef0006, #ffd9d9),
+   "ibis:Position":      (#091309, #182919, #314d31, #436643, #7db97d, #a6f4a7, #008a06, #71fe73),
+   "ibis:Argument":      (#0d0d27, #20204b, #3e3e85, #5656a0, #a7a7d2, #e0e0f3, #6261fe, #dfdffe),
+   "skos:Concept":       (#1a0b1a, #351c35, #613760, #804b7f, #d198d1, #f3daf3, #d200d1, #ffd5fe),
+   "ibis:generalizes":   (#0c0f20, #1e2340, #3a4372, #4e5a96, #a2a8d2, #dfe1f3, #376afe, #dce0fe),
+   "ibis:specializes":   (#0d0e26, #202149, #3d3f80, #5456a0, #a6a7d2, #e0e0f3, #5b63fe, #dfe0fe),
+   "ibis:suggests":      (#141009, #2b2419, #504531, #6a5c43, #bfa87d, #f4dfbd, #937200, #fedea1),
+   "ibis:suggested-by":  (#151009, #2c2419, #524431, #6d5b43, #c5a67d, #f4dfc7, #9a6f00, #ffddb3),
+   "ibis:questions":     (#180e09, #322219, #5b4032, #785644, #d89e7e, #f4ded4, #b26300, #ffdbca),
+   "ibis:questioned-by": (#1a0d09, #352019, #613d32, #805344, #d89d8b, #f4ddd8, #c15700, #ffdad1),
+   "ibis:response":      (#1e0a11, #3c1a27, #6c3449, #8e4762, #d59bae, #f4dce3, #e50081, #ffd8e4),
+   "ibis:responds-to":   (#1f0a10, #3d1a24, #6e3445, #90465c, #d59ba9, #f4dce1, #e80071, #fed8e1),
+   "ibis:supports":      (#0a1309, #1a2918, #354c31, #476543, #84b87d, #a9f59d, #2b8800, #78fe59),
+   "ibis:supported-by":  (#0b1209, #1c2818, #384b31, #4b6543, #8bb67d, #acf591, #3e8700, #80fe26),
+   "ibis:opposes":       (#20090b, #40191c, #723237, #95454a, #d69c9f, #f4ddde, #ed0035, #ffd9db),
+   "ibis:opposed-by":    (#20090d, #3f1a20, #70333d, #934552, #d69ba3, #f4dcdf, #eb0054, #ffd9dd)
 );
+
 
 @mixin vendor ($directive, $params...) {
    @each $p in webkit, moz, ms, o {
@@ -154,9 +174,15 @@ aside, td {
    &.predicate {
       display: block;
       background-color: black;
+      border-style: solid;
+      border-width: 0.05em;
       padding: 0.5em;
-      margin-bottom: 0.5em;
+      margin-top: 0.5em;
       @include vendor(border-radius, 1em);
+
+      &:first-child {
+         margin-top: 0;
+      }
 
       h3 {
          margin: 0 0 0.5em 0.25em;
@@ -168,10 +194,23 @@ aside, td {
       }
 
       li {
+         display: block;
          list-style-type: none;
          margin-left: 0.25em;
-         padding: 0.2em;
-         margin-bottom: 0.5em;
+         margin-top: 0.5em;
+         &:first-child {
+            margin-top: 0;
+         }
+         a {
+            box-sizing: border-box;
+            display: block;
+            width: 100%;
+            height: 100%;
+            padding: 0.2em 0.5em;
+            &:hover {
+               text-decoration: none;
+            }
+         }
       }
 
       &.link, &.concept {
@@ -318,8 +357,19 @@ fieldset {
       }
 
       ul {
-         padding: 0 0 0 0.5em;
+         padding: 0 0.5em 0 0.5em;
          list-style-type: none;
+      }
+
+      li {
+         @include vendor(border-radius, 0.5em);
+         margin-top: 1px;
+         border-style: solid;
+         border-width: 0.05em;
+
+         &:first-child {
+            margin-top: 0;
+         }
       }
 
       li > label {
@@ -410,7 +460,7 @@ button {
       font-size: 75%;
       display: inline-block;
       float: right;
-      margin: 0 0 0.5em 1em;
+      margin: 0.2em 0.2em 0.5em 1em;
       padding: 0.25em;
       @include vendor(border-radius, 0.25em);
    }
@@ -443,34 +493,59 @@ button {
    $uri: map-get($PREFIXES, str-slice($prop, 1, $idx - 1));
    $pal: map-get($PALETTE, $prop);
 
-   *[about="#{$uri}#{$suf}"] {
-      background-color: nth($pal, 1);
-      color: nth($pal, 2);
+   *[about="#{$uri}#{$suf}"], *[about="#{$prop}"] {
+      background-color: nth($pal, 8);
+      color: nth($pal, 3);
    }
 
-   //aside[rel~="#{$prop}"].predicate {
-   //   background-color: nth($pal, 1) !important;
-   //}
+   li[about="#{$prop}"] {
+      background-color: nth($pal, 7);
+      border-color: nth($pal, 4);
+      color: nth($pal, 2);
+
+      &.selected {
+         background-color: nth($pal, 8);
+         border-color: nth($pal, 5);
+         color: nth($pal, 3);
+      }
+   }
+
+   aside[rel~="#{$prop}"].predicate {
+      background-color: nth($pal, 7) !important;
+      border-color: nth($pal, 4) !important;
+   }
 }
 
 @each $class, $fieldset in $FIELDSETS {
    $pal : map-get($PALETTE, $class);
    body[typeof~="#{$class}"] main, fieldset.#{$fieldset},
       body[typeof~="#{$class}"] aside.predicate {
-      background-color: nth($pal, 1);
-      border-color: nth($pal, 3);
-      color: nth($pal, 2);
+      background-color: nth($pal, 2);
+      border-color: nth($pal, 5);
+      color: nth($pal, 5);
    }
 
-   body[typeof~="#{$class}"] article {
-      background-color: nth($pal, 6);
+   body[typeof~="#{$class}"] {
+      article {
+         background-color: nth($pal, 3);
+      }
+      footer {
+         background-color: nth($pal, 1);
+      }
+      section.relations {
+         background-color: nth($pal, 2);
+         border-color: nth($pal, 2);
+      }
    }
 
    button[value="#{$class}"].set-type,
       [typeof~="#{$class}"] button, li[typeof~="#{$class}"] button {
-      color: nth($pal, 1);
-      border-color: nth($pal, 1);
-      background-color: nth($pal, 3);
+      color: nth($pal, 2);
+      border-color: nth($pal, 3);
+      background-color: nth($pal, 4);
+      &:hover {
+         background-color: nth($pal, 5);
+      }
    }
 
    button[value="#{$class}"][disabled] {
@@ -480,14 +555,19 @@ button {
    }
 
    li[typeof~="#{$class}"] {
-      background-color: nth($pal, 1);
-      border-color: nth($pal, 3);
+      background-color: nth($pal, 5);
+      border-color: nth($pal, 4);
       a {
-         color: nth($pal, 4);
+         color: nth($pal, 2);
 
          &:hover {
-            color: nth($pal, 5);
+            //background-color: nth($pal, 6);
+            color: nth($pal, 3);
          }
+      }
+      &:hover {
+         background-color: nth($pal, 6);
+         border-color: nth($pal, 5);
       }
    }
 }
@@ -583,11 +663,13 @@ section {
 
    &.relations {
       position: absolute;
-      top: 13em;
+      top: 13.5em;
       bottom: 15em;
       overflow-y: auto;
       left: 1em;
       right: 1em;
+      border-style: solid;
+      border-width: 0.25em;
       @include vendor(border-radius, 0.8em);
 
       li {

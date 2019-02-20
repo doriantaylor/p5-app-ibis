@@ -124,6 +124,7 @@ function toggleCheckBox (input) {
 
     var forms = $("#create-new, #connect-existing");
     forms.find(selectors.join(', ')).each(function () {
+        $(this.parentNode.parentNode).toggleClass('selected', !!val);
         if (this != input) this.checked = val;
     });
 }

@@ -1431,10 +1431,11 @@ sub _menu {
             # XXX TEMPORARY
             next if grep { $_->equal($item->[0]) } @rep;
 
-            my $name = $ns->abbreviate($item->[0]) . ' : $';
+            my $curie = $ns->abbreviate($item->[0]);
+            my $name  = $curie . ' : $';
             $name = '! ' . $name if $flag;
             push @checkbox, {
-                -name => 'li', -content => {
+                -name => 'li', about => $curie, -content => {
                     -name => 'label', -content => [
                         { -name => 'input', type => 'checkbox',
                           name => $name, value => '$obj' },
@@ -1613,11 +1614,14 @@ sub _do_content {
             $li{$tv . $uri} = {
                 -name => 'li', about => $o->value,
                 typeof => $ns->abbreviate($type),
-                -content => { %FORMBP, -content => {
-                    -name => 'div', -content => [
-                        @baleet,
-                        { about => $o->value, href => $uri,
-                          property => 'rdf:value', -content => $tv } ] } }
+                -content => { %FORMBP, -content => [
+                    @baleet, { about => $o->value, href => $uri,
+                               property => 'rdf:value', -content => $tv } ] }
+                # -content => { %FORMBP, -content => {
+                #     -name => 'div', -content => [
+                #         @baleet,
+                #         { about => $o->value, href => $uri,
+                #           property => 'rdf:value', -content => $tv } ] } }
             };
         }
 
@@ -1625,10 +1629,8 @@ sub _do_content {
 
         if ($res{$k} && @li) {
             my $abbrk = $ns->abbreviate($k);
-            #my $first = '/' . URI->new($res{$k}[0]->value)->uuid;
             # XXX wtf is this even for anyway?
-
-            my $first = $li[0]{-content}{-content}{-content}[-1]{href};
+            my $first = $li[0]{-content}{-content}[-1]{href};
             push @asides, {
                 -name => 'aside', class => 'predicate', rel => $abbrk,
                 resource => $first, -content => [

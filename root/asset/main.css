@@ -114,13 +114,19 @@ aside.collection {
 aside.predicate, td.predicate {
   display: block;
   background-color: black;
+  border-style: solid;
+  border-width: 0.05em;
   padding: 0.5em;
-  margin-bottom: 0.5em;
+  margin-top: 0.5em;
   -webkit-border-radius: 1em;
   -moz-border-radius: 1em;
   -ms-border-radius: 1em;
   -o-border-radius: 1em;
   border-radius: 1em;
+}
+
+aside.predicate:first-child, td.predicate:first-child {
+  margin-top: 0;
 }
 
 aside.predicate h3, td.predicate h3 {
@@ -133,10 +139,26 @@ aside.predicate ul, td.predicate ul {
 }
 
 aside.predicate li, td.predicate li {
+  display: block;
   list-style-type: none;
   margin-left: 0.25em;
-  padding: 0.2em;
-  margin-bottom: 0.5em;
+  margin-top: 0.5em;
+}
+
+aside.predicate li:first-child, td.predicate li:first-child {
+  margin-top: 0;
+}
+
+aside.predicate li a, td.predicate li a {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0.2em 0.5em;
+}
+
+aside.predicate li a:hover, td.predicate li a:hover {
+  text-decoration: none;
 }
 
 aside.predicate.link ul li a, aside.predicate.concept ul li a, td.predicate.link ul li a, td.predicate.concept ul li a {
@@ -285,8 +307,23 @@ fieldset.relation legend {
 }
 
 fieldset.relation ul {
-  padding: 0 0 0 0.5em;
+  padding: 0 0.5em 0 0.5em;
   list-style-type: none;
+}
+
+fieldset.relation li {
+  -webkit-border-radius: 0.5em;
+  -moz-border-radius: 0.5em;
+  -ms-border-radius: 0.5em;
+  -o-border-radius: 0.5em;
+  border-radius: 0.5em;
+  margin-top: 1px;
+  border-style: solid;
+  border-width: 0.05em;
+}
+
+fieldset.relation li:first-child {
+  margin-top: 0;
 }
 
 fieldset.relation li > label {
@@ -373,7 +410,7 @@ button.disconnect {
   font-size: 75%;
   display: inline-block;
   float: right;
-  margin: 0 0 0.5em 1em;
+  margin: 0.2em 0.2em 0.5em 1em;
   padding: 0.25em;
   -webkit-border-radius: 0.25em;
   -moz-border-radius: 0.25em;
@@ -402,212 +439,492 @@ button#toggle-full-screen {
 }
 
 /* palette stuff */
-*[about="https://privatealpha.com/ontology/ibis/1#generalizes"] {
-  background-color: #5f7fff;
-  color: #00164d;
+*[about="https://privatealpha.com/ontology/ibis/1#generalizes"], *[about="ibis:generalizes"] {
+  background-color: #dce0fe;
+  color: #3a4372;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#specializes"] {
-  background-color: #0033ff;
-  color: #bec1fe;
+li[about="ibis:generalizes"] {
+  background-color: #376afe;
+  border-color: #4e5a96;
+  color: #1e2340;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#suggests"] {
-  background-color: #ffcd40;
-  color: #3d2e00;
+li[about="ibis:generalizes"].selected {
+  background-color: #dce0fe;
+  border-color: #a2a8d2;
+  color: #3a4372;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#suggested-by"] {
-  background-color: #ffbc00;
-  color: #402d00;
+aside[rel~="ibis:generalizes"].predicate {
+  background-color: #376afe !important;
+  border-color: #4e5a96 !important;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#questions"] {
-  background-color: #ff9a40;
-  color: #4b2700;
+*[about="https://privatealpha.com/ontology/ibis/1#specializes"], *[about="ibis:specializes"] {
+  background-color: #dfe0fe;
+  color: #3d3f80;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#questioned-by"] {
-  background-color: #ff7800;
-  color: #522200;
+li[about="ibis:specializes"] {
+  background-color: #5b63fe;
+  border-color: #5456a0;
+  color: #202149;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#response"] {
-  background-color: #8a0041;
-  color: #feb0c4;
+li[about="ibis:specializes"].selected {
+  background-color: #dfe0fe;
+  border-color: #a6a7d2;
+  color: #3d3f80;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#responds-to"] {
-  background-color: #d50065;
-  color: #ffd8e1;
+aside[rel~="ibis:specializes"].predicate {
+  background-color: #5b63fe !important;
+  border-color: #5456a0 !important;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#supports"] {
-  background-color: #4dde00;
-  color: #0d3800;
+*[about="https://privatealpha.com/ontology/ibis/1#suggests"], *[about="ibis:suggests"] {
+  background-color: #fedea1;
+  color: #504531;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#supported-by"] {
-  background-color: #55a62a;
-  color: #0b2002;
+li[about="ibis:suggests"] {
+  background-color: #937200;
+  border-color: #6a5c43;
+  color: #2b2419;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#opposes"] {
-  background-color: #ec0033;
-  color: #400006;
+li[about="ibis:suggests"].selected {
+  background-color: #fedea1;
+  border-color: #bfa87d;
+  color: #504531;
 }
 
-*[about="https://privatealpha.com/ontology/ibis/1#opposed-by"] {
-  background-color: #b12c49;
-  color: #f9dbde;
+aside[rel~="ibis:suggests"].predicate {
+  background-color: #937200 !important;
+  border-color: #6a5c43 !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#suggested-by"], *[about="ibis:suggested-by"] {
+  background-color: #ffddb3;
+  color: #524431;
+}
+
+li[about="ibis:suggested-by"] {
+  background-color: #9a6f00;
+  border-color: #6d5b43;
+  color: #2c2419;
+}
+
+li[about="ibis:suggested-by"].selected {
+  background-color: #ffddb3;
+  border-color: #c5a67d;
+  color: #524431;
+}
+
+aside[rel~="ibis:suggested-by"].predicate {
+  background-color: #9a6f00 !important;
+  border-color: #6d5b43 !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#questions"], *[about="ibis:questions"] {
+  background-color: #ffdbca;
+  color: #5b4032;
+}
+
+li[about="ibis:questions"] {
+  background-color: #b26300;
+  border-color: #785644;
+  color: #322219;
+}
+
+li[about="ibis:questions"].selected {
+  background-color: #ffdbca;
+  border-color: #d89e7e;
+  color: #5b4032;
+}
+
+aside[rel~="ibis:questions"].predicate {
+  background-color: #b26300 !important;
+  border-color: #785644 !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#questioned-by"], *[about="ibis:questioned-by"] {
+  background-color: #ffdad1;
+  color: #613d32;
+}
+
+li[about="ibis:questioned-by"] {
+  background-color: #c15700;
+  border-color: #805344;
+  color: #352019;
+}
+
+li[about="ibis:questioned-by"].selected {
+  background-color: #ffdad1;
+  border-color: #d89d8b;
+  color: #613d32;
+}
+
+aside[rel~="ibis:questioned-by"].predicate {
+  background-color: #c15700 !important;
+  border-color: #805344 !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#response"], *[about="ibis:response"] {
+  background-color: #ffd8e4;
+  color: #6c3449;
+}
+
+li[about="ibis:response"] {
+  background-color: #e50081;
+  border-color: #8e4762;
+  color: #3c1a27;
+}
+
+li[about="ibis:response"].selected {
+  background-color: #ffd8e4;
+  border-color: #d59bae;
+  color: #6c3449;
+}
+
+aside[rel~="ibis:response"].predicate {
+  background-color: #e50081 !important;
+  border-color: #8e4762 !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#responds-to"], *[about="ibis:responds-to"] {
+  background-color: #fed8e1;
+  color: #6e3445;
+}
+
+li[about="ibis:responds-to"] {
+  background-color: #e80071;
+  border-color: #90465c;
+  color: #3d1a24;
+}
+
+li[about="ibis:responds-to"].selected {
+  background-color: #fed8e1;
+  border-color: #d59ba9;
+  color: #6e3445;
+}
+
+aside[rel~="ibis:responds-to"].predicate {
+  background-color: #e80071 !important;
+  border-color: #90465c !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#supports"], *[about="ibis:supports"] {
+  background-color: #78fe59;
+  color: #354c31;
+}
+
+li[about="ibis:supports"] {
+  background-color: #2b8800;
+  border-color: #476543;
+  color: #1a2918;
+}
+
+li[about="ibis:supports"].selected {
+  background-color: #78fe59;
+  border-color: #84b87d;
+  color: #354c31;
+}
+
+aside[rel~="ibis:supports"].predicate {
+  background-color: #2b8800 !important;
+  border-color: #476543 !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#supported-by"], *[about="ibis:supported-by"] {
+  background-color: #80fe26;
+  color: #384b31;
+}
+
+li[about="ibis:supported-by"] {
+  background-color: #3e8700;
+  border-color: #4b6543;
+  color: #1c2818;
+}
+
+li[about="ibis:supported-by"].selected {
+  background-color: #80fe26;
+  border-color: #8bb67d;
+  color: #384b31;
+}
+
+aside[rel~="ibis:supported-by"].predicate {
+  background-color: #3e8700 !important;
+  border-color: #4b6543 !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#opposes"], *[about="ibis:opposes"] {
+  background-color: #ffd9db;
+  color: #723237;
+}
+
+li[about="ibis:opposes"] {
+  background-color: #ed0035;
+  border-color: #95454a;
+  color: #40191c;
+}
+
+li[about="ibis:opposes"].selected {
+  background-color: #ffd9db;
+  border-color: #d69c9f;
+  color: #723237;
+}
+
+aside[rel~="ibis:opposes"].predicate {
+  background-color: #ed0035 !important;
+  border-color: #95454a !important;
+}
+
+*[about="https://privatealpha.com/ontology/ibis/1#opposed-by"], *[about="ibis:opposed-by"] {
+  background-color: #ffd9dd;
+  color: #70333d;
+}
+
+li[about="ibis:opposed-by"] {
+  background-color: #eb0054;
+  border-color: #934552;
+  color: #3f1a20;
+}
+
+li[about="ibis:opposed-by"].selected {
+  background-color: #ffd9dd;
+  border-color: #d69ba3;
+  color: #70333d;
+}
+
+aside[rel~="ibis:opposed-by"].predicate {
+  background-color: #eb0054 !important;
+  border-color: #934552 !important;
 }
 
 body[typeof~="ibis:Issue"] main, fieldset.issue,
 body[typeof~="ibis:Issue"] aside.predicate {
-  background-color: #41191a;
-  border-color: #703535;
-  color: #dac1c1;
+  background-color: #401919;
+  border-color: #d79c9c;
+  color: #d79c9c;
 }
 
 body[typeof~="ibis:Issue"] article {
-  background-color: #4e2324;
+  background-color: #733232;
+}
+
+body[typeof~="ibis:Issue"] footer {
+  background-color: #210909;
+}
+
+body[typeof~="ibis:Issue"] section.relations {
+  background-color: #401919;
+  border-color: #401919;
 }
 
 button[value="ibis:Issue"].set-type,
 [typeof~="ibis:Issue"] button, li[typeof~="ibis:Issue"] button {
-  color: #41191a;
-  border-color: #41191a;
-  background-color: #703535;
+  color: #401919;
+  border-color: #733232;
+  background-color: #974444;
+}
+
+button[value="ibis:Issue"].set-type:hover,
+[typeof~="ibis:Issue"] button:hover, li[typeof~="ibis:Issue"] button:hover {
+  background-color: #d79c9c;
 }
 
 button[value="ibis:Issue"][disabled] {
-  color: #703535;
-  border-color: #703535;
-  background-color: #41191a;
+  color: #733232;
+  border-color: #733232;
+  background-color: #210909;
 }
 
 li[typeof~="ibis:Issue"] {
-  background-color: #41191a;
-  border-color: #703535;
+  background-color: #d79c9c;
+  border-color: #974444;
 }
 
 li[typeof~="ibis:Issue"] a {
-  color: #d39e9e;
+  color: #401919;
 }
 
 li[typeof~="ibis:Issue"] a:hover {
-  color: #f4dddd;
+  color: #733232;
+}
+
+li[typeof~="ibis:Issue"]:hover {
+  background-color: #f4dddd;
+  border-color: #d79c9c;
 }
 
 body[typeof~="ibis:Position"] main, fieldset.position,
 body[typeof~="ibis:Position"] aside.predicate {
-  background-color: #192a19;
-  border-color: #354c34;
-  color: #a6d2a5;
+  background-color: #182919;
+  border-color: #7db97d;
+  color: #7db97d;
 }
 
 body[typeof~="ibis:Position"] article {
-  background-color: #233523;
+  background-color: #314d31;
+}
+
+body[typeof~="ibis:Position"] footer {
+  background-color: #091309;
+}
+
+body[typeof~="ibis:Position"] section.relations {
+  background-color: #182919;
+  border-color: #182919;
 }
 
 button[value="ibis:Position"].set-type,
 [typeof~="ibis:Position"] button, li[typeof~="ibis:Position"] button {
-  color: #192a19;
-  border-color: #192a19;
-  background-color: #354c34;
+  color: #182919;
+  border-color: #314d31;
+  background-color: #436643;
+}
+
+button[value="ibis:Position"].set-type:hover,
+[typeof~="ibis:Position"] button:hover, li[typeof~="ibis:Position"] button:hover {
+  background-color: #7db97d;
 }
 
 button[value="ibis:Position"][disabled] {
-  color: #354c34;
-  border-color: #354c34;
-  background-color: #192a19;
+  color: #314d31;
+  border-color: #314d31;
+  background-color: #091309;
 }
 
 li[typeof~="ibis:Position"] {
-  background-color: #192a19;
-  border-color: #354c34;
+  background-color: #7db97d;
+  border-color: #436643;
 }
 
 li[typeof~="ibis:Position"] a {
-  color: #84b883;
+  color: #182919;
 }
 
 li[typeof~="ibis:Position"] a:hover {
-  color: #a7f5a5;
+  color: #314d31;
+}
+
+li[typeof~="ibis:Position"]:hover {
+  background-color: #a6f4a7;
+  border-color: #7db97d;
 }
 
 body[typeof~="ibis:Argument"] main, fieldset.argument,
 body[typeof~="ibis:Argument"] aside.predicate {
-  background-color: #21214c;
-  border-color: #40407e;
-  color: #c5c5d8;
+  background-color: #20204b;
+  border-color: #a7a7d2;
+  color: #a7a7d2;
 }
 
 body[typeof~="ibis:Argument"] article {
-  background-color: #2b2b59;
+  background-color: #3e3e85;
+}
+
+body[typeof~="ibis:Argument"] footer {
+  background-color: #0d0d27;
+}
+
+body[typeof~="ibis:Argument"] section.relations {
+  background-color: #20204b;
+  border-color: #20204b;
 }
 
 button[value="ibis:Argument"].set-type,
 [typeof~="ibis:Argument"] button, li[typeof~="ibis:Argument"] button {
-  color: #21214c;
-  border-color: #21214c;
-  background-color: #40407e;
+  color: #20204b;
+  border-color: #3e3e85;
+  background-color: #5656a0;
+}
+
+button[value="ibis:Argument"].set-type:hover,
+[typeof~="ibis:Argument"] button:hover, li[typeof~="ibis:Argument"] button:hover {
+  background-color: #a7a7d2;
 }
 
 button[value="ibis:Argument"][disabled] {
-  color: #40407e;
-  border-color: #40407e;
-  background-color: #21214c;
+  color: #3e3e85;
+  border-color: #3e3e85;
+  background-color: #0d0d27;
 }
 
 li[typeof~="ibis:Argument"] {
-  background-color: #21214c;
-  border-color: #40407e;
+  background-color: #a7a7d2;
+  border-color: #5656a0;
 }
 
 li[typeof~="ibis:Argument"] a {
-  color: #a8a8ce;
+  color: #20204b;
 }
 
 li[typeof~="ibis:Argument"] a:hover {
-  color: #e1e1f4;
+  color: #3e3e85;
+}
+
+li[typeof~="ibis:Argument"]:hover {
+  background-color: #e0e0f3;
+  border-color: #a7a7d2;
 }
 
 body[typeof~="skos:Concept"] main, fieldset.concept,
 body[typeof~="skos:Concept"] aside.predicate {
-  background-color: #361d36;
-  border-color: #361d36;
-  color: #d7bfd8;
+  background-color: #351c35;
+  border-color: #d198d1;
+  color: #d198d1;
 }
 
 body[typeof~="skos:Concept"] article {
-  background-color: #412742;
+  background-color: #613760;
+}
+
+body[typeof~="skos:Concept"] footer {
+  background-color: #1a0b1a;
+}
+
+body[typeof~="skos:Concept"] section.relations {
+  background-color: #351c35;
+  border-color: #351c35;
 }
 
 button[value="skos:Concept"].set-type,
 [typeof~="skos:Concept"] button, li[typeof~="skos:Concept"] button {
-  color: #361d36;
-  border-color: #361d36;
-  background-color: #361d36;
+  color: #351c35;
+  border-color: #613760;
+  background-color: #804b7f;
+}
+
+button[value="skos:Concept"].set-type:hover,
+[typeof~="skos:Concept"] button:hover, li[typeof~="skos:Concept"] button:hover {
+  background-color: #d198d1;
 }
 
 button[value="skos:Concept"][disabled] {
-  color: #361d36;
-  border-color: #361d36;
-  background-color: #361d36;
+  color: #613760;
+  border-color: #613760;
+  background-color: #1a0b1a;
 }
 
 li[typeof~="skos:Concept"] {
-  background-color: #361d36;
-  border-color: #361d36;
+  background-color: #d198d1;
+  border-color: #804b7f;
 }
 
 li[typeof~="skos:Concept"] a {
-  color: #cb9bcd;
+  color: #351c35;
 }
 
 li[typeof~="skos:Concept"] a:hover {
-  color: #f2dbf3;
+  color: #613760;
+}
+
+li[typeof~="skos:Concept"]:hover {
+  background-color: #f3daf3;
+  border-color: #d198d1;
 }
 
 /* idiosyncratic layout stuff */
@@ -705,11 +1022,13 @@ section.self aside.predicate li button {
 
 section.relations {
   position: absolute;
-  top: 13em;
+  top: 13.5em;
   bottom: 15em;
   overflow-y: auto;
   left: 1em;
   right: 1em;
+  border-style: solid;
+  border-width: 0.25em;
   -webkit-border-radius: 0.8em;
   -moz-border-radius: 0.8em;
   -ms-border-radius: 0.8em;
