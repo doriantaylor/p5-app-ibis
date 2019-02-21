@@ -1,6 +1,7 @@
 @import url("/asset/font-awesome.css");
 * {
   border-color: inherit;
+  transition: visibility 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, fill 0.15s, stroke 0.15s;
 }
 
 html {
@@ -271,16 +272,17 @@ form#blank-page {
 }
 
 form#toggle-which {
-  padding: 0.25em;
+  position: absolute;
+  top: 1em;
+  right: 0;
+  width: 50%;
+  height: 2em;
 }
 
 form#toggle-which label {
-  display: inline-block;
-  width: 40%;
-  margin: 0 2%;
+  display: block;
   font-size: 80%;
   font-weight: bold;
-  text-align: center;
 }
 
 fieldset {
@@ -288,18 +290,41 @@ fieldset {
   border-width: inherit;
   margin: 0;
   padding: 0;
+  /*
+   &.issue {
+      border-top-left-radius: 0.5em;
+      border-bottom-left-radius: 0.5em;
+   }
+
+   &.argument {
+      border-top-right-radius: 0.5em;
+      border-bottom-right-radius: 0.5em;
+   }
+   */
 }
 
 fieldset.relation {
   font-size: 75%;
-  float: left;
-  width: 33.33%;
-  height: 12em;
-  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  width: 11em;
+  height: 13em;
+  background-color: none !important;
+}
+
+fieldset.relation.selected {
+  opacity: 1;
+  visibility: visible;
 }
 
 fieldset.relation.skos {
   height: 6em;
+}
+
+fieldset.relation input {
+  margin: 0.125em;
+  padding: 0;
 }
 
 fieldset.relation legend {
@@ -307,8 +332,9 @@ fieldset.relation legend {
 }
 
 fieldset.relation ul {
-  padding: 0 0.5em 0 0.5em;
+  padding: 0;
   list-style-type: none;
+  margin: 0.6666em 0.8333em;
 }
 
 fieldset.relation li {
@@ -320,6 +346,7 @@ fieldset.relation li {
   margin-top: 1px;
   border-style: solid;
   border-width: 0.05em;
+  padding: 0.125em;
 }
 
 fieldset.relation li:first-child {
@@ -330,20 +357,40 @@ fieldset.relation li > label {
   display: block;
 }
 
-fieldset.issue {
-  border-top-left-radius: 0.5em;
-  border-bottom-left-radius: 0.5em;
+fieldset.types {
+  position: absolute;
+  top: 4em;
+  right: 0;
+  width: 50%;
+  margin: 0;
+  font-weight: bold;
 }
 
-fieldset.argument {
-  border-top-right-radius: 0.5em;
-  border-bottom-right-radius: 0.5em;
+fieldset.types ul {
+  margin: 0;
+  padding-left: 0;
+  list-style-type: none;
 }
 
-fieldset.interaction {
+fieldset .interaction {
+  position: absolute;
   height: 2em;
   margin: auto;
   padding: 1em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+}
+
+fieldset .interaction button {
+  width: 2.5em;
+  flex: 0;
+}
+
+fieldset.edit-group {
+  width: 100%;
+  height: 100%;
 }
 
 textarea.heading, textarea.description {
@@ -375,15 +422,23 @@ input[type="text"], input[type="submit"], input[type="reset"], select, button {
   border-radius: 0.25em;
 }
 
+input[type="submit"], input[type="reset"], input[type="checkbox"],
+input[type="radio"], label, button {
+  cursor: pointer;
+}
+
 select.target, input.new-value {
   min-width: 75%;
-  max-width: 32ex;
+  flex: 1;
+}
+
+select.target {
+  text-overflow: ellipsis;
 }
 
 select.target option {
   max-width: 70ex;
   overflow-x: hidden;
-  text-overflow: ellipsis;
 }
 
 option {
@@ -703,7 +758,7 @@ aside[rel~="ibis:opposed-by"].predicate {
   border-color: #934552 !important;
 }
 
-body[typeof~="ibis:Issue"] main, fieldset.issue,
+body[typeof~="ibis:Issue"] main,
 body[typeof~="ibis:Issue"] aside.predicate {
   background-color: #401919;
   border-color: #d79c9c;
@@ -718,7 +773,7 @@ body[typeof~="ibis:Issue"] footer {
   background-color: #210909;
 }
 
-body[typeof~="ibis:Issue"] section.relations {
+body[typeof~="ibis:Issue"] section.relations, body[typeof~="ibis:Issue"] section.edit {
   background-color: #401919;
   border-color: #401919;
 }
@@ -759,7 +814,29 @@ li[typeof~="ibis:Issue"]:hover {
   border-color: #d79c9c;
 }
 
-body[typeof~="ibis:Position"] main, fieldset.position,
+form[about="ibis:Issue"] {
+  background-color: #974444;
+  color: #401919;
+}
+
+form[about="ibis:Issue"] select.target, form[about="ibis:Issue"] input.new-value {
+  border-color: #401919;
+  background-color: #d79c9c;
+}
+
+form[about="ibis:Issue"] button {
+  border-color: #401919;
+  background-color: #974444;
+  color: #401919;
+}
+
+form[about="ibis:Issue"] button:hover {
+  background-color: #f4dddd;
+  border-color: #d79c9c;
+  color: #974444;
+}
+
+body[typeof~="ibis:Position"] main,
 body[typeof~="ibis:Position"] aside.predicate {
   background-color: #182919;
   border-color: #7db97d;
@@ -774,7 +851,7 @@ body[typeof~="ibis:Position"] footer {
   background-color: #091309;
 }
 
-body[typeof~="ibis:Position"] section.relations {
+body[typeof~="ibis:Position"] section.relations, body[typeof~="ibis:Position"] section.edit {
   background-color: #182919;
   border-color: #182919;
 }
@@ -815,7 +892,29 @@ li[typeof~="ibis:Position"]:hover {
   border-color: #7db97d;
 }
 
-body[typeof~="ibis:Argument"] main, fieldset.argument,
+form[about="ibis:Position"] {
+  background-color: #436643;
+  color: #182919;
+}
+
+form[about="ibis:Position"] select.target, form[about="ibis:Position"] input.new-value {
+  border-color: #182919;
+  background-color: #7db97d;
+}
+
+form[about="ibis:Position"] button {
+  border-color: #182919;
+  background-color: #436643;
+  color: #182919;
+}
+
+form[about="ibis:Position"] button:hover {
+  background-color: #a6f4a7;
+  border-color: #7db97d;
+  color: #436643;
+}
+
+body[typeof~="ibis:Argument"] main,
 body[typeof~="ibis:Argument"] aside.predicate {
   background-color: #20204b;
   border-color: #a7a7d2;
@@ -830,7 +929,7 @@ body[typeof~="ibis:Argument"] footer {
   background-color: #0d0d27;
 }
 
-body[typeof~="ibis:Argument"] section.relations {
+body[typeof~="ibis:Argument"] section.relations, body[typeof~="ibis:Argument"] section.edit {
   background-color: #20204b;
   border-color: #20204b;
 }
@@ -871,7 +970,29 @@ li[typeof~="ibis:Argument"]:hover {
   border-color: #a7a7d2;
 }
 
-body[typeof~="skos:Concept"] main, fieldset.concept,
+form[about="ibis:Argument"] {
+  background-color: #5656a0;
+  color: #20204b;
+}
+
+form[about="ibis:Argument"] select.target, form[about="ibis:Argument"] input.new-value {
+  border-color: #20204b;
+  background-color: #a7a7d2;
+}
+
+form[about="ibis:Argument"] button {
+  border-color: #20204b;
+  background-color: #5656a0;
+  color: #20204b;
+}
+
+form[about="ibis:Argument"] button:hover {
+  background-color: #e0e0f3;
+  border-color: #a7a7d2;
+  color: #5656a0;
+}
+
+body[typeof~="skos:Concept"] main,
 body[typeof~="skos:Concept"] aside.predicate {
   background-color: #351c35;
   border-color: #d198d1;
@@ -886,7 +1007,7 @@ body[typeof~="skos:Concept"] footer {
   background-color: #1a0b1a;
 }
 
-body[typeof~="skos:Concept"] section.relations {
+body[typeof~="skos:Concept"] section.relations, body[typeof~="skos:Concept"] section.edit {
   background-color: #351c35;
   border-color: #351c35;
 }
@@ -925,6 +1046,28 @@ li[typeof~="skos:Concept"] a:hover {
 li[typeof~="skos:Concept"]:hover {
   background-color: #f3daf3;
   border-color: #d198d1;
+}
+
+form[about="skos:Concept"] {
+  background-color: #804b7f;
+  color: #351c35;
+}
+
+form[about="skos:Concept"] select.target, form[about="skos:Concept"] input.new-value {
+  border-color: #351c35;
+  background-color: #d198d1;
+}
+
+form[about="skos:Concept"] button {
+  border-color: #351c35;
+  background-color: #804b7f;
+  color: #351c35;
+}
+
+form[about="skos:Concept"] button:hover {
+  background-color: #f3daf3;
+  border-color: #d198d1;
+  color: #804b7f;
 }
 
 /* idiosyncratic layout stuff */
@@ -1023,7 +1166,7 @@ section.self aside.predicate li button {
 section.relations {
   position: absolute;
   top: 13.5em;
-  bottom: 15em;
+  bottom: 14.5em;
   overflow-y: auto;
   left: 1em;
   right: 1em;
@@ -1048,10 +1191,23 @@ section.relations li {
 
 section.edit {
   position: absolute;
-  bottom: 0;
+  overflow: hidden;
+  bottom: 1em;
   left: 1em;
   right: 1em;
-  height: 15em;
+  height: 12.5em;
+  border-style: solid;
+  border-width: 0.25em;
+  -webkit-border-radius: 0.8em;
+  -moz-border-radius: 0.8em;
+  -ms-border-radius: 0.8em;
+  -o-border-radius: 0.8em;
+  border-radius: 0.8em;
+}
+
+section.edit > form {
+  width: 100%;
+  height: 100%;
 }
 
 section.index {

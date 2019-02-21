@@ -69,6 +69,8 @@ $PALETTE: (
 
 * {
    border-color: inherit;
+   transition: visibility 0.15s, opacity 0.15s, background-color 0.15s,
+      border-color 0.15s, color 0.15s, fill 0.15s, stroke 0.15s;
 }
 
 html {
@@ -322,15 +324,22 @@ form {
    }
 
    &#toggle-which {
-      padding: 0.25em;
+      //padding: 0.25em;
+      position: absolute;
+      top: 1em;
+      right: 0;
+      width: 50%;
+      height: 2em;
+      //z-index: 2;
 
       label {
-         display: inline-block;
-         width: 40%;
-         margin: 0 2%;
+         //display: inline-block;
+         display: block;
+         //width: 40%;
+         //margin: 0 2%;
          font-size: 80%;
          font-weight: bold;
-         text-align: center;
+         //text-align: center;
       }
    }
 }
@@ -343,13 +352,32 @@ fieldset {
 
    &.relation {
       font-size: 75%;
-      float: left;
-      width: 33.33%;
-      height: 12em;
-      overflow: hidden;
+      visibility: hidden;
+      // display: none;
+      opacity: 0;
+      // float: left;
+      // width: 33.33%;
+      // height: 12em;
+      // overflow: hidden;
+      position: absolute;
+      width: 11em;
+      height: 13em;
+      background-color: none !important;
+
+      &.selected {
+         // display: block;
+         opacity: 1;
+         visibility: visible;
+      }
 
       &.skos {
          height: 6em;
+      }
+
+      input {
+         margin: 0.125em;
+         padding: 0;
+         // vertical-align: middle;
       }
 
       legend {
@@ -357,8 +385,10 @@ fieldset {
       }
 
       ul {
-         padding: 0 0.5em 0 0.5em;
+         //padding: 0 0.5em 0 0.5em;
+         padding: 0;
          list-style-type: none;
+         margin: 0.6666em 0.8333em;
       }
 
       li {
@@ -366,6 +396,7 @@ fieldset {
          margin-top: 1px;
          border-style: solid;
          border-width: 0.05em;
+         padding: 0.125em;
 
          &:first-child {
             margin-top: 0;
@@ -376,7 +407,23 @@ fieldset {
          display: block;
       }
    }
+   
+   &.types {
+      position: absolute;
+      top: 4em;
+      right: 0;
+      width: 50%;
+      margin: 0;
+      font-weight: bold;
 
+      ul {
+         margin: 0;
+         padding-left: 0;
+         list-style-type: none;
+      }
+   }
+
+   /*
    &.issue {
       border-top-left-radius: 0.5em;
       border-bottom-left-radius: 0.5em;
@@ -386,11 +433,27 @@ fieldset {
       border-top-right-radius: 0.5em;
       border-bottom-right-radius: 0.5em;
    }
+   */
 
-   &.interaction {
+   .interaction {
+      position: absolute;
       height: 2em;
       margin: auto;
       padding: 1em;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+
+      button {
+         width: 2.5em;
+         flex: 0;
+      }
+   }
+
+   &.edit-group {
+      width: 100%;
+      height: 100%;
    }
 }
 
@@ -425,15 +488,23 @@ input[type="text"], input[type="submit"], input[type="reset"], select, button {
    border-radius: 0.25em;
 }
 
-select.target, input.new-value {
-      min-width: 75%;
-      max-width: 32ex;
+input[type="submit"], input[type="reset"], input[type="checkbox"],
+input[type="radio"], label, button {
+   cursor: pointer;
 }
 
-select.target option {
-   max-width: 70ex;
-   overflow-x: hidden;
+select.target, input.new-value {
+   min-width: 75%;
+   //max-width: 32ex;
+   flex: 1;
+}
+
+select.target {
    text-overflow: ellipsis;
+   option {
+      max-width: 70ex;
+      overflow-x: hidden;
+   }
 }
 
 option {
@@ -518,7 +589,12 @@ button {
 
 @each $class, $fieldset in $FIELDSETS {
    $pal : map-get($PALETTE, $class);
-   body[typeof~="#{$class}"] main, fieldset.#{$fieldset},
+
+   // body[typeof~="#{$class}"] main {
+   //   @include vendor(box-shadow, inset 0px 0px 40px nth($pal, 1));
+   // }
+
+   body[typeof~="#{$class}"] main, // fieldset.#{$fieldset},
       body[typeof~="#{$class}"] aside.predicate {
       background-color: nth($pal, 2);
       border-color: nth($pal, 5);
@@ -532,9 +608,11 @@ button {
       footer {
          background-color: nth($pal, 1);
       }
-      section.relations {
-         background-color: nth($pal, 2);
-         border-color: nth($pal, 2);
+      section {
+         &.relations, &.edit {
+            background-color: nth($pal, 2);
+            border-color: nth($pal, 2);
+         }
       }
    }
 
@@ -568,6 +646,27 @@ button {
       &:hover {
          background-color: nth($pal, 6);
          border-color: nth($pal, 5);
+      }
+   }
+
+   form[about="#{$class}"] {
+      background-color: nth($pal, 4);
+      color: nth($pal, 2);
+
+      select.target, input.new-value {
+         border-color: nth($pal, 2);
+         background-color: nth($pal, 5);
+      }
+      button {
+         border-color: nth($pal, 2);
+         background-color: nth($pal, 4);
+         color: nth($pal, 2);
+
+         &:hover {
+            background-color: nth($pal, 6);
+            border-color: nth($pal, 5);
+            color: nth($pal, 4);
+         }
       }
    }
 }
@@ -664,7 +763,7 @@ section {
    &.relations {
       position: absolute;
       top: 13.5em;
-      bottom: 15em;
+      bottom: 14.5em;
       overflow-y: auto;
       left: 1em;
       right: 1em;
@@ -681,10 +780,19 @@ section {
 
    &.edit {
       position: absolute;
-      bottom: 0;
+      overflow: hidden;
+      bottom: 1em;
       left: 1em;
       right: 1em;
-      height: 15em;
+      height: 12.5em;
+      border-style: solid;
+      border-width: 0.25em;
+      @include vendor(border-radius, 0.8em);
+
+      > form {
+         width: 100%;
+         height: 100%;
+      }
    }
 
    &.index {

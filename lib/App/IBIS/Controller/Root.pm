@@ -1424,8 +1424,29 @@ sub _menu {
     # XXX TEMPORARY
     my @rep = map { $ns->ibis->uri($_) } qw(replaces replaced-by);
 
+    my @cls;
+
     for my $i (0..$#labels) {
         my $v = $type->uri_value;
+
+        # my @radio;
+        # for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
+        #     # XXX TEMPORARY
+        #     next if grep { $_->equal($item->[0]) } @rep;
+
+        #     my $curie = $ns->abbreviate($item->[0]);
+
+        #     my $name = '$pred :';
+        #     $name = '! ' . $name if $flag;
+
+        #     push @radio, {
+        #         -name => 'li', about => $curie, -content => {
+        #             -name => 'label', -content => [
+        #                 { -name => 'input', type => 'radio',
+        #                   name => $name, value => $curie },
+        #                 ' ' . $item->[1] ] } };
+        # }
+
         my @checkbox;
         for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
             # XXX TEMPORARY
@@ -1442,26 +1463,32 @@ sub _menu {
                         ' ' . $item->[1] ] } };
         }
 
+        my $type = $ns->abbreviate($types[$i]);
+
         my %attr = (
             class => 'type-toggle',
             type  => 'radio',
             name  => $flag ? 'rdf:type :' : 'rdf-type',
             #value => $flag ? $ns->abbreviate($types[$i]) : '',
-            value => $ns->abbreviate($types[$i]),
+            value => $type,
         );
         $attr{checked}  = 'checked' if $i == 0;
         #$attr{disabled} = 'disabled' unless @checkbox;
 
         my $class = 'relation ' . lc $labels[$i];
+        $class .= ' selected' unless $i;
 
-        push @out, { -name => 'fieldset', class => $class, -content => [
-            { -name => 'legend', -content => {
-                -name => 'label', -content => [
-                    { -name => 'input', %attr }, " $labels[$i]" ] } },
-            scalar(@checkbox) ? { -name => 'ul',
-                                  -content => \@checkbox } : () ] };
+        push @cls, { -name => 'label', -content => [
+            { -name => 'input', %attr }, " $labels[$i]" ] };
+
+        push @out, { -name => 'fieldset', about => $type,
+                     class => $class, -content => [ !!@checkbox ? {
+                         -name => 'ul', -content => \@checkbox } : () ] };
     }
 
+    push @out, { -name => 'fieldset', class => 'types',
+                 -content => { -name => 'ul', -content => [
+                     map +( { -name => 'li', -content => $_}), @cls] } };
     @out;
 }
 
@@ -1927,9 +1954,10 @@ sub _do_connect_form {
     my ($self, $c, $subject, $type) = @_;
 
     return { %FORMBP, id => 'connect-existing', -content => {
-        -name => 'fieldset', -content => [
+        -name => 'fieldset', class => 'edit-group', -content => [
             $self->_menu($c, $type),
-            { -name => 'fieldset', class => 'interaction',
+            # XXX fieldset can't do flex
+            { -name => 'div', class => 'interaction',
               -content => [
                   $self->_select($c, $subject),
                   { -name => 'button', class => 'fa fa-link', -content => '' }]
@@ -1957,12 +1985,13 @@ sub _do_create_form {
     my $new = '/' . $self->uuid4;
 
     return { %FORMBP, id => 'create-new', action => $new, -content => {
-        -name => 'fieldset', -content => [
+        -name => 'fieldset', class => 'edit-group', -content => [
             @has,
             { -name => 'input', type => 'hidden',
               name => '$ obj', value => $subject },
             $self->_menu($c, $type, 1),
-            { -name => 'fieldset', class => 'interaction', -content => [
+            # XXX fieldset can't do flex
+            { -name => 'div', class => 'interaction', -content => [
                 { -name => 'input', class => 'new-value',
                   type => 'text', name => '= rdf:value' },
                 { -name => 'button', class => 'fa fa-plus', -content => '' } ]

@@ -9,12 +9,9 @@ var OTHER = {
 
 function expand (curie) {
     var parts = curie.split(':', 2);
-    if (parts && parts.length > 0 && NS[parts[0]]) {
+    if (parts && parts.length > 0 && NS[parts[0]])
         return NS[parts[0]] + parts[1];
-    }
-    else {
-        return curie;
-    }
+    return curie;
 }
 
 function abbreviate (uri) {
@@ -58,7 +55,7 @@ function toggleForm (input) {
 
         /* we have to select by checking the value of the other node */
         if (!sel.prop('checked')) {
-            node.each(function () { this.checked = false });
+            node.each(function () { this.checked = false; });
             //alert(n.length);
             sel.prop('checked', true);
             sel.trigger('change');
@@ -81,6 +78,11 @@ function toggleSelect (input) {
     console.log(form);
     */
 
+    form.find("fieldset.relation").each(function () {
+        //console.log(this.getAttribute('about'), value);
+        $(this).toggleClass('selected', this.getAttribute('about') == value);
+    });
+
     form.find("optgroup[rev~='rdf:type']").each(function () {
         var th = $(this);
         var opts = th.find("option:selected");
@@ -98,12 +100,18 @@ function toggleSelect (input) {
             th.hide();
         }
     });
+    var forms = $("#create-new, #connect-existing, #toggle-which").each(
+        //forms.find('fieldset.edit-group').each(function () {
+        function () {
+            this.setAttribute('about', value);
+        });
 }
 
 function toggleCheckBox (input) {
     var val  = input.checked;
     var re   = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
     var name = input.name.replace(re, '').replace(/[\s\uFEFF\xA0]+/g, ' ');
+    var about = input.parentNode.parentNode.getAttribute('about');
 
     var names = [];
     if (name.startsWith('!')) {
@@ -127,6 +135,10 @@ function toggleCheckBox (input) {
         $(this.parentNode.parentNode).toggleClass('selected', !!val);
         if (this != input) this.checked = val;
     });
+
+    /* forms.find('fieldset.edit-group').each(function () {
+        this.setAttribute('rel', about);
+    });*/
 }
 
 
@@ -139,13 +151,15 @@ $(document).ready(function () {
     $("input[name='new-item']").change(function () { switchForm(this.value); });
 
     /* "create new" form likewise */
-    $("#create-new .type-toggle").change(function () { toggleForm(this); });
+    //$("#create-new .type-toggle").change(function () { toggleForm(this); });
 
     /* the "connect existing" form needs a little extra something */
-    $("#connect-existing .type-toggle").change(function () {
-        toggleForm(this);
-        toggleSelect(this);
-    });
+    $("#create-new .type-toggle, #connect-existing .type-toggle").change(
+        function () {
+            toggleForm(this);
+            toggleSelect(this);
+        }
+    );
 
     /* add the toggle to the checkboxes */
     $("#create-new, #connect-existing").find("input[type=checkbox]").change(

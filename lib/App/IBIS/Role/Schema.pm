@@ -111,9 +111,9 @@ my %MAP = (
             #[$NS->ibis->uri('replaced-by'),     'Replaced by'],
         ],
         position => [
-            [$NS->ibis->questions,                'Questions'],
-            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
             [$NS->ibis->response,              'Has Response'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->questions,                'Questions'],
         ],
         argument => [
             #[$NS->ibis->generalizes,            'Generalizes'],
