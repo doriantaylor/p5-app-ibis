@@ -113,3 +113,7 @@ nytprof/.*
 App-IBIS.*\.tar\.gz
 \.db
 \.ttl
+
+# stuff we don't want to distro
+root/asset/main.scss
+maint/

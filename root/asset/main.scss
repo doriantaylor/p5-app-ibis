@@ -315,7 +315,59 @@ span.date {
 
 /* form stuff */
 
+body[typeof~="skos:Concept"] {
+   section.self {
+      h1 {
+         display: flex;
+         height: initial;
+         > form {
+            width: 100%;
+         }
+
+         input {
+            width: 100%;
+         }
+         button {
+            flex: 1;
+         }
+      }
+      > form {
+         display: flex;
+
+         textarea {
+            font-size: 80%;
+            border-style: solid;
+            border-width: 0.1em;
+            @include vendor(border-radius, 0.333em);
+         }
+         button {
+            position: initial;
+            top: initial;
+            right: initial;
+            flex: 1;
+         }
+      }
+
+      aside.predicate.link {
+         width: auto;
+         left: 0;
+         right: 0;
+      }
+   }
+
+   form#toggle-which {
+      width: 100%;
+      left: 0;
+      text-align: center;
+      label {
+         display: inline-block;
+         padding: 0 1em;
+      }
+   }
+}
+
 form {
+   display: inherit;
    border-color: inherit;
 
    &#blank-page {
@@ -371,7 +423,30 @@ fieldset {
       }
 
       &.skos {
-         height: 6em;
+         width: 100%;
+         height: auto;
+         visibility: visible;
+         opacity: 1;
+         left: 1em;
+
+         h4, li {
+            min-width: 8em;
+            max-width: 10em;
+         }
+         h4, ul, li {
+            margin: 0;
+            display: inline-block;
+         }
+
+         &[rel~="skos:narrower"] {
+            top: 5em;
+         }
+         &[rel~="skos:related"] {
+            top: 7em;
+         }
+         &[rel~="skos:broader"] {
+            top: 9em;
+         }
       }
 
       input {
@@ -491,6 +566,10 @@ input[type="text"], input[type="submit"], input[type="reset"], select, button {
 input[type="submit"], input[type="reset"], input[type="checkbox"],
 input[type="radio"], label, button {
    cursor: pointer;
+}
+
+input.new-value {
+   padding-left: 0.25em;
 }
 
 select.target, input.new-value {

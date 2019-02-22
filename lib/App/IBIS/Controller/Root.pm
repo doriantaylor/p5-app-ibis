@@ -194,14 +194,15 @@ sub ci2 :Local {
     # first we obtain the subject either from the query string or from
     # the referrer
 
-    my ($snode, $suri);
+    my %lit;
     if ($ref) {
-        $ref = $ref->[0] if ref $ref eq 'ARRAY'; # lol got all that?
-        $ref = URI->new_abs($ref, $bs);
-
-        if (my ($uuid) = ($ref->path =~ $UUID_RE)) {
-            $snode = iri('urn:uuid:' . lc $uuid);
-            $suri  = $c->uri_for($uuid);
+        $ref = [$ref] unless ref $ref;
+        for my $s (map { URI->new_abs($_, $bs) } @$ref) {
+            if (my ($uuid) = ($s->path =~ $UUID_RE)) {
+                my $sub  = iri('urn:uuid:' . lc $uuid);
+                my $suri = $c->uri_for($uuid);
+                $lit{$suri} = $sub;
+            }
         }
     }
 
@@ -221,9 +222,9 @@ sub ci2 :Local {
     my (%nodes, @edges, @queue);
 
     # here we execute a riff on a spanning tree
-    if ($snode) {
+    if (%lit) {
         # start the queue with the context node if present
-        push @queue, $snode;
+        push @queue, values %lit;
     }
     else {
         # otherwise get a list of all the "top" nodes
@@ -365,7 +366,7 @@ sub ci2 :Local {
 
         # add nodes to queue
         push @queue, values %ok;
-        if ($snode and $s->equal($snode)) {
+        if (grep { $s->equal($_) } values %lit) {
             # add recurse down (?s ibis:generalizes ?o, ?o
             # ibis:specializes ?s) to queue
             %nope = map +(%$_), values %nope;
@@ -422,7 +423,7 @@ sub ci2 :Local {
     my $doc = $circos->plot(
         nodes  => \%nodes,
         edges  => \@edges,
-        active => $suri,
+        active => \%lit,
     );
 
     $c->res->content_type('image/svg+xml');
@@ -894,6 +895,19 @@ sub _get_concept :Private {
 
     my $uu = URI->new($subject->uri_value);
 
+    my %t = map { my $x = $ns->ibis->uri($_);
+                  $x->uri_value => $x } qw(Issue Position Argument);
+    my @ibis;
+    for my $ib ($m->subjects($ns->dct->references, $subject)) {
+        next unless $ib->is_resource;
+        my $iu = URI->new($ib->uri_value);
+        next unless $iu->isa('URI::urn::uuid');
+        my @types = $m->objects($ib, $ns->rdf->type);
+        next unless grep { $t{$_->value} } @types;
+
+        push @ibis, $iu->uuid;
+    }
+
     my $doc = $c->stub(
         uri   => $c->req->uri,
         title => $label->value,
@@ -904,7 +918,8 @@ sub _get_concept :Private {
                     { -name => 'object', class => 'baby hiveplot',
                       type => 'image/svg+xml',
                       data => $c->uri_for('ci2',
-                                          { degrees => 240, rotate => 60 }) },
+                                          { subject => \@ibis, degrees => 240,
+                                            rotate => 60 }) },
                     { -name => 'object', class => 'hiveplot',
                       type => 'image/svg+xml',
                       data => $c->uri_for(concepts => {
@@ -912,7 +927,7 @@ sub _get_concept :Private {
                           degrees => 240, rotate => 60 }) },
                 ] },
                 { -name => 'article', -content => [
-                    { -name => 'section', -content => [
+                    { -name => 'section', class => 'self', -content => [
                         { -name => 'h1', -content => { %FORMBP, -content => [
                             { -name => 'input', type => 'text',
                               name => '= skos:prefLabel',
@@ -928,9 +943,11 @@ sub _get_concept :Private {
                         $self->_do_link_form($c, $subject, 1),
                     ] },
                     $self->_do_concept_neighbours($c, $subject),
-                    TOGGLE,
-                    $self->_do_concept_create_form($c, $subject),
-                    $self->_do_concept_connect_form($c, $subject),
+                    { -name => 'section', class => 'edit', -content => [
+                        TOGGLE,
+                        $self->_do_concept_create_form($c, $subject),
+                        $self->_do_concept_connect_form($c, $subject),
+                    ] },
                 ] },
             ] },
             { -name => 'footer',
@@ -948,11 +965,13 @@ sub _get_concept :Private {
 # the order we would like the neighbours to show up in
 my @SKOS_SEQ = (
     ['Has Narrower'  => ['', 'narrower'],
-     ['Transitive', 'narrowerTransitive'], ['Narrow Match', 'narrowMatch']],
+     # ['Transitive', 'narrowerTransitive'],
+     ['Narrow Match', 'narrowMatch']],
     ['Has Related' => ['', 'related'],
      ['Close Match', 'closeMatch'], ['Exact Match', 'exactMatch']],
     ['Has Broader' => ['', 'broader'],
-     ['Transitive', 'broaderTransitive'], ['Broad Match', 'broadMatch']],
+     # ['Transitive', 'broaderTransitive'],
+     ['Broad Match', 'broadMatch']],
 );
 
 sub _do_concept_neighbours {
@@ -1026,7 +1045,7 @@ sub _do_concept_neighbours {
             { -name => 'h3', -content => $label }, @subs ] } if @subs;
     }
 
-    return { -name => 'section', -content => \@out };
+    return { -name => 'section', class => 'relations', -content => \@out };
 }
 
 sub _concept_menu {
@@ -1064,15 +1083,15 @@ sub _concept_menu {
             }
             else {
                 $xp = $ns->abbreviate($p);
-                $leg = { -name => 'legend', -content => {
+                $leg = { -name => 'h4', -content => {
                     -name => 'label', -content => [\%radio, " $lab"] } };
             }
         }
 
         @li = { -name => 'ul', -content => [@li] } if @li;
 
-        push @out, { -name => 'fieldset',
-                     class => "skos relation $xp", -content => [$leg, @li] };
+        push @out, { -name => 'fieldset', rel => $xp,
+                     class => "skos relation", -content => [$leg, @li] };
     }
 
     wantarray ? @out : \@out;
@@ -1089,12 +1108,13 @@ sub _do_concept_create_form {
           value => 'skos:Concept' },
         { -name => 'input', type => 'hidden', name => '! $predicate :',
           value => $subject->uri_value },
-        $self->_concept_menu($c, 1),
-        { -name => 'fieldset', class => 'interaction', -content => [
-            { -name => 'input', type => 'text', class => 'new-value',
-              name => 'skos:prefLabel' },
-            { -name => 'button', class => 'fa fa-plus', -content => '' } ] },
-    ]};
+        { -name => 'fieldset', class => 'edit-group', -content => [
+            $self->_concept_menu($c, 1),
+            { -name => 'div', class => 'interaction', -content => [
+                { -name => 'input', type => 'text', class => 'new-value',
+                  name => 'skos:prefLabel' },
+                { -name => 'button', class => 'fa fa-plus', -content => '' }
+            ] } ] } ]};
 }
 
 sub _do_concept_connect_form {
@@ -1115,12 +1135,15 @@ sub _do_concept_connect_form {
     my @opt = map +{ -name => 'option', value => $_, -content => $c{$_} },
         sort { $c{$a} cmp $c{$b} } keys %c;
 
-    return { %FORMBP, id => 'connect-existing', action => '', -content => [
-        $self->_concept_menu($c, 1),
-        { -name => 'fieldset', class => 'interaction', -content => [
-            { -name => 'select', name => '$predicate :', -content => \@opt },
-            { -name => 'button', class => 'fa fa-link', -content => '' } ] },
-    ]};
+    return { %FORMBP, id => 'connect-existing', action => '',
+             -content => {
+                 -name => 'fieldset', class => 'edit-group', -content => [
+                     $self->_concept_menu($c, 1),
+                     { -name => 'div', class => 'interaction', -content => [
+                         { -name => 'select', class=> 'target',
+                           name => '$predicate :', -content => \@opt },
+                         { -name => 'button', class => 'fa fa-link',
+                           -content => '' } ] } ] } };
 }
 
 sub _get_collection :Private {
@@ -1193,12 +1216,12 @@ sub _get_ibis :Private {
     }
 
     my @concepts;
-    for my $c ($m->objects($subject, $ns->dct->references)) {
-        next unless $c->is_resource;
-        my $cu = URI->new($c->uri_value);
+    for my $co ($m->objects($subject, $ns->dct->references)) {
+        next unless $co->is_resource;
+        my $cu = URI->new($co->uri_value);
         next unless $cu->isa('URI::urn::uuid');
         next unless $m->count_statements
-            ($c, $ns->rdf->type, $ns->skos->Concept);
+            ($co, $ns->rdf->type, $ns->skos->Concept);
 
         push @concepts, $cu->uuid;
     }

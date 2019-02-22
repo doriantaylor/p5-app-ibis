@@ -262,7 +262,64 @@ span.date {
 }
 
 /* form stuff */
+body[typeof~="skos:Concept"] section.self h1 {
+  display: flex;
+  height: initial;
+}
+
+body[typeof~="skos:Concept"] section.self h1 > form {
+  width: 100%;
+}
+
+body[typeof~="skos:Concept"] section.self h1 input {
+  width: 100%;
+}
+
+body[typeof~="skos:Concept"] section.self h1 button {
+  flex: 1;
+}
+
+body[typeof~="skos:Concept"] section.self > form {
+  display: flex;
+}
+
+body[typeof~="skos:Concept"] section.self > form textarea {
+  font-size: 80%;
+  border-style: solid;
+  border-width: 0.1em;
+  -webkit-border-radius: 0.333em;
+  -moz-border-radius: 0.333em;
+  -ms-border-radius: 0.333em;
+  -o-border-radius: 0.333em;
+  border-radius: 0.333em;
+}
+
+body[typeof~="skos:Concept"] section.self > form button {
+  position: initial;
+  top: initial;
+  right: initial;
+  flex: 1;
+}
+
+body[typeof~="skos:Concept"] section.self aside.predicate.link {
+  width: auto;
+  left: 0;
+  right: 0;
+}
+
+body[typeof~="skos:Concept"] form#toggle-which {
+  width: 100%;
+  left: 0;
+  text-align: center;
+}
+
+body[typeof~="skos:Concept"] form#toggle-which label {
+  display: inline-block;
+  padding: 0 1em;
+}
+
 form {
+  display: inherit;
   border-color: inherit;
 }
 
@@ -319,7 +376,33 @@ fieldset.relation.selected {
 }
 
 fieldset.relation.skos {
-  height: 6em;
+  width: 100%;
+  height: auto;
+  visibility: visible;
+  opacity: 1;
+  left: 1em;
+}
+
+fieldset.relation.skos h4, fieldset.relation.skos li {
+  min-width: 8em;
+  max-width: 10em;
+}
+
+fieldset.relation.skos h4, fieldset.relation.skos ul, fieldset.relation.skos li {
+  margin: 0;
+  display: inline-block;
+}
+
+fieldset.relation.skos[rel~="skos:narrower"] {
+  top: 5em;
+}
+
+fieldset.relation.skos[rel~="skos:related"] {
+  top: 7em;
+}
+
+fieldset.relation.skos[rel~="skos:broader"] {
+  top: 9em;
 }
 
 fieldset.relation input {
@@ -425,6 +508,10 @@ input[type="text"], input[type="submit"], input[type="reset"], select, button {
 input[type="submit"], input[type="reset"], input[type="checkbox"],
 input[type="radio"], label, button {
   cursor: pointer;
+}
+
+input.new-value {
+  padding-left: 0.25em;
 }
 
 select.target, input.new-value {
