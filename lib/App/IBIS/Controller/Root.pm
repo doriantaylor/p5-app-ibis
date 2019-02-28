@@ -111,7 +111,7 @@ sub index :Path :Args(0) {
         next unless $s->uri_value =~ /^urn:uuid:/i;
         my $uri     = URI->new($s->uri_value);
         my ($label) = $m->objects($s, $ns->skos->prefLabel);
-        next unless $label->is_literal;
+        next unless $label && $label->is_literal;
         my $x = $concepts{$label->literal_value} ||= {};
         $x->{$uri} = $uri;
     }
@@ -1129,7 +1129,7 @@ sub _do_concept_connect_form {
         next unless $cv =~ $UUID_URN;
 
         my ($lab) = $m->objects($c, $ns->skos->prefLabel);
-        $c{$cv} = $lab->value;
+        $c{$cv} = $lab ? $lab->value : '';
     }
 
     my @opt = map +{ -name => 'option', value => $_, -content => $c{$_} },
