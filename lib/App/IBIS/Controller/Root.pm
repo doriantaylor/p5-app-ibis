@@ -416,6 +416,7 @@ sub ci2 :Local {
         ns        => $self->uns,
         node_seq  => [map { $_->uri_value} @t],
         edge_seq  => [map { $_->uri_value} @fp],
+        collator  => $c->collator,
     );
 
     #warn Data::Dumper::Dumper(\%nodes, \@edges);
@@ -541,7 +542,7 @@ sub concepts :Local {
 
         my ($label) = $m->objects($s, $ns->skos->prefLabel);
 
-        $n->{label} = $label->literal_value;
+        $n->{label} = $label ? $label->literal_value : '';
         $n->{type}  = 'skos:Concept';
 
         # do the neighbour thing again
@@ -608,6 +609,7 @@ sub concepts :Local {
         ns        => $self->uns,
         node_seq  => [$ns->skos->Concept->uri_value],
         edge_seq  => [map { $_->uri_value } @fp],
+        collator  => $c->collator,
     );
 
     #warn Data::Dumper::Dumper(\%nodes, \@edges);
@@ -1022,13 +1024,16 @@ sub _do_concept_neighbours {
                 my $rp = sprintf '-! %s :',
                     $ns->abbreviate($inv->{$p->uri_value}[0]);
 
+                # label may be undef
+                my $cnt = $lab ? $lab->literal_value : '';
+
                 # now make the list item
                 push @li, { -name => 'li', -content => { %FORMBP, -content => [
                     { -name => 'input', type => 'hidden', name => $rp,
                       value => $ov },
                     { -name => 'button', class => 'disconnect fa fa-unlink',
                       name => $fp, value => $ov },
-                    { href => $ou, -content => $lab->literal_value } ] } };
+                    { href => $ou, -content => $cnt } ] } };
             }
 
             # now sort the bugger

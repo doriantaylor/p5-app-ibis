@@ -13,6 +13,7 @@ use MooseX::Params::Validate;
 
 with 'Role::Markup::XML';
 
+use Unicode::Collate;
 use List::Util;
 use Math::Trig;
 use POSIX qw(fmod);
@@ -127,6 +128,13 @@ has edge_seq => (
     isa     => 'ArrayRef',
     lazy    => 1,
     default => sub { [] },
+);
+
+has collator => (
+    is      => 'ro',
+    isa     => 'Unicode::Collate',
+    lazy    => 1,
+    default => sub { Unicode::Collate->new(level => 3) },
 );
 
 #sub BUILD {
@@ -428,13 +436,15 @@ sub _node_cmp_func {
     my $nseq = $self->node_seq;
     my %tseq = map +($nseq->[$_] => $_), (0..$#$nseq);
 
+    my $coll = $self->collator;
+
     return sub {
         my ($l, $r) = @{$nodes}{@_[0,1]};
         my $lt = defined $l->{type} ? $l->{type} : '';
         my $rt = defined $r->{type} ? $r->{type} : '';
         return (($tseq{$lt} || 0) <=> ($tseq{$rt} || 0))
             || (($l->{date} || '') cmp ($r->{date} || ''))
-                || ($l->{label} cmp $r->{label});
+                || $coll->cmp($l->{label}, $r->{label});
     };
 }
 

@@ -41,7 +41,7 @@ extends 'Catalyst';
 with 'App::IBIS::Role::Schema';
 with 'Role::Markup::XML';
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 my (@LABELS, @ALT_LAB);
 
@@ -49,7 +49,7 @@ my (@LABELS, @ALT_LAB);
 has collator => (
     is      => 'ro',
     isa     => 'Unicode::Collate',
-    default => sub { Unicode::Collate->new },
+    default => sub { Unicode::Collate->new(level => 3, identical => 1) },
 );
 
 after setup_finalize => sub {
