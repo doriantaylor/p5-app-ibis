@@ -6,6 +6,33 @@ use warnings FATAL => 'all';
 use Convert::Color;
 use Convert::Color::HUSL;
 use Convert::Color::RGB;
+use URI::NamespaceMap;
+use Text::CSV;
+
+use Getopt::Long qw(:config no_ignore_case bundling);
+
+my $NS = URI::NamespaceMap->new({
+    bibo => 'http://purl.org/ontology/bibo/',
+    bs   => 'http://purl.org/ontology/bibo/status/',
+    ci   => 'https://privatealpha.com/ontology/content-inventory/1#',
+    dbc  => 'https://dbpedia.org/resource/Category:',
+    dbo  => 'https://dbpedia.org/ontology/',
+    dbr  => 'https://dbpedia.org/resource/',
+    dct  => 'http://purl.org/dc/terms/',
+    foaf => 'http://xmlns.com/foaf/0.1/',
+    gr   => 'http://purl.org/goodrelations/v1#',
+    ibis => 'https://privatealpha.com/ontology/ibis/1#',
+    oa   => 'http://www.w3.org/ns/oa#',
+    org  => 'http://www.w3.org/ns/org#',
+    owl  => 'http://www.w3.org/2002/07/owl#',
+    rdf  => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+    rdfa => 'http://www.w3.org/ns/rdfa#',
+    rdfs => 'http://www.w3.org/2000/01/rdf-schema#',
+    sioc => 'http://rdfs.org/sioc/ns#',
+    skos => 'http://www.w3.org/2004/02/skos/core#',
+    xhv  => 'http://www.w3.org/1999/xhtml/vocab#',
+    xsd  => 'http://www.w3.org/2001/XMLSchema#',
+});
 
 my @SEQ = qw(ibis:Issue ibis:Position ibis:Argument skos:Concept
            ibis:generalizes ibis:specializes ibis:suggests ibis:suggested-by

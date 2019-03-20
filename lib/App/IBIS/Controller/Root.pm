@@ -117,7 +117,7 @@ sub index :Path :Args(0) {
     }
 
     my @li;
-    for my $c (sort keys %concepts) {
+    for my $c ($c->collator->sort(keys %concepts)) {
         for my $uuid (sort values %{$concepts{$c}}) {
             push @li, { -name => 'li',
                         -content => {
@@ -1358,21 +1358,13 @@ Standard 404 error page
 
 =cut
 
-sub default :Path {
+sub default :Path :Does('+CatalystX::Action::Negotiate') {
     my ( $self, $c, @p) = @_;
 
     if ($p[0] and $p[0] =~ $UUID_RE) {
         $c->forward(uuid => [lc $p[0]]);
         return;
     }
-
-    $c->log->debug(@p);
-    $c->res->status(404);
-    my $doc = $c->stub(
-        title => 'Nothing here. Make something?',
-        uri => $c->req->base, content => $self->_do_404);
-
-    $c->res->body($doc);
 }
 
 
@@ -2063,6 +2055,15 @@ sub end : ActionClass('RenderView') {
 
     my $resp = $c->res;
     my $body = $resp->body;
+
+    if ($resp->status == 404) {
+        my $doc = $c->stub(
+        title => 'Nothing here. Make something?',
+        uri => $c->req->base, content => $self->_do_404);
+
+        $c->res->body($doc);
+    }
+
     if (ref $body and Scalar::Util::blessed($body)
             and $body->isa('XML::LibXML::Document')) {
         # fix it ya goof

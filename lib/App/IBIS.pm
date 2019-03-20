@@ -29,9 +29,10 @@ use Catalyst::Runtime 5.80;
 use Catalyst qw/
     -Debug
     ConfigLoader
-    Static::Simple
-    StackTrace
 /;
+#    Static::Simple
+#    StackTrace
+#/;
 #     +CatalystX::Profile
 # /;
 
@@ -41,7 +42,7 @@ extends 'Catalyst';
 with 'App::IBIS::Role::Schema';
 with 'Role::Markup::XML';
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 my (@LABELS, @ALT_LAB);
 
