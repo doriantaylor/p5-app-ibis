@@ -7,7 +7,6 @@
 html {
   width: 100%;
   min-height: 100%;
-  overflow: hidden;
   font-family: Roboto, Helvetica Neue, sans-serif;
   background-color: #333;
   color: #999;
@@ -20,6 +19,76 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+body[typeof~="bibo:Webpage"] {
+  overflow: auto;
+  text-align: justify;
+  hyphens: auto;
+  color: #aaa;
+}
+
+body[typeof~="bibo:Webpage"] h1 {
+  font-size: 200%;
+}
+
+body[typeof~="bibo:Webpage"] h2 {
+  font-size: 180%;
+}
+
+body[typeof~="bibo:Webpage"] h3 {
+  font-size: 160%;
+}
+
+body[typeof~="bibo:Webpage"] h4 {
+  font-size: 140%;
+}
+
+body[typeof~="bibo:Webpage"] h5 {
+  font-size: 120%;
+}
+
+body[typeof~="bibo:Webpage"] h6 {
+  font-size: 100%;
+}
+
+body[typeof~="bibo:Webpage"] h1 {
+  text-align: center;
+}
+
+body[typeof~="bibo:Webpage"] article {
+  width: 100%;
+  max-width: initial;
+  right: initial;
+  margin: 1em auto;
+}
+
+body[typeof~="bibo:Webpage"] section {
+  max-width: 70ex;
+  margin: auto;
+  line-height: 1.25em;
+}
+
+body[typeof~="bibo:Webpage"] aside[role~="note"] {
+  margin: 1.3333em;
+  font-size: 75%;
+}
+
+body[typeof~="bibo:Webpage"] em, body[typeof~="bibo:Webpage"] strong, body[typeof~="bibo:Webpage"] dfn, body[typeof~="bibo:Webpage"] abbr, body[typeof~="bibo:Webpage"] span {
+  -webkit-border-radius: 0.25em;
+  -moz-border-radius: 0.25em;
+  -ms-border-radius: 0.25em;
+  -o-border-radius: 0.25em;
+  border-radius: 0.25em;
+}
+
+body[typeof~="bibo:Webpage"] em[about], body[typeof~="bibo:Webpage"] strong[about], body[typeof~="bibo:Webpage"] dfn[about], body[typeof~="bibo:Webpage"] abbr[about], body[typeof~="bibo:Webpage"] span[about] {
+  padding: 0 0.1em;
+}
+
+body[typeof~="bibo:Webpage"] dfn, body[typeof~="bibo:Webpage"] abbr {
+  text-decoration: underline;
+  text-decoration-style: dotted;
 }
 
 main {
@@ -63,7 +132,6 @@ footer {
   right: 0;
   bottom: 0;
   height: 1.5em;
-  text-align: right;
   padding: 0.25em 0.5em;
   background-color: black;
   line-height: 1.5em;
@@ -72,6 +140,22 @@ footer {
 footer > a {
   display: inline-block;
   height: 100%;
+}
+
+footer nav ul {
+  margin: 0;
+  padding: 0;
+}
+
+footer nav li {
+  display: block;
+  width: 50%;
+  float: left;
+  text-align: right;
+}
+
+footer nav li:first-child {
+  text-align: left;
 }
 
 figure {
@@ -883,20 +967,21 @@ button[value="ibis:Issue"][disabled] {
   background-color: #210909;
 }
 
-li[typeof~="ibis:Issue"] {
+li[typeof~="ibis:Issue"], li[about="ibis:Issue"], li[about="https://privatealpha.com/ontology/ibis/1#Issue"], dfn[typeof~="ibis:Issue"], dfn[about="ibis:Issue"], dfn[about="https://privatealpha.com/ontology/ibis/1#Issue"], em[typeof~="ibis:Issue"], em[about="ibis:Issue"], em[about="https://privatealpha.com/ontology/ibis/1#Issue"], strong[typeof~="ibis:Issue"], strong[about="ibis:Issue"], strong[about="https://privatealpha.com/ontology/ibis/1#Issue"], span[typeof~="ibis:Issue"], span[about="ibis:Issue"], span[about="https://privatealpha.com/ontology/ibis/1#Issue"] {
   background-color: #d79c9c;
   border-color: #974444;
-}
-
-li[typeof~="ibis:Issue"] a {
   color: #401919;
 }
 
-li[typeof~="ibis:Issue"] a:hover {
+li[typeof~="ibis:Issue"] a, li[about="ibis:Issue"] a, li[about="https://privatealpha.com/ontology/ibis/1#Issue"] a, dfn[typeof~="ibis:Issue"] a, dfn[about="ibis:Issue"] a, dfn[about="https://privatealpha.com/ontology/ibis/1#Issue"] a, em[typeof~="ibis:Issue"] a, em[about="ibis:Issue"] a, em[about="https://privatealpha.com/ontology/ibis/1#Issue"] a, strong[typeof~="ibis:Issue"] a, strong[about="ibis:Issue"] a, strong[about="https://privatealpha.com/ontology/ibis/1#Issue"] a, span[typeof~="ibis:Issue"] a, span[about="ibis:Issue"] a, span[about="https://privatealpha.com/ontology/ibis/1#Issue"] a {
+  color: inherit;
+}
+
+li[typeof~="ibis:Issue"] a:hover, li[about="ibis:Issue"] a:hover, li[about="https://privatealpha.com/ontology/ibis/1#Issue"] a:hover, dfn[typeof~="ibis:Issue"] a:hover, dfn[about="ibis:Issue"] a:hover, dfn[about="https://privatealpha.com/ontology/ibis/1#Issue"] a:hover, em[typeof~="ibis:Issue"] a:hover, em[about="ibis:Issue"] a:hover, em[about="https://privatealpha.com/ontology/ibis/1#Issue"] a:hover, strong[typeof~="ibis:Issue"] a:hover, strong[about="ibis:Issue"] a:hover, strong[about="https://privatealpha.com/ontology/ibis/1#Issue"] a:hover, span[typeof~="ibis:Issue"] a:hover, span[about="ibis:Issue"] a:hover, span[about="https://privatealpha.com/ontology/ibis/1#Issue"] a:hover {
   color: #733232;
 }
 
-li[typeof~="ibis:Issue"]:hover {
+li[typeof~="ibis:Issue"]:hover, li[about="ibis:Issue"]:hover, li[about="https://privatealpha.com/ontology/ibis/1#Issue"]:hover, dfn[typeof~="ibis:Issue"]:hover, dfn[about="ibis:Issue"]:hover, dfn[about="https://privatealpha.com/ontology/ibis/1#Issue"]:hover, em[typeof~="ibis:Issue"]:hover, em[about="ibis:Issue"]:hover, em[about="https://privatealpha.com/ontology/ibis/1#Issue"]:hover, strong[typeof~="ibis:Issue"]:hover, strong[about="ibis:Issue"]:hover, strong[about="https://privatealpha.com/ontology/ibis/1#Issue"]:hover, span[typeof~="ibis:Issue"]:hover, span[about="ibis:Issue"]:hover, span[about="https://privatealpha.com/ontology/ibis/1#Issue"]:hover {
   background-color: #f4dddd;
   border-color: #d79c9c;
 }
@@ -961,20 +1046,21 @@ button[value="ibis:Position"][disabled] {
   background-color: #091309;
 }
 
-li[typeof~="ibis:Position"] {
+li[typeof~="ibis:Position"], li[about="ibis:Position"], li[about="https://privatealpha.com/ontology/ibis/1#Position"], dfn[typeof~="ibis:Position"], dfn[about="ibis:Position"], dfn[about="https://privatealpha.com/ontology/ibis/1#Position"], em[typeof~="ibis:Position"], em[about="ibis:Position"], em[about="https://privatealpha.com/ontology/ibis/1#Position"], strong[typeof~="ibis:Position"], strong[about="ibis:Position"], strong[about="https://privatealpha.com/ontology/ibis/1#Position"], span[typeof~="ibis:Position"], span[about="ibis:Position"], span[about="https://privatealpha.com/ontology/ibis/1#Position"] {
   background-color: #7db97d;
   border-color: #436643;
-}
-
-li[typeof~="ibis:Position"] a {
   color: #182919;
 }
 
-li[typeof~="ibis:Position"] a:hover {
+li[typeof~="ibis:Position"] a, li[about="ibis:Position"] a, li[about="https://privatealpha.com/ontology/ibis/1#Position"] a, dfn[typeof~="ibis:Position"] a, dfn[about="ibis:Position"] a, dfn[about="https://privatealpha.com/ontology/ibis/1#Position"] a, em[typeof~="ibis:Position"] a, em[about="ibis:Position"] a, em[about="https://privatealpha.com/ontology/ibis/1#Position"] a, strong[typeof~="ibis:Position"] a, strong[about="ibis:Position"] a, strong[about="https://privatealpha.com/ontology/ibis/1#Position"] a, span[typeof~="ibis:Position"] a, span[about="ibis:Position"] a, span[about="https://privatealpha.com/ontology/ibis/1#Position"] a {
+  color: inherit;
+}
+
+li[typeof~="ibis:Position"] a:hover, li[about="ibis:Position"] a:hover, li[about="https://privatealpha.com/ontology/ibis/1#Position"] a:hover, dfn[typeof~="ibis:Position"] a:hover, dfn[about="ibis:Position"] a:hover, dfn[about="https://privatealpha.com/ontology/ibis/1#Position"] a:hover, em[typeof~="ibis:Position"] a:hover, em[about="ibis:Position"] a:hover, em[about="https://privatealpha.com/ontology/ibis/1#Position"] a:hover, strong[typeof~="ibis:Position"] a:hover, strong[about="ibis:Position"] a:hover, strong[about="https://privatealpha.com/ontology/ibis/1#Position"] a:hover, span[typeof~="ibis:Position"] a:hover, span[about="ibis:Position"] a:hover, span[about="https://privatealpha.com/ontology/ibis/1#Position"] a:hover {
   color: #314d31;
 }
 
-li[typeof~="ibis:Position"]:hover {
+li[typeof~="ibis:Position"]:hover, li[about="ibis:Position"]:hover, li[about="https://privatealpha.com/ontology/ibis/1#Position"]:hover, dfn[typeof~="ibis:Position"]:hover, dfn[about="ibis:Position"]:hover, dfn[about="https://privatealpha.com/ontology/ibis/1#Position"]:hover, em[typeof~="ibis:Position"]:hover, em[about="ibis:Position"]:hover, em[about="https://privatealpha.com/ontology/ibis/1#Position"]:hover, strong[typeof~="ibis:Position"]:hover, strong[about="ibis:Position"]:hover, strong[about="https://privatealpha.com/ontology/ibis/1#Position"]:hover, span[typeof~="ibis:Position"]:hover, span[about="ibis:Position"]:hover, span[about="https://privatealpha.com/ontology/ibis/1#Position"]:hover {
   background-color: #a6f4a7;
   border-color: #7db97d;
 }
@@ -1039,20 +1125,21 @@ button[value="ibis:Argument"][disabled] {
   background-color: #0d0d27;
 }
 
-li[typeof~="ibis:Argument"] {
+li[typeof~="ibis:Argument"], li[about="ibis:Argument"], li[about="https://privatealpha.com/ontology/ibis/1#Argument"], dfn[typeof~="ibis:Argument"], dfn[about="ibis:Argument"], dfn[about="https://privatealpha.com/ontology/ibis/1#Argument"], em[typeof~="ibis:Argument"], em[about="ibis:Argument"], em[about="https://privatealpha.com/ontology/ibis/1#Argument"], strong[typeof~="ibis:Argument"], strong[about="ibis:Argument"], strong[about="https://privatealpha.com/ontology/ibis/1#Argument"], span[typeof~="ibis:Argument"], span[about="ibis:Argument"], span[about="https://privatealpha.com/ontology/ibis/1#Argument"] {
   background-color: #a7a7d2;
   border-color: #5656a0;
-}
-
-li[typeof~="ibis:Argument"] a {
   color: #20204b;
 }
 
-li[typeof~="ibis:Argument"] a:hover {
+li[typeof~="ibis:Argument"] a, li[about="ibis:Argument"] a, li[about="https://privatealpha.com/ontology/ibis/1#Argument"] a, dfn[typeof~="ibis:Argument"] a, dfn[about="ibis:Argument"] a, dfn[about="https://privatealpha.com/ontology/ibis/1#Argument"] a, em[typeof~="ibis:Argument"] a, em[about="ibis:Argument"] a, em[about="https://privatealpha.com/ontology/ibis/1#Argument"] a, strong[typeof~="ibis:Argument"] a, strong[about="ibis:Argument"] a, strong[about="https://privatealpha.com/ontology/ibis/1#Argument"] a, span[typeof~="ibis:Argument"] a, span[about="ibis:Argument"] a, span[about="https://privatealpha.com/ontology/ibis/1#Argument"] a {
+  color: inherit;
+}
+
+li[typeof~="ibis:Argument"] a:hover, li[about="ibis:Argument"] a:hover, li[about="https://privatealpha.com/ontology/ibis/1#Argument"] a:hover, dfn[typeof~="ibis:Argument"] a:hover, dfn[about="ibis:Argument"] a:hover, dfn[about="https://privatealpha.com/ontology/ibis/1#Argument"] a:hover, em[typeof~="ibis:Argument"] a:hover, em[about="ibis:Argument"] a:hover, em[about="https://privatealpha.com/ontology/ibis/1#Argument"] a:hover, strong[typeof~="ibis:Argument"] a:hover, strong[about="ibis:Argument"] a:hover, strong[about="https://privatealpha.com/ontology/ibis/1#Argument"] a:hover, span[typeof~="ibis:Argument"] a:hover, span[about="ibis:Argument"] a:hover, span[about="https://privatealpha.com/ontology/ibis/1#Argument"] a:hover {
   color: #3e3e85;
 }
 
-li[typeof~="ibis:Argument"]:hover {
+li[typeof~="ibis:Argument"]:hover, li[about="ibis:Argument"]:hover, li[about="https://privatealpha.com/ontology/ibis/1#Argument"]:hover, dfn[typeof~="ibis:Argument"]:hover, dfn[about="ibis:Argument"]:hover, dfn[about="https://privatealpha.com/ontology/ibis/1#Argument"]:hover, em[typeof~="ibis:Argument"]:hover, em[about="ibis:Argument"]:hover, em[about="https://privatealpha.com/ontology/ibis/1#Argument"]:hover, strong[typeof~="ibis:Argument"]:hover, strong[about="ibis:Argument"]:hover, strong[about="https://privatealpha.com/ontology/ibis/1#Argument"]:hover, span[typeof~="ibis:Argument"]:hover, span[about="ibis:Argument"]:hover, span[about="https://privatealpha.com/ontology/ibis/1#Argument"]:hover {
   background-color: #e0e0f3;
   border-color: #a7a7d2;
 }
@@ -1117,20 +1204,21 @@ button[value="skos:Concept"][disabled] {
   background-color: #1a0b1a;
 }
 
-li[typeof~="skos:Concept"] {
+li[typeof~="skos:Concept"], li[about="skos:Concept"], li[about="http://www.w3.org/2004/02/skos/core#Concept"], dfn[typeof~="skos:Concept"], dfn[about="skos:Concept"], dfn[about="http://www.w3.org/2004/02/skos/core#Concept"], em[typeof~="skos:Concept"], em[about="skos:Concept"], em[about="http://www.w3.org/2004/02/skos/core#Concept"], strong[typeof~="skos:Concept"], strong[about="skos:Concept"], strong[about="http://www.w3.org/2004/02/skos/core#Concept"], span[typeof~="skos:Concept"], span[about="skos:Concept"], span[about="http://www.w3.org/2004/02/skos/core#Concept"] {
   background-color: #d198d1;
   border-color: #804b7f;
-}
-
-li[typeof~="skos:Concept"] a {
   color: #351c35;
 }
 
-li[typeof~="skos:Concept"] a:hover {
+li[typeof~="skos:Concept"] a, li[about="skos:Concept"] a, li[about="http://www.w3.org/2004/02/skos/core#Concept"] a, dfn[typeof~="skos:Concept"] a, dfn[about="skos:Concept"] a, dfn[about="http://www.w3.org/2004/02/skos/core#Concept"] a, em[typeof~="skos:Concept"] a, em[about="skos:Concept"] a, em[about="http://www.w3.org/2004/02/skos/core#Concept"] a, strong[typeof~="skos:Concept"] a, strong[about="skos:Concept"] a, strong[about="http://www.w3.org/2004/02/skos/core#Concept"] a, span[typeof~="skos:Concept"] a, span[about="skos:Concept"] a, span[about="http://www.w3.org/2004/02/skos/core#Concept"] a {
+  color: inherit;
+}
+
+li[typeof~="skos:Concept"] a:hover, li[about="skos:Concept"] a:hover, li[about="http://www.w3.org/2004/02/skos/core#Concept"] a:hover, dfn[typeof~="skos:Concept"] a:hover, dfn[about="skos:Concept"] a:hover, dfn[about="http://www.w3.org/2004/02/skos/core#Concept"] a:hover, em[typeof~="skos:Concept"] a:hover, em[about="skos:Concept"] a:hover, em[about="http://www.w3.org/2004/02/skos/core#Concept"] a:hover, strong[typeof~="skos:Concept"] a:hover, strong[about="skos:Concept"] a:hover, strong[about="http://www.w3.org/2004/02/skos/core#Concept"] a:hover, span[typeof~="skos:Concept"] a:hover, span[about="skos:Concept"] a:hover, span[about="http://www.w3.org/2004/02/skos/core#Concept"] a:hover {
   color: #613760;
 }
 
-li[typeof~="skos:Concept"]:hover {
+li[typeof~="skos:Concept"]:hover, li[about="skos:Concept"]:hover, li[about="http://www.w3.org/2004/02/skos/core#Concept"]:hover, dfn[typeof~="skos:Concept"]:hover, dfn[about="skos:Concept"]:hover, dfn[about="http://www.w3.org/2004/02/skos/core#Concept"]:hover, em[typeof~="skos:Concept"]:hover, em[about="skos:Concept"]:hover, em[about="http://www.w3.org/2004/02/skos/core#Concept"]:hover, strong[typeof~="skos:Concept"]:hover, strong[about="skos:Concept"]:hover, strong[about="http://www.w3.org/2004/02/skos/core#Concept"]:hover, span[typeof~="skos:Concept"]:hover, span[about="skos:Concept"]:hover, span[about="http://www.w3.org/2004/02/skos/core#Concept"]:hover {
   background-color: #f3daf3;
   border-color: #d198d1;
 }

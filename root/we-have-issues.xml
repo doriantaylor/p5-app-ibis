@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Welcome to App::IBIS: We Have Issues.</title>
+    <link rel="stylesheet" type="text/css" href="/asset/main.css"/>
+  </head>
+  <body typeof="bibo:Webpage">
+    <main>
+      <article>
+        <h1>Welcome to App::IBIS: We Have Issues.</h1>
+        <!--
+        <nav>
+          <ul>
+            <li></li>
+          </ul>
+        </nav>-->
+        <section id="Eu1PZoeotXTE0qTW7AbfLL">
+          <p>This tool is something of a laboratory with half a dozen experiments running concurrently, and was never intended to be anything more. It has been dragged, kicking and screaming, into active service, because it has nevertheless turned out to be useful. Here are some of the major things going on:</p>
+          <dl>
+            <dt>The <abbr>RDF-KV</abbr> Protocol</dt>
+            <dd>I originally created this tool for the exclusive purpose of testing <a href="https://doriantaylor.com/rdf-kv">a protocol I designed</a>. The purpose of this protocol is to facilitate the rapid development of <abbr>RDF</abbr> <abbr>CRUD</abbr> applications with the fewest possible moving parts, in particular the ability to modify server-side graph content without having to rely on client-side JavaScript. This simple protocol is embedded into <abbr>HTML</abbr> <code>&lt;form&gt;</code> fields, the <code>name=</code> attributes of which are specially-crafted to sum up to commands to add and remove <abbr>RDF</abbr> statements from a given graph database.</dd>
+            <dt>The <abbr>IBIS</abbr> Vocabulary</dt>
+            <dd>In order to test the protocol, I needed an <abbr>RDF</abbr> vocabulary. A year or two pfrior, <a href="https://privatealpha.com/ontology/ibis/1#">I had created a vocabulary</a> for representing instances of Kunz and Rittel's <a href="https://en.wikipedia.org/wiki/Issue-based_information_system">Issue-Based Information System</a>. Feedback from using the tool has since stimulated a number of revisions to my initial interpretation of the system.</dd>
+            <dt>Visualizing Graph Data</dt>
+            <dd>While I believe that synoptic views are essential to comprehending complex data, I am sympathetic to <a href="http://mkweb.bcgsc.ca/">Martin Krzywinski's</a> position that <q>hairball</q> <a href="https://en.wikipedia.org/wiki/Force-directed_graph_drawing">force-directed layouts</a> are suboptimal in their information-carrying capacity&#x2014;so much so that I implemented his <a href="http://hiveplot.net/">hiveplot</a> design in a very early prototype of this tool. I very quickly discovered that while it is an attractive visualization for static presentation graphics, the hiveplot was inadequate&#x2014;at least for this particular&#x2014;<em>interactive</em> application, as it turns out the aspect ratio of the image changes dramatically with the addition of new elements, making it impossible to design around. This led me to implement Krzywinski's <a href="http://circos.ca/">Circos</a> plot, which has its own set of shortcomings for the data in question: Circos appears to be better for <em>shallower</em> graphs, which <abbr>IBIS</abbr> is most definitely not. I have a semi-original idea for a third attempt which will look wildly different from the first two, but it will have to wait until I can sequester enough time to implement it.</dd>
+            <dt>Semantic Data Visualizations</dt>
+            <dd>Early on it seemed to me that it would be a very useful thing, if you were interested in actually sharing the data you visualize, to arrange for those visualizations to <em>embed</em> their constituent data such that it can be extracted intact. What obviously followed was to embed the data directly into the very elements that were being used to draw the corresponding points in the visualization. This coincided nicely with yet another experiment.</dd>
+            <dt>Visual Styling of Semantic Content</dt>
+            <dd>It turns out <abbr>RDFa</abbr> attributes are just as eligible as any other for <abbr>CSS</abbr> selectors, and in many cases can stand in for conventional <code>class</code> and <code>id</code> selectors, thus obviating the need to maintain a separate set of identifiers. In the handful of cases these attributes <em>cannot</em> be repurposed this way, they can be read by an <abbr>RDFa</abbr>-aware processor that transforms the markup into something more amenable to styling with <abbr>CSS</abbr>. In practice, this greatly increases the capacity for styling, since e.g. colour palettes can be identified to <abbr>RDF</abbr> types and predicates, and much less has to be maintained by hand.</dd>
+            <dt>Through-and-Through <abbr>RDF</abbr> Web Application</dt>
+            <dd>I designed this application from the ground up to be a thin skin overtop of an <abbr>RDF</abbr> graph database, the ultimate implementation of which it is intended to be agnostic. Indeed, the ultimate goal was to have the application produce data which could be removed and installed in a completely different implementation or applied to a completely different purpose. In concrete terms, implementation is only about <var>3000</var> lines of code, a third of which is for drawing the visualizations. This experience has been extremely insightful for identifying the kinds of traits which are desirable in an <abbr>RDF</abbr> application framework.</dd>
+          </dl>
+        </section>
+        <section id="EbM2twsp_2Y4F6yW3E0inL">
+          <h2><abbr>IBIS</abbr> Itself</h2>
+          <p>In <time>1970</time>, Werner Kunz and <a rel="dct:references" href="projects/active/doriantaylor.com/trunk/">Horst Rittel</a>, two professors of architecture, planning and design at Berkeley, <a rel="dct:references" href="http://cc.gatech.edu/~ellendo/rittel/rittel-issues.pdf">published a paper</a> describing a system for solving <q><a rel="dct:references" href="https://en.wikipedia.org/wiki/Wicked_problem"><dfn>wicked problems</dfn></a></q>&#x2014;problems with a large number of mutually interacting concerns, often accompanied by a number of stakeholders whose interests are often divergent, if not diametrically opposed.</p>
+          <p>The important idea behind <abbr>IBIS</abbr>, although not unique to it, is a concept called <dfn>structured argumentation</dfn>, which involves limiting the available rhetorical manœuvres to the constraints of a formal system, thus turning the argumentation process into a kind of game. <em>Argumentation</em> here is not conflict per se, but rather in the context of developing a program and rationale for solving <em>wicked problems</em>: figuring out <em>what</em> issues exist, <em>how</em> to address them, and <em>why</em> one course of action should be carried out instead of another. To this effect, there are three recognized types of element in the <abbr>IBIS</abbr> ecosystem:</p>
+          <ul>
+            <li><strong about="ibis:Issue"><dfn>Issues</dfn>:</strong> Factual statements regarding states of affairs in the world, that somebody would like something done about. In the tool, these are tinted <span about="ibis:Issue">red</span>.</li>
+            <li><strong about="ibis:Position"><dfn>Positions</dfn>:</strong> Value statements or statements of opinion, about what, if anything, should be done about a given <dfn about="ibis:Issue">issue</dfn>. In the tool, these are tinted <span about="ibis:Position">green</span>.</li>
+            <li><strong about="ibis:Argument"><dfn>Arguments</dfn>:</strong> These are ultimately factual statements just like <dfn about="ibis:Issue">issues</dfn>, even though they are motivated by convincing our interlocutors of the merits or demerits of a given <dfn about="ibis:Position">position</dfn>. In the tool, these are tinted <span about="ibis:Argument">blue</span>.</li>
+          </ul>
+          <p>The elements in the system can be connected in the following ways:</p>
+          <ul>
+            <li>Any element can <dfn about="ibis:generalizes">generalize</dfn>, <dfn about="ibis:specializes">specialize</dfn>, or <dfn about="ibis:replaces">replace</dfn> an element of the same kind.</li>
+            <li>Any <dfn about="ibis:Position">position</dfn> can <dfn about="ibis:responds-to">respond to</dfn> any <dfn about="ibis:Issue">issue</dfn>.</li>
+            <li>Any element can <dfn about="ibis:suggests">suggest</dfn> an <dfn about="ibis:Issue">issue</dfn>.</li>
+            <li>Any <dfn about="ibis:Issue">issue</dfn> can <dfn about="ibis:questions">question</dfn> any other element.</li>
+            <li>Any <dfn about="ibis:Argument">argument</dfn> can <dfn about="ibis:supports">support</dfn> or <dfn about="ibis:opposes">oppose</dfn> any <dfn about="ibis:Position">position</dfn>.</li>
+          </ul>
+          <p>The original formulation of this system was moderated by Kunz and Rittel and carried out on simple index cards. One can thus imagine additional faculties for annotation and attachment of evidence, which was essential part of any argumentation system. Such extensions were added in numerous digital implementations of <abbr>IBIS</abbr> dating back as far as <time>1988</time>.</p>
+          <section id="ErLyJl3gy_nQldz0VhlUJI">
+            <h3>Extensive Digital Pedigree</h3>
+            <p>There have been numerous attempts spanning three decades to digitize <abbr>IBIS</abbr>, many of which are still extant. <a type="application/pdf" href="http://csis.pace.edu/~marchese/CS835/Readings/p303-conklin_gibis.pdf">The original, Conklin</a>, once a student of Rittel, is still in business. Nevertheless, these tools remain incredibly niche, which I suspect has to do with:</p>
+            <dl>
+              <dt><abbr>IBIS</abbr> tools require at <em>least</em> a trained moderator, if not comprehensive training for all participants.</dt>
+              <dd>No matter how slick the user interface presented, <abbr>IBIS</abbr> will never be <q>user-friendly</q>&#x2014;i.e., workable by novices&#x2014;in one very important sense: These systems are ultimately text-based, and the formulation of the language is important enough that one can't just write anything in any slot. Like any precision instrument, there are consequences to their misuse.</dd>
+              <dt>They draw on, and lend themselves to reference by, copious external resources</dt>
+              <dd>Up until fairly recently, <abbr>IBIS</abbr> implementations have been stand-alone desktop applications. Attachments for evidence or notes thus had to be either embedded in the state mechanism of the tool itself (its save file or database), or linked to a computer's local file system. Argumentation elements within the tool itself were likewise not directly addressable. Until the Web came along, remedies for these problems would have spelled out enormous expansions in development scope; even <em>with</em> the Web they are not trivial.</dd>
+            </dl>
+            <p><abbr>IBIS</abbr> tools are meant to solve hard problems, but are <em>themselves</em> hard problems, made harder by technical and paradigmatic constraints over their half-century history. <strong>Why try to make another one?</strong></p>
+          </section>
+        </section>
+        <section id="EkujszAx594jB1BF_7tnKJ">
+          <h2>This Particular Implementation</h2>
+          <p>As mentioned, <em>this</em> <abbr>IBIS</abbr> tool started life as a test bench for a mundane yet important piece of back-end infrastructure. That infrastructure doesn't know or care about what it's processing. What gives the tool its identity is the <abbr>RDF</abbr> vocabulary at its core. </p>
+          <aside role="note">
+            <p>The vocabulary itself is something I wrote because an existing vocabulary disappeared off the Web. I wrote the vocabulary at least a full year, if not two years, before implementing the tool.</p>
+          </aside>
+          <section id="EpvdRgkEURDTvaTgfFAsyI">
+            <h3>Elements are First-Class Citizens</h3>
+            <p>Under this design, the <dfn about="ibis:Issue">issues</dfn>, <dfn about="ibis:Position">positions</dfn> and <dfn about="ibis:Argument">arguments</dfn> that make up an <abbr>IBIS</abbr> instance are individually-addressable information resources. Indeed, operations are carried out from the point of view of a given element. Other systems typically render a single view of objects on a canvas, and only the canvas <em>itself</em> is addressable. It was important to me to show a situated view in <em>addition</em> to a synoptic one, and it has proven extremely useful to be able to link directly to individual <abbr>IBIS</abbr> elements.</p>
+          </section>
+          <section id="EPcoi8JKaI3xIfr2oIwzrL">
+            <h3>Permeable Membrane</h3>
+            <p>Whereas other <abbr>IBIS</abbr> systems attempt to encapsulate all of the attendant structures to support their core functionality, the strategy here is to try to delegate as much of that work as possible. Using <abbr>RDF</abbr> and <dfn>linked data</dfn>, we can outsource ancillary data representations to other vocabularies, and assets to other sites.</p>
+            <p>When designing the underpinning vocabulary, it was obvious that since <abbr>IBIS</abbr> elements are essentially conceptual entities, they ought to inherit the properties of <abbr>SKOS</abbr> <dfn about="skos:Concept">concepts</dfn>. It became clear very early on that the <abbr>IBIS</abbr> elements needed to interact with regular <abbr>SKOS</abbr> <dfn about="skos:Concept">concepts</dfn>, insofar as the latter helps group and identify the former. I have since added a rudimentary interface for creating and manipulating an ordinary <abbr>SKOS</abbr> concept scheme.</p>
+          </section>
+        </section>
+        <section id="EC699_MWImpa-5d6IOI54I">
+          <h2>My Experience With <abbr>IBIS</abbr></h2>
+          <p>I bootstrapped the first working version of this tool around <time datetime="2013-10-31">Halloween 2013</time>, and have been using it off and on ever since, although much more in the last couple years due to fixing a few severe performance and resource consumption problems. I have also made some sporadic changes to the user interface, but acknowledge that I am approaching the limit of what this particular implementation&#x2014;and the framework it rests upon&#x2014;can be reasonably teased out to do. Nevertheless, it has been serviceable enough to get a sense of what the <abbr>IBIS</abbr> experience is all about:</p>
+          <section id="EkF4l3XgWW8dREv14YfzaL">
+            <h3>Versus Outliner</h3>
+            <p>The first thing you will notice is that in contrast to an outliner, <abbr>IBIS</abbr> is only <em>weakly</em> hierarchical. <abbr>IBIS</abbr> structures do not have a <em>root</em>, although they may be understood to represent <em>paths</em> that begin with a single <dfn about="ibis:Issue">issue</dfn> and traipse from <dfn about="ibis:Position">position</dfn> to <dfn about="ibis:Argument">argument</dfn> and even loop around. What you get, in my opinion, is something ultimately more powerful than an outliner, if not quite as tidy: a much more topologically <em>honest</em> representation of a problem space: you don't have to mangle your work in order to fit it into a strict hierarchy.</p>
+            <p>The other item worth noting is the <abbr>IBIS</abbr> elements and the relations between them are <em>typed</em>: there is additional meaning attached to the element outside its textual content, and elements can only be attached to certain other types of elements, and only in specific ways. Here you lose some of the generality of an outliner, but in return the relationships between entries say more than <q>sibling</q> or <q>child</q>.</p>
+            <p>For those of us who use an outliner as a to-do list, in <abbr>IBIS</abbr> we are encouraged to record what <dfn about="ibis:Issue">issue</dfn> we are trying to respond to, in addition to the thing that needs doing. In collaborative environments we may also need to justify <em>why</em> the thing needs doing in the first place, either versus doing nothing, or versus doing some other thing. This is also recorded in the <abbr>IBIS</abbr> network.</p>
+          </section>
+          <section id="EpXUeorSrYjUtJTt_NnFtJ">
+            <h3>Versus Bug Tracker</h3>
+            <p>Many software bug-tracking packages already call their main content <dfn about="ibis:Issue">issues</dfn>, and in some narrow sense these can be construed as exactly the same thing. The main difference is that the <dfn about="ibis:Issue">issues</dfn> in bug trackers only concern themselves with some piece or other of software, while in <abbr>IBIS</abbr> an <dfn about="ibis:Issue">issue</dfn> can pertain to anything.</p>
+            <aside role="note">
+              <p>I suppose you can use a bug tracker for non-software-development purposes, and people do, but the experience tends to be skewed toward software.</p>
+            </aside>
+            <p>Responses to <dfn about="ibis:Issue">issues</dfn> in bug trackers tend to be implicit, as there is often only one response to a bug report, which is <q>fix the bug</q>. Only occasionally is there any discussion of <em>how</em> to fix the bug, and when there is, it is carried out in the bug report's comment section. In this way we can say bug trackers are <em>semi</em>-typed&#x2014;with the main <dfn about="ibis:Issue">issue</dfn> being typed and the commentary, implicitly full of <dfn about="ibis:Position">positions</dfn> and <dfn about="ibis:Argument">arguments</dfn>, being untyped.</p>
+            <p>One way the two classes of system are similar is that modern bug trackers are capable of representing dependencies between two <dfn about="ibis:Issue">issues</dfn>, which makes it possible to compute the essential procedure for resolving any given issue&#x2014;an important ingredient for project planning. Given these comparisons, we can regard an <dfn>IBIS</dfn> tool as something like a <q>bug tracker for everything</q>.</p>
+          </section>
+        </section>
+        <section id="E9m5yaeClAooSC3WJ-cb6I">
+          <h2>How to Use <abbr>IBIS</abbr></h2>
+          <p>Using the tool itself is easy; the hard part is mastering how to <em>write</em> for it.</p>
+          <p>The main idea to keep in mind when writing entries into an <abbr>IBIS</abbr> network is that by using it you are agreeing to delegate aspects of your argument to the topological structure of the network. This would be the same whether the process was carried out on the original index cards, or on any other computerized version. For example, with an <dfn about="ibis:Issue">issue</dfn>, the fact that it got into the system at <em>all</em> implies somebody wrote it and it didn't just appear out of nowhere, and the fact that it's marked as an <dfn about="ibis:Issue">issue</dfn> implies something ought to be done about it. If the text of the <dfn about="ibis:Issue">issue</dfn> contains a value judgment or even hints at a course of action, then the formal semantic relationships can't do their work. Here are some more concrete examples:</p>
+          <dl>
+            <dt>Bad issue (value judgment):</dt>
+            <dd><q>The rent is too damn high!</q></dd>
+            <dt>Bad issue (suggests course of action):</dt>
+            <dd><q>More housing supply will cause prices to come down.</q></dd>
+            <dt>Almost good; actually two issues:</dt>
+            <dd><q>Housing costs have risen faster than incomes and vacancy is at 0.5%.</q></dd>
+            <dt>Good issue (atomic factual statement):</dt>
+            <dd><q>Housing costs continue to rise faster than incomes.</q></dd>
+          </dl>
+          <p>The first two examples in this list are actually <dfn about="ibis:Position">positions</dfn>, for the reasons attached. The third example is resolved simply by cutting it in half. Only the last example takes an appropriate-enough form to use as an issue. That only leaves us to discuss the third class of element, the <dfn about="ibis:Argument">argument</dfn>. It has become clear, both from the reference literature and from several years of use, that an <dfn about="ibis:Argument">argument</dfn> only differs from an <dfn about="ibis:Issue">issue</dfn> by the fact that it is being used to argue for or against a position. Otherwise they are exactly the same kind of thing: an atomic factual statement.</p>
+          <p>This is perhaps counterintuitive, and perhaps doesn't track with the formal idea of an argument, let alone the colloquial one. It might seem that it's the elements called <dfn about="ibis:Position">positions</dfn> that are the actual arguments, while the things called <dfn about="ibis:Argument">arguments</dfn> provide the evidence for or against the position. The role of the <dfn about="ibis:Issue">issue</dfn> is to anchor the position to a particular state of affairs. Under the <abbr>IBIS</abbr> rubric, <dfn about="ibis:Issue">issues</dfn> and <dfn about="ibis:Argument">arguments</dfn> are statements of fact; <dfn about="ibis:Position">positions</dfn> are the only elements permitted to contain an <q><em>ought</em></q>.</p>
+          <p>If an element <var>A</var> <dfn about="ibis:specializes">specializes</dfn> another element <var>B</var>, this is saying that <var>A</var> is a special case of <var>B</var>, and the <dfn about="ibis:generalizes">generalizes</dfn> relation is the inverse. The only other real ambiguity is the distinction between <dfn about="ibis:questions">questions</dfn> and <dfn about="ibis:suggests">suggests</dfn>, which are roughly inverse to one another. Through experience it seems that <dfn about="ibis:questions">questions</dfn> is a stronger variant of <dfn about="ibis:suggested-by">suggested by</dfn>, while <dfn about="ibis:suggests">suggests</dfn> is a weaker version of <dfn about="ibis:questioned-by">questioned by</dfn>. Any element can <dfn about="ibis:suggests">suggest</dfn> an <dfn about="ibis:Issue">issue</dfn>, while any <dfn about="ibis:Issue">issue</dfn> can <dfn about="ibis:questions">question</dfn> any other element. If an <dfn about="ibis:Issue">issue</dfn> <var>I</var> <dfn about="ibis:questions">questions</dfn> an element <var>J</var>, this implies <var>J</var> <dfn about="ibis:suggests">suggests</dfn> <var>I</var>.</p>
+          <p>As you can see, the role technology plays in this system is minimal, relegated to abridging the labour of arranging and connecting the constituent parts, and subsequently getting out of the way of what is ultimately a cognitive process that requires a certain amount of training and skill.</p>
+        </section>
+        <section id="EA7D4hOhQbr37qrtuPwIsL">
+          <h2>Implementation Status and Direction</h2>
+          <p>This particular implementation I feel has served its initial purpose, which was to test the <abbr>RDF-KV</abbr> protocol. Its mission was extended by helping flesh out the <abbr>IBIS</abbr> vocabulary, and it continues to serve as a useful tool for project planning and similar forms of problem-solving.</p>
+          <p>Nevertheless, in order to take this tool to the next level, I need a fast <dfn>reasoner</dfn>, which doesn't exist in this implementation's programming language, and writing one from scratch is out of the question. It's much easier to just rewrite the tool in a different language. Major changes, like proper multi-user support and a proper data visualization régime, are not worth the effort to do in the current implementation, so they will have to wait for the rewrite.</p>
+          <p>Thankfully, the code is only <var>3000</var> lines long. No doubt there will be gaps in third-party libraries, my eyeball guess is I'm probably looking at a <var>10000</var>-line job just to reach parity, albeit with a lot of the design decisions already taken care of. The only remaining question is how to sequester the time. Until then, enjoy App::IBIS.</p>
+        </section>
+      </article>
+    </main>
+    <footer>
+      <a href="/">Overview</a>
+    </footer>
+  </body>
+</html>

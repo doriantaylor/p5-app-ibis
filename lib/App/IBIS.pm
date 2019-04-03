@@ -42,7 +42,7 @@ extends 'Catalyst';
 with 'App::IBIS::Role::Schema';
 with 'Role::Markup::XML';
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 my (@LABELS, @ALT_LAB);
 

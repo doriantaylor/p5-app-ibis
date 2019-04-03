@@ -42,6 +42,18 @@ my %FORMBP = (
     'accept-charset' => 'utf-8',
 );
 
+my %FOOTER = (
+    -name => 'footer', -content => {
+        -name => 'nav', -content => {
+            -name => 'ul', -content => [
+                { -name => 'li', -content => { href => '/',
+                                               -content => 'Overview' } },
+                { -name => 'li', -content => {
+                    href => '/we-have-issues',
+                    -content => 'What is this thing?' } },
+            ] } },
+);
+
 has _dispatch => (
     is => 'ro',
     isa => 'HashRef',
@@ -102,6 +114,11 @@ sub index :Path :Args(0) {
     my $req  = $c->req;
     my $resp = $c->res;
 
+    if ($req->method == 'DELETE') {
+        $c->forward('truncate');
+        return;
+    }
+
     my $ns = $self->ns;
     my $m  = $c->rdf_cache;
 
@@ -131,6 +148,7 @@ sub index :Path :Args(0) {
         uri => $req->base,
         title => 'Welcome to App::IBIS: We Have Issues.',
         content => [
+            { -name => 'main', -content => [
             { -name => 'section', class => 'index ibis',
               -content => [
                   { -name => 'h1', -content => 'Argumentation Structure' },
@@ -161,6 +179,16 @@ sub index :Path :Args(0) {
                                { -name => 'h2', -content => 'Concepts' },
                                { -name => 'ul', -content => \@li } ] },
                        ] },
+        ]},
+            { -name => 'footer', -content => {
+                -name => 'nav', -content => {
+                    -name => 'ul', -content => [
+                        { -name => 'li', -content => {
+                            href => '/', -content => "\xa0" } }, # empty overview
+                        { -name => 'li', -content => {
+                            href => '/we-have-issues',
+                            -content => 'What is this thing?' } },
+                    ] } } }
         ]);
 
     $resp->body($doc);
@@ -627,6 +655,7 @@ sub concepts :Local {
 
 }
 
+
 sub uuid :Private {
     my ($self, $c, $uuid) = @_;
 
@@ -708,6 +737,27 @@ sub _delete_uuid :Private {
     $m->begin_bulk_ops;
     $m->remove_statements($uuid, undef, undef, $g);
     $m->remove_statements(undef, undef, $uuid, $g);
+    $m->end_bulk_ops;
+
+    $c->log->debug(sprintf 'New size: %d', $m->size);
+
+    my $resp = $c->response;
+    $resp->status('204');
+    $resp->content_type('text/plain');
+    $resp->body('');
+    return;
+}
+
+sub truncate :Private {
+    my ($self, $c) = @_;
+
+    my $m = $c->model('RDF');
+    my $g = $c->graph;
+
+    $c->log->debug(sprintf 'Model size: %d', $m->size);
+
+    $m->begin_bulk_ops;
+    $m->remove_statements(undef, undef, undef, $g);
     $m->end_bulk_ops;
 
     $c->log->debug(sprintf 'New size: %d', $m->size);
@@ -951,13 +1001,7 @@ sub _get_concept :Private {
                         $self->_do_concept_connect_form($c, $subject),
                     ] },
                 ] },
-            ] },
-            { -name => 'footer',
-              -content => [
-                  { href => '/', -content => 'Overview' },
-                  { -name => 'button', id => 'toggle-full-screen',
-                    -content => 'Full Screen' },
-              ] },
+            ] }, \%FOOTER,
         ],
     );
 
@@ -1266,12 +1310,7 @@ sub _get_ibis :Private {
                     $self->_do_connect_form($c, $subject, $type),
                     $self->_do_create_form($c, $uri, $type) ] },
             ] } ] },
-            { -name => 'footer',
-              -content => [
-                  { href => '/', -content => 'Overview' },
-                  { -name => 'button', id => 'toggle-full-screen',
-                    -content => 'Full Screen' },
-              ] },
+                     \%FOOTER,
         ],
     );
 

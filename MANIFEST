@@ -43,6 +43,7 @@ root/asset/main.css
 root/asset/main.js
 root/asset/svg.css
 root/favicon.ico
+root/we-have-issues.xml
 script/app_ibis_cgi.pl
 script/app_ibis_create.pl
 script/app_ibis_fastcgi.pl

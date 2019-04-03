@@ -76,7 +76,7 @@ $PALETTE: (
 html {
    width: 100%;
    min-height: 100%;
-   overflow: hidden;
+   //overflow: hidden;
    font-family: Roboto, Helvetica Neue, sans-serif;
    background-color: #333;
    color: #999;
@@ -89,6 +89,53 @@ body {
    margin: 0;
    padding: 0;
    overflow: hidden;
+}
+
+body[typeof~="bibo:Webpage"] {
+   overflow: auto;
+   text-align: justify;
+   hyphens: auto;
+   color: #aaa;
+
+   @for $i from 5 through 0 {
+      h#{6 - $i} {
+         font-size: 100% + $i * 20;
+      }
+   }
+
+   h1 {
+      text-align: center;
+   }
+
+   article {
+      width: 100%;
+      max-width: initial;
+      right: initial;
+      margin: 1em auto;
+   }
+
+   section {
+      max-width: 70ex;
+      margin: auto;
+      line-height: 1.25em;
+   }
+
+   aside[role~="note"] {
+      margin: 1.3333em;
+      font-size: 75%;
+   }
+
+   em, strong, dfn, abbr, span {
+      @include vendor(border-radius, 0.25em);
+      &[about] {
+         padding: 0 0.1em;
+      }
+   }
+   dfn, abbr {
+      //font-variant: small-caps;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+   }
 }
 
 main {
@@ -124,13 +171,27 @@ footer {
    right: 0;
    bottom: 0;
    height: 1.5em;
-   text-align: right;
    padding: 0.25em 0.5em;
    background-color: black;
    line-height: 1.5em;
    > a {
       display: inline-block;
       height: 100%;
+   }
+   nav {
+      ul {
+         margin: 0;
+         padding: 0;
+      }
+      li {
+         display: block;
+         width: 50%;
+         float: left;
+         text-align: right;
+         &:first-child {
+            text-align: left;
+         }
+      }
    }
 }
 
@@ -667,7 +728,10 @@ button {
 }
 
 @each $class, $fieldset in $FIELDSETS {
-   $pal : map-get($PALETTE, $class);
+   $idx: str-index($class, ":");
+   $suf: str-slice($class, $idx + 1);
+   $uri: map-get($PREFIXES, str-slice($class, 1, $idx - 1));
+   $pal: map-get($PALETTE, $class);
 
    // body[typeof~="#{$class}"] main {
    //   @include vendor(box-shadow, inset 0px 0px 40px nth($pal, 1));
@@ -711,20 +775,24 @@ button {
       background-color: nth($pal, 1);
    }
 
-   li[typeof~="#{$class}"] {
-      background-color: nth($pal, 5);
-      border-color: nth($pal, 4);
-      a {
-         color: nth($pal, 2);
+   li, dfn, em, strong, span {
+      &[typeof~="#{$class}"], &[about="#{$class}"], &[about="#{$uri}#{$suf}"] {
 
-         &:hover {
+         background-color: nth($pal, 5);
+         border-color: nth($pal, 4);
+         color: nth($pal, 2);
+         a {
+            color: inherit;
+            
+            &:hover {
             //background-color: nth($pal, 6);
-            color: nth($pal, 3);
+               color: nth($pal, 3);
+            }
          }
-      }
-      &:hover {
-         background-color: nth($pal, 6);
-         border-color: nth($pal, 5);
+         &:hover {
+            background-color: nth($pal, 6);
+            border-color: nth($pal, 5);
+         }
       }
    }
 
