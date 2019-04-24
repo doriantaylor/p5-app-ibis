@@ -114,7 +114,7 @@ sub index :Path :Args(0) {
     my $req  = $c->req;
     my $resp = $c->res;
 
-    if ($req->method == 'DELETE') {
+    if ($req->method eq 'DELETE') {
         $c->forward('truncate');
         return;
     }
@@ -2125,8 +2125,8 @@ sub end : ActionClass('RenderView') {
         $resp->content_type($ct) unless $resp->content_type;
 
         $body = $body->toString(1);
-        $resp->content_length(length $body);
-        utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
+        #$resp->content_length(length $body);
+        #utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
         $resp->body($body);
     }
 }
