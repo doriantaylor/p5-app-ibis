@@ -110,10 +110,13 @@
 root/static/.*
 nytprof\.out$
 nytprof/.*
-App-IBIS.*\.tar\.gz
+App-IBIS.*
 \.db
 \.ttl
+.*\.csv
+.*\.orig
 
 # stuff we don't want to distro
 root/asset/main.scss
 maint/
+root/asset/jquery-2.*

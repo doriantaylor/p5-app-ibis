@@ -27,9 +27,9 @@ use Catalyst::Runtime 5.80;
 #                 directory
 
 use Catalyst qw/
-    -Debug
     ConfigLoader
 /;
+#    -Debug
 #    Static::Simple
 #    StackTrace
 #/;
@@ -42,7 +42,7 @@ extends 'Catalyst';
 with 'App::IBIS::Role::Schema';
 with 'Role::Markup::XML';
 
-our $VERSION = '0.09';
+our $VERSION = '0.09_03';
 
 my (@LABELS, @ALT_LAB);
 
@@ -226,9 +226,17 @@ sub graph {
     my $c = shift;
 
     my $g = $c->req->base;
+    $c->log->debug("Using base $g as context");
 
     if (my $cfg = $c->config->{graph}) {
-        $g = (ref $cfg eq 'HASH' and $cfg->{$g}) ? $cfg->{$g} : $cfg;
+        if (ref $cfg eq 'HASH') {
+            $g = $cfg->{$g} || $g;
+        }
+        elsif (!ref $cfg and $cfg) {
+            $g = $cfg;
+        }
+
+        $c->log->debug("Using context graph $g from config");
     }
 
     # i suppose this oculd theoretically
@@ -246,12 +254,17 @@ sub stub {
 
     #my %ns = (%{$self->uns}, %{$p{ns} || {}});
 
-    my $css = $c->config->{css} || '/asset/main.css';
+    # optionally multiple css files
+    my $css = $c->config->{css} ||
+        ['/asset/font-awesome.css', '/asset/main.css'];
+    $css = [$css] unless ref $css;
+    my @css = map {
+        { rel => 'stylesheet', type => 'text/css', href => $_ } } @$css;
 
     my ($body, $doc) = $c->_XHTML(
         %p,
         link  => [
-            { rel => 'stylesheet', type => 'text/css', href => $css },
+            @css,
             { rel => 'alternate', type => 'application/atom+xml',
               href => '/feed' } ],
         head  => [

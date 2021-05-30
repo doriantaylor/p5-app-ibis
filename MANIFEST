@@ -1,5 +1,6 @@
 app_ibis.conf
 app_ibis.psgi
+backstory.org
 Changes
 inc/File/Copy/Recursive.pm
 inc/Module/AutoInstall.pm
@@ -37,12 +38,13 @@ root/asset/font-awesome/fontawesome-webfont.svg
 root/asset/font-awesome/fontawesome-webfont.ttf
 root/asset/font-awesome/fontawesome-webfont.woff
 root/asset/font-awesome/FontAwesome.otf
-root/asset/jquery-2.0.3.js
+root/asset/jquery-3.4.1.js
 root/asset/jquery.js
 root/asset/main.css
 root/asset/main.js
 root/asset/svg.css
 root/favicon.ico
+root/icon.svg
 root/we-have-issues.xml
 script/app_ibis_cgi.pl
 script/app_ibis_create.pl

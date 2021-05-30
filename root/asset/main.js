@@ -142,6 +142,7 @@ function toggleCheckBox (input) {
 }
 
 
+
 $(document).ready(function () {
     /* check initial state */
 
@@ -167,6 +168,54 @@ $(document).ready(function () {
 
     /* */
     $('.type-toggle:checked').first().trigger('change');
+
+    var hov = function (mouse) {
+        var plots = $('object.hiveplot');
+        return function () {
+            var about = this.getAttribute('about');
+            about = about.replace(/^urn:uuid:/, '/');
+            //console.log(about);
+            plots.map(function (i, x) {
+                x = x.contentDocument;
+                if (x) {
+                    var sel = 'path[about*="' + about + '"].node';
+                    var obj = $(x.querySelectorAll(sel));
+                    if (obj.length > 0) {
+                        obj.toggleClass('subject', mouse);
+                        //console.log(obj);
+                    }
+                }
+            });
+        };
+    };
+
+    $('aside.predicate li[about][typeof]').map(function (i, x) {
+        $(x).hover(hov(true), hov(false));
+    });
+});
+
+$(window).on('load', function () {
+
+    var hov = function (uuid, mouse) {
+        var sel = 'aside.predicate li[about*="' + uuid + '"]';
+        return function () {
+            $(document).find(sel).map(function (i, x) {
+                $(x).toggleClass('subject', mouse);
+            });
+        };
+    };
+
+    // now do the opposite direction
+    $('object.hiveplot').map(function (i, x) {
+        //console.log(x);
+        x = x.contentDocument;
+        //if (!x) console.log('wat');
+        if (x) $(x).find('#nodes a').map(function (j, y) {
+            var uuid = y.href.baseVal.replace(/.*\//, '');
+
+            $(y).hover(hov(uuid, true), hov(uuid, false));
+        });
+    });
 });
 
 function toggleFullscreen () {
@@ -191,41 +240,3 @@ function toggleFullscreen () {
         }
     }
 }
-
-window.addEventListener('load', function () {
-    /*
-    var butt = document.getElementById('toggle-full-screen');
-    if (butt && document.fullscreenEnabled) {
-        butt.style.display = 'initial';
-        butt.toggleFullscreen = toggleFullscreen;
-        butt.addEventListener('click',
-                              function () { this.toggleFullscreen(); }, false);
-    }
-    */
-    /*
-    document.body.addEventListener('toggle-full-screen', function (e) {
-        return true;
-    }, false);
-
-    document.body.addEventListener('touchstart', function (e) {
-        if (!this.longPressTimer) {
-            this.longPressTimer = null;
-            this.longPressTimer = window.setTimeout(function () {
-                var ev = new Event('toggle-full-screen');
-                document.body.dispatchEvent(ev);
-            }, 500);
-        }
-        return true;
-    }, false);
-
-    document.body.addEventListener('touchend', function (e) {
-        if (this.longPressTimer) {
-            console.log('clearing');
-            window.clearTimeout(this.longPressTimer);
-            this.longPressTimer = null;
-        }
-        return true;
-    }, false);
-    */
-    return true;
-}, false);

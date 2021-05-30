@@ -65,7 +65,8 @@ $PALETTE: (
    #{$directive}: $params;
 }
 
-@import url("/asset/font-awesome.css");
+// this causes FOUC ???
+//@import url("/asset/font-awesome.css");
 
 * {
    border-color: inherit;
@@ -154,15 +155,18 @@ article {
    @include vendor(border-radius, 1em);
    display: inline-block;
    position: absolute;
-   margin: 1em 1em 1em 5%;
+   //margin: 1em 1em 1em 5%;
+   margin: 1em 5% 1em 1em;
    padding: 0 1em;
    top: 0;
-   right: 0;
+   left: 0;
+   //right: 0;
    bottom: 0;
    width: 45%;
    max-width: 70ex;
    z-index: 2;
-   overflow: visible auto;
+   overflow-x: visible;
+   overflow-y: auto;
 }
 
 footer {
@@ -201,14 +205,13 @@ figure {
    &.aside {
       position: absolute;
       top: 0;
-      left: 0;
-      display: inline-block;
-      max-width: 65%;
-      width: 40%;
-      height: 50%;
+      //left: 0;
+      right: 0;
+      display: block;
+      max-width: 60%;
       margin: 0;
       overflow: visible;
-      width: 100%;
+      width: 100vh;
       height: 100%;
       z-index: 1;
    }
@@ -350,17 +353,17 @@ object {
          display: block;
          position: absolute;
          top: 0;
-         left: 0;
+         right: 0;
          width: auto;
          height: 25%;
-         transform: rotate(45deg);
+         transform: rotate(-45deg);
 
          &.other {
             top: unset;
             bottom: 0;
             width: auto;
             height: 25%;
-            transform: rotate(-45deg);
+            transform: rotate(45deg);
          }
       }
    }
@@ -789,7 +792,7 @@ button {
                color: nth($pal, 3);
             }
          }
-         &:hover {
+         &:hover, &.subject {
             background-color: nth($pal, 6);
             border-color: nth($pal, 5);
          }

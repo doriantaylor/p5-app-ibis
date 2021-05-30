@@ -707,7 +707,6 @@ sub _make_nodes {
 
     my $r     = $self->radius;
     my @seq   = @{$p{sequence} || []};
-    my $large = int(@seq == 1);
     my $angle = fmod($self->start + $self->rotate, 360); # angle in DEGREES
     my %es    = map { $self->edge_seq->[$_] => $_ } (0..$#{$self->edge_seq});
     my $esort = $self->_edge_sort_func2(\@seq);
@@ -716,7 +715,11 @@ sub _make_nodes {
     for my $s (@seq) {
         my $rec = $p{nodes}{$s};
         # XXX the degree-age here should be the total sweep from the params
+        # (note this is the *graph* degree, measured in *radians*)
         my $deg = ($rec->{degree} ||= 0) * $p{dlen};
+
+        # large is 1 if the full sweep is bigger than pi radians (180 degrees)
+        my $large = int($deg + $p{gap} + $p{plen} >= pi);
 
         # set this so we can come back to it
         $rec->{angle} = $angle;

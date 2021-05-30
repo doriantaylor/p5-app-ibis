@@ -151,7 +151,7 @@ sub index :Path :Args(0) {
             { -name => 'main', -content => [
             { -name => 'section', class => 'index ibis',
               -content => [
-                  { -name => 'h1', -content => 'Argumentation Structure' },
+                  { -name => 'h1', -content => 'Issue Network' },
                   { -name => 'figure',
                     -content => { -name => 'object',
                                   type => 'image/svg+xml', data => '/ci2' } },
@@ -966,18 +966,6 @@ sub _get_concept :Private {
         attr  => { typeof => 'skos:Concept' },
         content => [
             { -name => 'main', -content => [
-                { -name => 'figure', class => 'aside', -content => [
-                    { -name => 'object', class => 'baby hiveplot',
-                      type => 'image/svg+xml',
-                      data => $c->uri_for('ci2',
-                                          { subject => \@ibis, degrees => 240,
-                                            rotate => 60 }) },
-                    { -name => 'object', class => 'hiveplot',
-                      type => 'image/svg+xml',
-                      data => $c->uri_for(concepts => {
-                          subject => $uu->uuid,
-                          degrees => 240, rotate => 60 }) },
-                ] },
                 { -name => 'article', -content => [
                     { -name => 'section', class => 'self', -content => [
                         { -name => 'h1', -content => { %FORMBP, -content => [
@@ -1000,6 +988,18 @@ sub _get_concept :Private {
                         $self->_do_concept_create_form($c, $subject),
                         $self->_do_concept_connect_form($c, $subject),
                     ] },
+                ] },
+                { -name => 'figure', class => 'aside', -content => [
+                    { -name => 'object', class => 'baby hiveplot',
+                      type => 'image/svg+xml',
+                      data => $c->uri_for('ci2',
+                                          { subject => \@ibis, degrees => 240,
+                                            rotate => 240 }) },
+                    { -name => 'object', class => 'hiveplot',
+                      type => 'image/svg+xml',
+                      data => $c->uri_for(concepts => {
+                          subject => $uu->uuid,
+                          degrees => 240, rotate => 240 }) },
                 ] },
             ] }, \%FOOTER,
         ],
@@ -1276,16 +1276,20 @@ sub _get_ibis :Private {
     }
 
     my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid,
-                                   degrees => 240, rotate => 60, });
+                                   degrees => 240, rotate => 240, });
 
-    my $css = $c->config->{css} || '/asset/main.css';
+    my $css = $c->config->{css} ||
+        ['/asset/font-awesome.css', '/asset/main.css'];
+    $css = [$css] unless ref $css;
+    my @css = map {
+        { rel => 'stylesheet', type => 'text/css', href => $_ } } @$css;
 
     my (undef, $doc) = $self->_XHTML(
         ns    => $self->uns,
         uri   => $uri,
         title => $label . $title ? $title->value : '',
         link  => [
-            { rel => 'stylesheet', type => 'text/css', href => $css },
+            @css,
             { rel => 'alternate', type => 'application/atom+xml',
               href => '/feed' } ],
         head  => [
@@ -1293,15 +1297,6 @@ sub _get_ibis :Private {
             qw(/asset/jquery.js /asset/main.js) ],
         attr  => \%attrs,
         content => [ { -name => 'main', -content => [
-            { -name => 'figure', class => 'aside', -content => [
-                { -name => 'object', class => 'other baby hiveplot',
-                  type => 'image/svg+xml',
-                  data => $c->uri_for('concepts',
-                                      { subject => \@concepts,
-                                        degrees => 240, rotate => 60, }) },
-                { -name => 'object', class => 'hiveplot', data => $ci2,
-                  type => 'image/svg+xml', -content => '(Circos Plot)' }
-            ]},
             { -name => 'article', -content => [
                 $self->_do_content($c, $subject),
                 #{ -name => 'hr', class => 'separator' },
@@ -1309,9 +1304,16 @@ sub _get_ibis :Private {
                     TOGGLE,
                     $self->_do_connect_form($c, $subject, $type),
                     $self->_do_create_form($c, $uri, $type) ] },
-            ] } ] },
-                     \%FOOTER,
-        ],
+            ] },
+            { -name => 'figure', class => 'aside', -content => [
+                { -name => 'object', class => 'other baby hiveplot',
+                  type => 'image/svg+xml',
+                  data => $c->uri_for('concepts',
+                                      { subject => \@concepts,
+                                        degrees => 240, rotate => 240, }) },
+                { -name => 'object', class => 'hiveplot', data => $ci2,
+                  type => 'image/svg+xml', -content => '(Circos Plot)' }
+            ] } ] }, \%FOOTER ],
     );
 
     # XXX forward this maybe?
@@ -2126,7 +2128,8 @@ sub end : ActionClass('RenderView') {
 
         $body = $body->toString(1);
         #$resp->content_length(length $body);
-        #utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
+        #$c->log->debug($doc->actualEncoding);
+        utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
         $resp->body($body);
     }
 }

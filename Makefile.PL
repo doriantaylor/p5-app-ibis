@@ -14,6 +14,7 @@ requires 'Catalyst::Runtime' => '5.90019';
 requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Static::Simple';
 requires 'Catalyst::Action::RenderView';
+requires 'Catalyst::TraitFor::Request::ProxyBase';
 requires 'Moose';
 requires 'MooseX::Params::Validate';
 requires 'namespace::autoclean';

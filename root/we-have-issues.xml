@@ -15,12 +15,13 @@
           </ul>
         </nav>-->
         <section id="Eu1PZoeotXTE0qTW7AbfLL">
+          <p>If you are looking at this page, it is almost certain you have been directed here by its author, <a href="https://doriantaylor.com/">me</a>.</p>
           <p>This tool is something of a laboratory with half a dozen experiments running concurrently, and was never intended to be anything more. It has been dragged, kicking and screaming, into active service, because it has nevertheless turned out to be useful. Here are some of the major things going on:</p>
           <dl>
             <dt>The <abbr>RDF-KV</abbr> Protocol</dt>
             <dd>I originally created this tool for the exclusive purpose of testing <a href="https://doriantaylor.com/rdf-kv">a protocol I designed</a>. The purpose of this protocol is to facilitate the rapid development of <abbr>RDF</abbr> <abbr>CRUD</abbr> applications with the fewest possible moving parts, in particular the ability to modify server-side graph content without having to rely on client-side JavaScript. This simple protocol is embedded into <abbr>HTML</abbr> <code>&lt;form&gt;</code> fields, the <code>name=</code> attributes of which are specially-crafted to sum up to commands to add and remove <abbr>RDF</abbr> statements from a given graph database.</dd>
             <dt>The <abbr>IBIS</abbr> Vocabulary</dt>
-            <dd>In order to test the protocol, I needed an <abbr>RDF</abbr> vocabulary. A year or two pfrior, <a href="https://privatealpha.com/ontology/ibis/1#">I had created a vocabulary</a> for representing instances of Kunz and Rittel's <a href="https://en.wikipedia.org/wiki/Issue-based_information_system">Issue-Based Information System</a>. Feedback from using the tool has since stimulated a number of revisions to my initial interpretation of the system.</dd>
+            <dd>In order to test the protocol, I needed an <abbr>RDF</abbr> vocabulary. A year or two prior, <a href="https://privatealpha.com/ontology/ibis/1#">I had created a vocabulary</a> for representing instances of Kunz and Rittel's <a href="https://en.wikipedia.org/wiki/Issue-based_information_system">Issue-Based Information System</a>. Feedback from using the tool has since stimulated a number of revisions to my initial interpretation of the system.</dd>
             <dt>Visualizing Graph Data</dt>
             <dd>While I believe that synoptic views are essential to comprehending complex data, I am sympathetic to <a href="http://mkweb.bcgsc.ca/">Martin Krzywinski's</a> position that <q>hairball</q> <a href="https://en.wikipedia.org/wiki/Force-directed_graph_drawing">force-directed layouts</a> are suboptimal in their information-carrying capacity&#x2014;so much so that I implemented his <a href="http://hiveplot.net/">hiveplot</a> design in a very early prototype of this tool. I very quickly discovered that while it is an attractive visualization for static presentation graphics, the hiveplot was inadequate&#x2014;at least for this particular&#x2014;<em>interactive</em> application, as it turns out the aspect ratio of the image changes dramatically with the addition of new elements, making it impossible to design around. This led me to implement Krzywinski's <a href="http://circos.ca/">Circos</a> plot, which has its own set of shortcomings for the data in question: Circos appears to be better for <em>shallower</em> graphs, which <abbr>IBIS</abbr> is most definitely not. I have a semi-original idea for a third attempt which will look wildly different from the first two, but it will have to wait until I can sequester enough time to implement it.</dd>
             <dt>Semantic Data Visualizations</dt>
@@ -42,7 +43,7 @@
           </ul>
           <p>The elements in the system can be connected in the following ways:</p>
           <ul>
-            <li>Any element can <dfn about="ibis:generalizes">generalize</dfn>, <dfn about="ibis:specializes">specialize</dfn>, or <dfn about="ibis:replaces">replace</dfn> an element of the same kind.</li>
+            <li>Any element can <dfn about="ibis:generalizes">generalize</dfn>, <dfn about="ibis:specializes">specialize</dfn>, or <dfn about="ibis:replaces">replace</dfn> an element of the same kind (<em>replace</em> is currently not implemented).</li>
             <li>Any <dfn about="ibis:Position">position</dfn> can <dfn about="ibis:responds-to">respond to</dfn> any <dfn about="ibis:Issue">issue</dfn>.</li>
             <li>Any element can <dfn about="ibis:suggests">suggest</dfn> an <dfn about="ibis:Issue">issue</dfn>.</li>
             <li>Any <dfn about="ibis:Issue">issue</dfn> can <dfn about="ibis:questions">question</dfn> any other element.</li>
@@ -51,7 +52,7 @@
           <p>The original formulation of this system was moderated by Kunz and Rittel and carried out on simple index cards. One can thus imagine additional faculties for annotation and attachment of evidence, which was essential part of any argumentation system. Such extensions were added in numerous digital implementations of <abbr>IBIS</abbr> dating back as far as <time>1988</time>.</p>
           <section id="ErLyJl3gy_nQldz0VhlUJI">
             <h3>Extensive Digital Pedigree</h3>
-            <p>There have been numerous attempts spanning three decades to digitize <abbr>IBIS</abbr>, many of which are still extant. <a type="application/pdf" href="http://csis.pace.edu/~marchese/CS835/Readings/p303-conklin_gibis.pdf">The original, Conklin</a>, once a student of Rittel, is still in business. Nevertheless, these tools remain incredibly niche, which I suspect has to do with:</p>
+            <p>There have been numerous attempts spanning three decades to digitize <abbr>IBIS</abbr>, many of which are still extant. <a type="application/pdf" href="http://csis.pace.edu/~marchese/CS835/Readings/p303-conklin_gibis.pdf">Conklin, the original</a>, once a student of Rittel, is still in business. Nevertheless, these tools remain incredibly niche, which I suspect has to do with:</p>
             <dl>
               <dt><abbr>IBIS</abbr> tools require at <em>least</em> a trained moderator, if not comprehensive training for all participants.</dt>
               <dd>No matter how slick the user interface presented, <abbr>IBIS</abbr> will never be <q>user-friendly</q>&#x2014;i.e., workable by novices&#x2014;in one very important sense: These systems are ultimately text-based, and the formulation of the language is important enough that one can't just write anything in any slot. Like any precision instrument, there are consequences to their misuse.</dd>
@@ -63,7 +64,7 @@
         </section>
         <section id="EkujszAx594jB1BF_7tnKJ">
           <h2>This Particular Implementation</h2>
-          <p>As mentioned, <em>this</em> <abbr>IBIS</abbr> tool started life as a test bench for a mundane yet important piece of back-end infrastructure. That infrastructure doesn't know or care about what it's processing. What gives the tool its identity is the <abbr>RDF</abbr> vocabulary at its core. </p>
+          <p>As mentioned, <em>this</em> <abbr>IBIS</abbr> tool started life as a test bench for a mundane yet important piece of back-end infrastructure. That infrastructure doesn't know or care about what it's processing. What gives the tool its identity is <a href="https://privatealpha.com/ontology/ibis/1#">the <abbr>RDF</abbr> vocabulary at its core.</a></p>
           <aside role="note">
             <p>The vocabulary itself is something I wrote because an existing vocabulary disappeared off the Web. I wrote the vocabulary at least a full year, if not two years, before implementing the tool.</p>
           </aside>
@@ -79,7 +80,7 @@
         </section>
         <section id="EC699_MWImpa-5d6IOI54I">
           <h2>My Experience With <abbr>IBIS</abbr></h2>
-          <p>I bootstrapped the first working version of this tool around <time datetime="2013-10-31">Halloween 2013</time>, and have been using it off and on ever since, although much more in the last couple years due to fixing a few severe performance and resource consumption problems. I have also made some sporadic changes to the user interface, but acknowledge that I am approaching the limit of what this particular implementation&#x2014;and the framework it rests upon&#x2014;can be reasonably teased out to do. Nevertheless, it has been serviceable enough to get a sense of what the <abbr>IBIS</abbr> experience is all about:</p>
+          <p>I bootstrapped the first working version of this tool around <time datetime="2013-10-31">Halloween 2013</time>, and have been using it off and on ever since, although much more in the last couple years due to fixing and/or working around a few severe third-party performance and resource consumption problems. I have also made some sporadic changes to the user interface, but acknowledge that I am approaching the limit of what this particular implementation&#x2014;and the framework it rests upon&#x2014;can be reasonably teased out to do. Nevertheless, it has been serviceable enough to get a sense of what the <abbr>IBIS</abbr> experience is all about:</p>
           <section id="EkF4l3XgWW8dREv14YfzaL">
             <h3>Versus Outliner</h3>
             <p>The first thing you will notice is that in contrast to an outliner, <abbr>IBIS</abbr> is only <em>weakly</em> hierarchical. <abbr>IBIS</abbr> structures do not have a <em>root</em>, although they may be understood to represent <em>paths</em> that begin with a single <dfn about="ibis:Issue">issue</dfn> and traipse from <dfn about="ibis:Position">position</dfn> to <dfn about="ibis:Argument">argument</dfn> and even loop around. What you get, in my opinion, is something ultimately more powerful than an outliner, if not quite as tidy: a much more topologically <em>honest</em> representation of a problem space: you don't have to mangle your work in order to fit it into a strict hierarchy.</p>
