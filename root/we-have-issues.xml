@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <title>Welcome to App::IBIS: We Have Issues.</title>
-    <link rel="stylesheet" type="text/css" href="/asset/main.css"/>
+    <link rel="stylesheet" type="text/css" href="asset/main.css"/>
   </head>
   <body typeof="bibo:Webpage">
     <main>
@@ -125,7 +125,7 @@
       </article>
     </main>
     <footer>
-      <a href="/">Overview</a>
+      <a href="./">Overview</a>
     </footer>
   </body>
 </html>

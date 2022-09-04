@@ -14,8 +14,10 @@ requires 'Catalyst::Runtime' => '5.90019';
 requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Static::Simple';
 requires 'Catalyst::Action::RenderView';
+requires 'CatalystX::RoleApplicator';
 requires 'Catalyst::TraitFor::Request::ProxyBase';
 requires 'Moose';
+requires 'MooseX::Types::Moose';
 requires 'MooseX::Params::Validate';
 requires 'namespace::autoclean';
 
@@ -23,20 +25,22 @@ requires 'namespace::autoclean';
 # See Catalyst::Plugin::ConfigLoader for supported formats
 requires 'Config::General';
 
-requires 'CatalystX::Action::Negotiate' => '0.04';
+# app-specific third-party
 requires 'Catalyst::Model::RDF'         => '0.03';
 requires 'Data::GUID::Any'              => '0.004';
-requires 'Data::UUID::NCName'           => '0.03';
 requires 'RDF::Trine'                   => '1.007';
-requires 'RDF::KV'                      => '0.04';
 requires 'URI::NamespaceMap'            => '0.06';
 requires 'URI::urn::uuid'               => '0.03';
 requires 'DateTime::Format::W3CDTF'     => '0.06';
-requires 'Role::Markup::XML'            => '0.03';
 requires 'HTTP::Negotiate'              => '6.00';
 requires 'Convert::Color::HUSL'         => '1.000';
 requires 'Unicode::Collate'             => '1.19';
-requires 'URI::urn::uuid'               => '0.03';
+
+# stuff i made
+requires 'Role::Markup::XML'            => '0.03';
+requires 'RDF::KV'                      => '0.04';
+requires 'Data::UUID::NCName'           => '0.03';
+requires 'CatalystX::Action::Negotiate' => '0.04';
 
 test_requires 'Test::More' => '0.88';
 catalyst;

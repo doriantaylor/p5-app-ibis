@@ -23,3 +23,5 @@ nytprof*
 *.orig
 root/asset/jq*
 root/asset/font*
+js/node_modules
+js/package-lock.json

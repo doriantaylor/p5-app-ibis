@@ -35,6 +35,9 @@ use Catalyst qw/
 #/;
 #     +CatalystX::Profile
 # /;
+use CatalystX::RoleApplicator;
+
+our $VERSION = '0.09_08';
 
 extends 'Catalyst';
 
@@ -42,7 +45,9 @@ extends 'Catalyst';
 with 'App::IBIS::Role::Schema';
 with 'Role::Markup::XML';
 
-our $VERSION = '0.09_03';
+__PACKAGE__->apply_request_class_roles(qw/
+    Catalyst::TraitFor::Request::ProxyBase
+/);
 
 my (@LABELS, @ALT_LAB);
 
@@ -56,7 +61,7 @@ has collator => (
 after setup_finalize => sub {
     my $app = shift;
 
-    # TODO prepare palette 
+    # TODO prepare palette
     my $p = $app->config->{palette};
     for my $t (sort keys %{$p->{class}}) {
         if ($t =~ /:/) {
@@ -259,17 +264,20 @@ sub stub {
         ['/asset/font-awesome.css', '/asset/main.css'];
     $css = [$css] unless ref $css;
     my @css = map {
-        { rel => 'stylesheet', type => 'text/css', href => $_ } } @$css;
+        { rel => 'stylesheet', type => 'text/css',
+              href => $c->uri_for($_) }
+    } @$css;
 
     my ($body, $doc) = $c->_XHTML(
         %p,
         link  => [
             @css,
             { rel => 'alternate', type => 'application/atom+xml',
-              href => '/feed' } ],
+              href => $c->uri_for('/feed') } ],
         head  => [
-            map +{ -name => 'script', type => 'text/javascript', src => $_ },
-            qw(/asset/jquery.js /asset/main.js) ],
+            map +{ -name => 'script', type => 'text/javascript',
+                   src => $c->uri_for($_) },
+            qw(asset/jquery.js asset/main.js) ],
         ns => $c->uns,
     );
 

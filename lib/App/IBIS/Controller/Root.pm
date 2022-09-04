@@ -29,6 +29,9 @@ use DateTime::Format::W3CDTF;
 use Scalar::Util ();
 use List::MoreUtils qw(any);
 
+# negotiate yo
+use HTTP::Negotiate ();
+
 #use App::IBIS::HivePlot;
 use App::IBIS::Circos;
 
@@ -46,10 +49,10 @@ my %FOOTER = (
     -name => 'footer', -content => {
         -name => 'nav', -content => {
             -name => 'ul', -content => [
-                { -name => 'li', -content => { href => '/',
+                { -name => 'li', -content => { href => './',
                                                -content => 'Overview' } },
                 { -name => 'li', -content => {
-                    href => '/we-have-issues',
+                    href => 'we-have-issues',
                     -content => 'What is this thing?' } },
             ] } },
 );
@@ -137,12 +140,11 @@ sub index :Path :Args(0) {
     for my $c ($c->collator->sort(keys %concepts)) {
         for my $uuid (sort values %{$concepts{$c}}) {
             push @li, { -name => 'li',
-                        -content => {
-                            href => '/' . $uuid->uuid, -content => $c } };
+                        -content => { href => $uuid->uuid, -content => $c } };
         }
     }
 
-    my $new ||= '/' . $self->uuid4;
+    my $new ||= $self->uuid4;
 
     my $doc = $c->stub(
         uri => $req->base,
@@ -154,7 +156,7 @@ sub index :Path :Args(0) {
                   { -name => 'h1', -content => 'Issue Network' },
                   { -name => 'figure',
                     -content => { -name => 'object',
-                                  type => 'image/svg+xml', data => '/ci2' } },
+                                  type => 'image/svg+xml', data => 'ci2' } },
                   $self->_do_404($new), # not really a 404 but whatev
               ] },
             { -name => 'section', class => 'index skos',
@@ -163,7 +165,7 @@ sub index :Path :Args(0) {
                   { -name => 'figure',
                     -content => { -name => 'object',
                                   type => 'image/svg+xml',
-                                  data => '/concepts?rotate=180' } },
+                                  data => 'concepts?rotate=180' } },
                   { %FORMBP, action => $new,
                     -content => { -name => 'fieldset', -content => [
                         { -name => 'legend',
@@ -184,9 +186,9 @@ sub index :Path :Args(0) {
                 -name => 'nav', -content => {
                     -name => 'ul', -content => [
                         { -name => 'li', -content => {
-                            href => '/', -content => "\xa0" } }, # empty overview
+                            href => './', -content => "\xa0" } }, # empty overview
                         { -name => 'li', -content => {
-                            href => '/we-have-issues',
+                            href => 'we-have-issues',
                             -content => 'What is this thing?' } },
                     ] } } }
         ]);
@@ -662,7 +664,7 @@ sub uuid :Private {
     my $req  = $c->req;
     my $resp = $c->res;
 
-    my $path = '/' . lc $uuid;
+    my $path = lc $uuid;
     $uuid = RDF::Trine::Node::Resource->new('urn:uuid:' . lc $uuid);
 
     # check request method
@@ -769,15 +771,43 @@ sub truncate :Private {
     return;
 }
 
+my %DUMP = (
+    turtle   => 'text/turtle',
+    rdfxml   => 'application/rdf+xml',
+    ntriples => 'application/n-triples',
+);
+
 sub dump :Local {
     my ($self, $c) = @_;
+    my $req  = $c->req;
     my $resp = $c->res;
 
+    # get the variant or fail
+    my $chosen = HTTP::Negotiate::choose([
+        ['turtle',   1,    'text/turtle'],
+        ['turtle',   0.99, 'text/plain'],
+        ['rdfxml',   0.7,  'application/rdf+xml'],
+        ['rdfxml',   0.5,  'application/xml'],
+        ['ntriples', 0.5,  'application/n-triples'],
+    ], $req->headers) or do {
+        $resp->status(406);
+        $resp->content_type('text/plain');
+        $resp->body(q[lol fail can't pick a mime type]);
+        return;
+    };
+
+    # override unless turtle is actually in the header
+    my $type = $DUMP{$chosen};
+    $type = 'text/plain' if $chosen eq 'turtle' and
+        ($req->header('Accept') // '') !~ m!\btext/turtle\b!i;
+
+    # $c->log->debug('in: ' . ( $req->header('Accept') // ''));
+    # $c->log->debug('out: ' . $type);
+
     $resp->status(200);
-    $resp->content_type('text/plain');
-    my $serializer = RDF::Trine::Serializer->new
-        ('turtle', namespaces => $self->ns);
-    $resp->body($serializer->serialize_model_to_string($c->rdf_cache));
+    $resp->content_type($type);
+    my $s = RDF::Trine::Serializer->new($chosen, namespaces => $self->ns);
+    $resp->body($s->serialize_model_to_string($c->rdf_cache));
 }
 
 sub bulk :Local {
@@ -816,7 +846,7 @@ sub bulk :Local {
         $p->parse(undef, $up->decoded_slurp(':utf8'),
                   sub { $m->add_statement(shift, $g) });
 
-        $c->res->redirect('/');
+        $c->res->redirect($c->req->base);
         return;
     }
     else {
@@ -942,7 +972,7 @@ sub _get_concept :Private {
     my $ns = $self->ns;
 
     my ($label) = $m->objects($subject, $ns->skos->prefLabel);
-    my ($desc)  = $m->objects($subject, $ns->skos->description);
+    my ($desc)  = $m->objects($subject, $ns->skos->definition);
     $desc = $desc ? $desc->literal_value : '';
 
     my $uu = URI->new($subject->uri_value);
@@ -976,7 +1006,7 @@ sub _get_concept :Private {
                               -content => '', } ] } },
                         { %FORMBP, -content => [
                             { -name => 'textarea', class => 'description',
-                              name => '= skos:description', -content => $desc },
+                              name => '= skos:definition', -content => $desc },
                             { -name => 'button', class => 'update fa fa-repeat',
                               -content => '' } ] },
                         $self->_do_link_form($c, $subject),
@@ -1149,7 +1179,7 @@ sub _concept_menu {
 sub _do_concept_create_form {
     my ($self, $c, $subject) = @_;
 
-    my $new = '/' .$self->uuid4;
+    my $new = $self->uuid4;
 
 
     return { %FORMBP, id => 'create-new', action => $new, -content => [
@@ -1210,7 +1240,7 @@ sub _get_collection :Private {
     # XXX THIS CAN GET AWAY ON US
     my ($type)  = $m->objects($subject, $rns->rdf->type);
     my ($title) = $m->objects($subject, $rns->skos->prefLabel);
-    my ($desc)  = $m->objects($subject, $rns->skos->description);
+    my ($desc)  = $m->objects($subject, $rns->skos->definition);
 
     my %attrs;
     $attrs{typeof} = $rns->abbreviate($type) if $type;
@@ -1226,7 +1256,7 @@ sub _get_collection :Private {
                 -name => 'input', name => '= skos:prefLabel',
                 value => $maybetitle } },
             { -name => 'p', -content => {
-                -name => 'textarea', name => '= skos:description',
+                -name => 'textarea', name => '= skos:definition',
                 -content => $desc ? $desc->value : '' }},
             $self->_do_index($c, $subject) ] },
     );
@@ -1279,7 +1309,7 @@ sub _get_ibis :Private {
                                    degrees => 240, rotate => 240, });
 
     my $css = $c->config->{css} ||
-        ['/asset/font-awesome.css', '/asset/main.css'];
+        ['asset/font-awesome.css', 'asset/main.css'];
     $css = [$css] unless ref $css;
     my @css = map {
         { rel => 'stylesheet', type => 'text/css', href => $_ } } @$css;
@@ -1291,10 +1321,10 @@ sub _get_ibis :Private {
         link  => [
             @css,
             { rel => 'alternate', type => 'application/atom+xml',
-              href => '/feed' } ],
+              href => 'feed' } ],
         head  => [
             map +{ -name => 'script', type => 'text/javascript', src => $_ },
-            qw(/asset/jquery.js /asset/main.js) ],
+            qw(asset/jquery.js asset/main.js) ],
         attr  => \%attrs,
         content => [ { -name => 'main', -content => [
             { -name => 'article', -content => [
@@ -1616,7 +1646,7 @@ sub _do_index {
             my $uu = URI->new($s->value);
             push @x, {
                 -name => 'li',
-                -content => { href => '/' . $uu->uuid,
+                -content => { href => $uu->uuid,
                               -content => $v ? $v->value : $s->value } };
         }
 
@@ -1689,7 +1719,7 @@ sub _do_content {
             # replicate the uuid if text is missing
             $text = $o unless $text;
 
-            my $uri = '/' . URI->new($o->value)->uuid;
+            my $uri = URI->new($o->value)->uuid;
 
             my @baleet = { -name => 'button',
                            class => 'disconnect fa fa-unlink',
@@ -1947,7 +1977,7 @@ sub _do_collection_form {
 
             push @li, {
                 -name => 'li', -content => [
-                    { href => '/' . $uu->uuid, -content => $label },
+                    { href => $uu->uuid, -content => $label },
                     { -name => 'button', name => '-! skos:member :',
                       value => "$uu" }, 'Remove' ]
             };
@@ -1991,7 +2021,7 @@ sub _do_collection_form {
 
 sub _do_404 {
     my ($self, $new) = @_;
-    $new ||= '/' . $self->uuid4;
+    $new ||= $self->uuid4;
 
     # new thing types
     my @types = map +["ibis:$_" => $_ ], qw(Issue Position Argument);
@@ -2043,7 +2073,7 @@ sub _do_create_form {
     @has = map +{ -name => 'input', type => 'hidden',
                   name => '! skos:member :', value => $_->value }, @has;
 
-    my $new = '/' . $self->uuid4;
+    my $new = $self->uuid4;
 
     return { %FORMBP, id => 'create-new', action => $new, -content => {
         -name => 'fieldset', class => 'edit-group', -content => [
@@ -2091,6 +2121,12 @@ Fiddle with serialization, content type/length, etc.
 
 =cut
 
+sub _is_xml_node {
+    my $body = shift;
+    ref $body and Scalar::Util::blessed($body)
+        and $body->isa('XML::LibXML::Node');
+}
+
 sub end : ActionClass('RenderView') {
     my ($self, $c) = @_;
 
@@ -2105,33 +2141,21 @@ sub end : ActionClass('RenderView') {
         $c->res->body($doc);
     }
 
-    if (ref $body and Scalar::Util::blessed($body)
-            and $body->isa('XML::LibXML::Document')) {
-        # fix it ya goof
-        unless ($body->documentElement) {
-            $resp->status(501);
-            $resp->content_type('text/plain');
-            $resp->body("Missing document element!");
-            return;
-        }
+    my $type = $resp->content_type;
 
-        my $doc = $body;
-        my $ct;
-        if ($body->documentElement->localName eq 'html') {
-            $ct = 'application/xhtml+xml';
-        }
-        else {
-            $ct = 'application/xml';
-        }
+    # XXX we should really turn this into a standalone view
 
-        $resp->content_type($ct) unless $resp->content_type;
-
-        $body = $body->toString(1);
-        #$resp->content_length(length $body);
-        #$c->log->debug($doc->actualEncoding);
-        utf8::decode($body) if lc $doc->actualEncoding eq 'utf-8';
-        $resp->body($body);
+    if ($type =~ m!/(?:[^/]*(?:ht|x)ml)$!i or _is_xml_node($c->res->body)) {
+        $c->forward('View::XML::Finish');
     }
+
+    # XXX this too
+
+    # elsif ($type =~ m!text/(?:x-)?vnd\.sass(?:\.scss)?!i
+    #        and not $c->stash->{is_subreq}) {
+    #     $c->log->debug('invoking Sass handler for ' . $c->req->uri);
+    #     $c->forward('View::Sass');
+    # }
 }
 
 =head1 AUTHOR
