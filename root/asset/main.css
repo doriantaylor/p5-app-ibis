@@ -168,8 +168,6 @@ figure.aside {
   right: 0;
   display: block;
   max-width: 60%;
-  width: 40%;
-  height: 50%;
   margin: 0;
   overflow: visible;
   width: 100vh;
@@ -665,6 +663,94 @@ button#toggle-full-screen {
 }
 
 /* palette stuff */
+*[about="references"], *[about="dct:references"] {
+  background-color: #bdf500;
+  color: #4b563a;
+}
+
+li[about="dct:references"] {
+  background-color: #628100;
+  border-color: #566243;
+  color: #212718;
+}
+
+li[about="dct:references"].selected {
+  background-color: #bdf500;
+  border-color: #9db27d;
+  color: #4b563a;
+}
+
+aside[rel~="dct:references"].predicate {
+  background-color: #628100 !important;
+  border-color: #566243 !important;
+}
+
+*[about="http://www.w3.org/2004/02/skos/core#broader"], *[about="skos:broader"] {
+  background-color: #e1dffe;
+  color: #4e4895;
+}
+
+li[about="skos:broader"] {
+  background-color: #6e5dfe;
+  border-color: #5a54a0;
+  color: #232049;
+}
+
+li[about="skos:broader"].selected {
+  background-color: #e1dffe;
+  border-color: #a9a6d2;
+  color: #4e4895;
+}
+
+aside[rel~="skos:broader"].predicate {
+  background-color: #6e5dfe !important;
+  border-color: #5a54a0 !important;
+}
+
+*[about="http://www.w3.org/2004/02/skos/core#narrower"], *[about="skos:narrower"] {
+  background-color: #e2dffe;
+  color: #524792;
+}
+
+li[about="skos:narrower"] {
+  background-color: #7859fe;
+  border-color: #5e53a0;
+  color: #261f48;
+}
+
+li[about="skos:narrower"].selected {
+  background-color: #e2dffe;
+  border-color: #aba6d2;
+  color: #524792;
+}
+
+aside[rel~="skos:narrower"].predicate {
+  background-color: #7859fe !important;
+  border-color: #5e53a0 !important;
+}
+
+*[about="http://www.w3.org/2004/02/skos/core#related"], *[about="skos:related"] {
+  background-color: #ffd9d8;
+  color: #7f3f3b;
+}
+
+li[about="skos:related"] {
+  background-color: #e32f00;
+  border-color: #914944;
+  color: #3e1b19;
+}
+
+li[about="skos:related"].selected {
+  background-color: #ffd9d8;
+  border-color: #d79c99;
+  color: #7f3f3b;
+}
+
+aside[rel~="skos:related"].predicate {
+  background-color: #e32f00 !important;
+  border-color: #914944 !important;
+}
+
 *[about="https://privatealpha.com/ontology/ibis/1#generalizes"], *[about="ibis:generalizes"] {
   background-color: #dce0fe;
   color: #3a4372;
@@ -1448,4 +1534,410 @@ section.index ul {
 section.index li {
   text-align: left;
   hyphens: auto;
+}
+
+a[typeof~="ibis:Issue"] > circle {
+  fill: #d79c9c;
+}
+
+a[typeof~="ibis:Issue"] > circle.target {
+  fill: transparent;
+}
+
+a[typeof~="ibis:Issue"]:hover > circle, a[typeof~="ibis:Issue"].subject > circle {
+  fill: #f4dddd;
+}
+
+a[typeof~="ibis:Issue"]:hover > circle.target, a[typeof~="ibis:Issue"].subject > circle.target {
+  fill: transparent;
+}
+
+a[typeof~="ibis:Position"] > circle {
+  fill: #7db97d;
+}
+
+a[typeof~="ibis:Position"] > circle.target {
+  fill: transparent;
+}
+
+a[typeof~="ibis:Position"]:hover > circle, a[typeof~="ibis:Position"].subject > circle {
+  fill: #a6f4a7;
+}
+
+a[typeof~="ibis:Position"]:hover > circle.target, a[typeof~="ibis:Position"].subject > circle.target {
+  fill: transparent;
+}
+
+a[typeof~="ibis:Argument"] > circle {
+  fill: #a7a7d2;
+}
+
+a[typeof~="ibis:Argument"] > circle.target {
+  fill: transparent;
+}
+
+a[typeof~="ibis:Argument"]:hover > circle, a[typeof~="ibis:Argument"].subject > circle {
+  fill: #e0e0f3;
+}
+
+a[typeof~="ibis:Argument"]:hover > circle.target, a[typeof~="ibis:Argument"].subject > circle.target {
+  fill: transparent;
+}
+
+a[typeof~="skos:Concept"] > circle {
+  fill: #d198d1;
+}
+
+a[typeof~="skos:Concept"] > circle.target {
+  fill: transparent;
+}
+
+a[typeof~="skos:Concept"]:hover > circle, a[typeof~="skos:Concept"].subject > circle {
+  fill: #f3daf3;
+}
+
+a[typeof~="skos:Concept"]:hover > circle.target, a[typeof~="skos:Concept"].subject > circle.target {
+  fill: transparent;
+}
+
+line[rel~="dct:references"] {
+  stroke: #628100;
+  color: #628100;
+  marker-end: url(#dct.references) !important;
+}
+
+line[rel~="dct:references"].subject {
+  stroke: #bdf500;
+  color: #bdf500;
+  marker-end: url(#dct.references.subject) !important;
+}
+
+polygon[about~="dct:references"] {
+  opacity: 1 !important;
+  fill: #628100;
+}
+
+polygon[about~="dct:references"].subject {
+  fill: #bdf500;
+}
+
+line[rel~="skos:broader"] {
+  stroke: #6e5dfe;
+  color: #6e5dfe;
+  marker-end: url(#skos.broader) !important;
+}
+
+line[rel~="skos:broader"].subject {
+  stroke: #e1dffe;
+  color: #e1dffe;
+  marker-end: url(#skos.broader.subject) !important;
+}
+
+polygon[about~="skos:broader"] {
+  opacity: 1 !important;
+  fill: #6e5dfe;
+}
+
+polygon[about~="skos:broader"].subject {
+  fill: #e1dffe;
+}
+
+line[rel~="skos:narrower"] {
+  stroke: #7859fe;
+  color: #7859fe;
+  marker-end: url(#skos.narrower) !important;
+}
+
+line[rel~="skos:narrower"].subject {
+  stroke: #e2dffe;
+  color: #e2dffe;
+  marker-end: url(#skos.narrower.subject) !important;
+}
+
+polygon[about~="skos:narrower"] {
+  opacity: 1 !important;
+  fill: #7859fe;
+}
+
+polygon[about~="skos:narrower"].subject {
+  fill: #e2dffe;
+}
+
+line[rel~="skos:related"] {
+  stroke: #e32f00;
+  color: #e32f00;
+  marker-end: url(#skos.related) !important;
+}
+
+line[rel~="skos:related"].subject {
+  stroke: #ffd9d8;
+  color: #ffd9d8;
+  marker-end: url(#skos.related.subject) !important;
+}
+
+polygon[about~="skos:related"] {
+  opacity: 1 !important;
+  fill: #e32f00;
+}
+
+polygon[about~="skos:related"].subject {
+  fill: #ffd9d8;
+}
+
+line[rel~="ibis:generalizes"] {
+  stroke: #376afe;
+  color: #376afe;
+  marker-end: url(#ibis.generalizes) !important;
+}
+
+line[rel~="ibis:generalizes"].subject {
+  stroke: #dce0fe;
+  color: #dce0fe;
+  marker-end: url(#ibis.generalizes.subject) !important;
+}
+
+polygon[about~="ibis:generalizes"] {
+  opacity: 1 !important;
+  fill: #376afe;
+}
+
+polygon[about~="ibis:generalizes"].subject {
+  fill: #dce0fe;
+}
+
+line[rel~="ibis:specializes"] {
+  stroke: #5b63fe;
+  color: #5b63fe;
+  marker-end: url(#ibis.specializes) !important;
+}
+
+line[rel~="ibis:specializes"].subject {
+  stroke: #dfe0fe;
+  color: #dfe0fe;
+  marker-end: url(#ibis.specializes.subject) !important;
+}
+
+polygon[about~="ibis:specializes"] {
+  opacity: 1 !important;
+  fill: #5b63fe;
+}
+
+polygon[about~="ibis:specializes"].subject {
+  fill: #dfe0fe;
+}
+
+line[rel~="ibis:suggests"] {
+  stroke: #937200;
+  color: #937200;
+  marker-end: url(#ibis.suggests) !important;
+}
+
+line[rel~="ibis:suggests"].subject {
+  stroke: #fedea1;
+  color: #fedea1;
+  marker-end: url(#ibis.suggests.subject) !important;
+}
+
+polygon[about~="ibis:suggests"] {
+  opacity: 1 !important;
+  fill: #937200;
+}
+
+polygon[about~="ibis:suggests"].subject {
+  fill: #fedea1;
+}
+
+line[rel~="ibis:suggested-by"] {
+  stroke: #9a6f00;
+  color: #9a6f00;
+  marker-end: url(#ibis.suggested-by) !important;
+}
+
+line[rel~="ibis:suggested-by"].subject {
+  stroke: #ffddb3;
+  color: #ffddb3;
+  marker-end: url(#ibis.suggested-by.subject) !important;
+}
+
+polygon[about~="ibis:suggested-by"] {
+  opacity: 1 !important;
+  fill: #9a6f00;
+}
+
+polygon[about~="ibis:suggested-by"].subject {
+  fill: #ffddb3;
+}
+
+line[rel~="ibis:questions"] {
+  stroke: #b26300;
+  color: #b26300;
+  marker-end: url(#ibis.questions) !important;
+}
+
+line[rel~="ibis:questions"].subject {
+  stroke: #ffdbca;
+  color: #ffdbca;
+  marker-end: url(#ibis.questions.subject) !important;
+}
+
+polygon[about~="ibis:questions"] {
+  opacity: 1 !important;
+  fill: #b26300;
+}
+
+polygon[about~="ibis:questions"].subject {
+  fill: #ffdbca;
+}
+
+line[rel~="ibis:questioned-by"] {
+  stroke: #c15700;
+  color: #c15700;
+  marker-end: url(#ibis.questioned-by) !important;
+}
+
+line[rel~="ibis:questioned-by"].subject {
+  stroke: #ffdad1;
+  color: #ffdad1;
+  marker-end: url(#ibis.questioned-by.subject) !important;
+}
+
+polygon[about~="ibis:questioned-by"] {
+  opacity: 1 !important;
+  fill: #c15700;
+}
+
+polygon[about~="ibis:questioned-by"].subject {
+  fill: #ffdad1;
+}
+
+line[rel~="ibis:response"] {
+  stroke: #e50081;
+  color: #e50081;
+  marker-end: url(#ibis.response) !important;
+}
+
+line[rel~="ibis:response"].subject {
+  stroke: #ffd8e4;
+  color: #ffd8e4;
+  marker-end: url(#ibis.response.subject) !important;
+}
+
+polygon[about~="ibis:response"] {
+  opacity: 1 !important;
+  fill: #e50081;
+}
+
+polygon[about~="ibis:response"].subject {
+  fill: #ffd8e4;
+}
+
+line[rel~="ibis:responds-to"] {
+  stroke: #e80071;
+  color: #e80071;
+  marker-end: url(#ibis.responds-to) !important;
+}
+
+line[rel~="ibis:responds-to"].subject {
+  stroke: #fed8e1;
+  color: #fed8e1;
+  marker-end: url(#ibis.responds-to.subject) !important;
+}
+
+polygon[about~="ibis:responds-to"] {
+  opacity: 1 !important;
+  fill: #e80071;
+}
+
+polygon[about~="ibis:responds-to"].subject {
+  fill: #fed8e1;
+}
+
+line[rel~="ibis:supports"] {
+  stroke: #2b8800;
+  color: #2b8800;
+  marker-end: url(#ibis.supports) !important;
+}
+
+line[rel~="ibis:supports"].subject {
+  stroke: #78fe59;
+  color: #78fe59;
+  marker-end: url(#ibis.supports.subject) !important;
+}
+
+polygon[about~="ibis:supports"] {
+  opacity: 1 !important;
+  fill: #2b8800;
+}
+
+polygon[about~="ibis:supports"].subject {
+  fill: #78fe59;
+}
+
+line[rel~="ibis:supported-by"] {
+  stroke: #3e8700;
+  color: #3e8700;
+  marker-end: url(#ibis.supported-by) !important;
+}
+
+line[rel~="ibis:supported-by"].subject {
+  stroke: #80fe26;
+  color: #80fe26;
+  marker-end: url(#ibis.supported-by.subject) !important;
+}
+
+polygon[about~="ibis:supported-by"] {
+  opacity: 1 !important;
+  fill: #3e8700;
+}
+
+polygon[about~="ibis:supported-by"].subject {
+  fill: #80fe26;
+}
+
+line[rel~="ibis:opposes"] {
+  stroke: #ed0035;
+  color: #ed0035;
+  marker-end: url(#ibis.opposes) !important;
+}
+
+line[rel~="ibis:opposes"].subject {
+  stroke: #ffd9db;
+  color: #ffd9db;
+  marker-end: url(#ibis.opposes.subject) !important;
+}
+
+polygon[about~="ibis:opposes"] {
+  opacity: 1 !important;
+  fill: #ed0035;
+}
+
+polygon[about~="ibis:opposes"].subject {
+  fill: #ffd9db;
+}
+
+line[rel~="ibis:opposed-by"] {
+  stroke: #eb0054;
+  color: #eb0054;
+  marker-end: url(#ibis.opposed-by) !important;
+}
+
+line[rel~="ibis:opposed-by"].subject {
+  stroke: #ffd9dd;
+  color: #ffd9dd;
+  marker-end: url(#ibis.opposed-by.subject) !important;
+}
+
+polygon[about~="ibis:opposed-by"] {
+  opacity: 1 !important;
+  fill: #eb0054;
+}
+
+polygon[about~="ibis:opposed-by"].subject {
+  fill: #ffd9dd;
+}
+
+marker polygon {
+  fill: currentColor;
+  stroke: none;
+  opacity: 1;
 }

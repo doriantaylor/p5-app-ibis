@@ -89,6 +89,33 @@ use constant TOGGLE => {
             ' Create new' ] } ] }
 };
 
+# use constant DATAVIZ => [
+#     { -name => 'script', type => 'text/javascript',
+#       src => '/asset/force-directed', -content => '' },
+# #     { -name => 'script', type => 'text/javascript',
+# #       -content => <<'EOJ' },
+# # if (window) window.addEventListener('load', function (e) {
+# #     // attach the graph
+# #     window.graph = ForceRDF.prototype.RDF.graph();
+
+# #     // XXX WE WANT TO GET THIS FROM RDFA OR SOMETHING
+# #     let uri  = window.location.href;
+# #     let path = window.location.pathname;
+# #     uri = uri.substr(0, uri.indexOf(path)) + '/dump';
+
+# #     // okay now load
+# #     fetcher.load(uri, {
+# #         baseURI: window.location.href,
+# #         headers: { Accept: 'text/turtle;q=1' }
+# #     }).then(() => {
+# #         window.dataviz = new ForceRDF(window.graph);
+# #         //console.log(document.body);
+# #         document.querySelector('figure.aside').appendChild(window.dataviz.svg);
+# #     });
+# # }, false);
+# # EOJ
+# ];
+
 #
 # Sets the actions in this controller to be registered with no prefix
 # so they function identically to actions created in MyApp.pm
@@ -1019,18 +1046,20 @@ sub _get_concept :Private {
                         $self->_do_concept_connect_form($c, $subject),
                     ] },
                 ] },
-                { -name => 'figure', class => 'aside', -content => [
-                    { -name => 'object', class => 'baby hiveplot',
-                      type => 'image/svg+xml',
-                      data => $c->uri_for('ci2',
-                                          { subject => \@ibis, degrees => 240,
-                                            rotate => 240 }) },
-                    { -name => 'object', class => 'hiveplot',
-                      type => 'image/svg+xml',
-                      data => $c->uri_for(concepts => {
-                          subject => $uu->uuid,
-                          degrees => 240, rotate => 240 }) },
-                ] },
+                { -name => 'figure', id => 'dataviz', class => 'aside' }, # -content => DATAVIZ },
+
+                # { -name => 'figure', class => 'aside', -content => [
+                #     { -name => 'object', class => 'baby hiveplot',
+                #       type => 'image/svg+xml',
+                #       data => $c->uri_for('ci2',
+                #                           { subject => \@ibis, degrees => 240,
+                #                             rotate => 240 }) },
+                #     { -name => 'object', class => 'hiveplot',
+                #       type => 'image/svg+xml',
+                #       data => $c->uri_for(concepts => {
+                #           subject => $uu->uuid,
+                #           degrees => 240, rotate => 240 }) },
+                # ] },
             ] }, \%FOOTER,
         ],
     );
@@ -1305,8 +1334,8 @@ sub _get_ibis :Private {
         push @concepts, $cu->uuid;
     }
 
-    my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid,
-                                   degrees => 240, rotate => 240, });
+    # my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid,
+    #                                degrees => 240, rotate => 240, });
 
     my $css = $c->config->{css} ||
         ['asset/font-awesome.css', 'asset/main.css'];
@@ -1321,10 +1350,15 @@ sub _get_ibis :Private {
         link  => [
             @css,
             { rel => 'alternate', type => 'application/atom+xml',
-              href => 'feed' } ],
+              href => 'feed' },
+            { rel => 'alternate', type => 'text/turtle', href => 'dump' },
+        ],
         head  => [
-            map +{ -name => 'script', type => 'text/javascript', src => $_ },
-            qw(asset/jquery.js asset/main.js) ],
+            (map +{ -name => 'script', type => 'text/javascript', src => $_ },
+            qw(asset/jquery.js asset/rdf asset/d3 asset/force-directed)),
+            { -name => 'script', type => 'text/javascript', defer => 'defer',
+              src => 'asset/main.js' }
+        ],
         attr  => \%attrs,
         content => [ { -name => 'main', -content => [
             { -name => 'article', -content => [
@@ -1335,15 +1369,16 @@ sub _get_ibis :Private {
                     $self->_do_connect_form($c, $subject, $type),
                     $self->_do_create_form($c, $uri, $type) ] },
             ] },
-            { -name => 'figure', class => 'aside', -content => [
-                { -name => 'object', class => 'other baby hiveplot',
-                  type => 'image/svg+xml',
-                  data => $c->uri_for('concepts',
-                                      { subject => \@concepts,
-                                        degrees => 240, rotate => 240, }) },
-                { -name => 'object', class => 'hiveplot', data => $ci2,
-                  type => 'image/svg+xml', -content => '(Circos Plot)' }
-            ] } ] }, \%FOOTER ],
+            { -name => 'figure', id => 'dataviz', class => 'aside', # [
+                # { -name => 'object', class => 'other baby hiveplot',
+                #   type => 'image/svg+xml',
+                #   data => $c->uri_for('concepts',
+                #                       { subject => \@concepts,
+                #                         degrees => 240, rotate => 240, }) },
+                # { -name => 'object', class => 'hiveplot', data => $ci2,
+                #   type => 'image/svg+xml', -content => '(Circos Plot)' }
+            # ]
+          } ] }, \%FOOTER ],
     );
 
     # XXX forward this maybe?

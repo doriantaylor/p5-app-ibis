@@ -37,7 +37,7 @@ use Catalyst qw/
 # /;
 use CatalystX::RoleApplicator;
 
-our $VERSION = '0.09_08';
+our $VERSION = '0.09_09';
 
 extends 'Catalyst';
 
@@ -273,11 +273,13 @@ sub stub {
         link  => [
             @css,
             { rel => 'alternate', type => 'application/atom+xml',
-              href => $c->uri_for('/feed') } ],
+              href => $c->uri_for('/feed') },
+            { rel => 'alternate', type => 'text/turtle',
+              href => $c->uri_for('/dump') } ],
         head  => [
             map +{ -name => 'script', type => 'text/javascript',
                    src => $c->uri_for($_) },
-            qw(asset/jquery.js asset/main.js) ],
+            qw(asset/jquery.js asset/rdf asset/d3 asset/main.js) ],
         ns => $c->uns,
     );
 

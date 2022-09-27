@@ -1,20 +1,22 @@
 // all this can come out of the app
 $CLASSES: ("ibis:Issue", "ibis:Position", "ibis:Argument", "skos:Concept");
 $PROPERTIES: (
-   "ibis:generalizes", "ibis:specializes",
-   "ibis:suggests", "ibis:suggested-by",
-   "ibis:questions", "ibis:questioned-by",
-   "ibis:response", "ibis:responds-to",
-   "ibis:supports", "ibis:supported-by",
-   "ibis:opposes", "ibis:opposed-by"
+    "dct:references",
+    "skos:broader", "skos:narrower", "skos:related",
+    "ibis:generalizes", "ibis:specializes",
+    "ibis:suggests", "ibis:suggested-by",
+    "ibis:questions", "ibis:questioned-by",
+    "ibis:response", "ibis:responds-to",
+    "ibis:supports", "ibis:supported-by",
+    "ibis:opposes", "ibis:opposed-by"
 );
 
 $FIELDSETS: ("ibis:Issue": issue, "ibis:Position": position,
-   "ibis:Argument": argument, "skos:Concept": concept);
+             "ibis:Argument": argument, "skos:Concept": concept);
 
 $PREFIXES: (
-   ibis: "https://privatealpha.com/ontology/ibis/1#",
-      skos: "http://www.w3.org/2004/02/skos/core#"
+    ibis: "https://privatealpha.com/ontology/ibis/1#",
+    skos: "http://www.w3.org/2004/02/skos/core#"
 );
 
 // the palette can/should come out of the app too:
@@ -38,23 +40,68 @@ $PREFIXES: (
 //    "ibis:opposed-by":    (#b12c49, #f9dbde)
 // );
 
+// S,L: 45,5; 45,15; 45,30; 45,40; 45,70; 60,90; 100,50; 100,90
 $PALETTE: (
-   "ibis:Issue":         (#210909, #401919, #733232, #974444, #d79c9c, #f4dddd, #ef0006, #ffd9d9),
-   "ibis:Position":      (#091309, #182919, #314d31, #436643, #7db97d, #a6f4a7, #008a06, #71fe73),
-   "ibis:Argument":      (#0d0d27, #20204b, #3e3e85, #5656a0, #a7a7d2, #e0e0f3, #6261fe, #dfdffe),
-   "skos:Concept":       (#1a0b1a, #351c35, #613760, #804b7f, #d198d1, #f3daf3, #d200d1, #ffd5fe),
-   "ibis:generalizes":   (#0c0f20, #1e2340, #3a4372, #4e5a96, #a2a8d2, #dfe1f3, #376afe, #dce0fe),
-   "ibis:specializes":   (#0d0e26, #202149, #3d3f80, #5456a0, #a6a7d2, #e0e0f3, #5b63fe, #dfe0fe),
-   "ibis:suggests":      (#141009, #2b2419, #504531, #6a5c43, #bfa87d, #f4dfbd, #937200, #fedea1),
-   "ibis:suggested-by":  (#151009, #2c2419, #524431, #6d5b43, #c5a67d, #f4dfc7, #9a6f00, #ffddb3),
-   "ibis:questions":     (#180e09, #322219, #5b4032, #785644, #d89e7e, #f4ded4, #b26300, #ffdbca),
-   "ibis:questioned-by": (#1a0d09, #352019, #613d32, #805344, #d89d8b, #f4ddd8, #c15700, #ffdad1),
-   "ibis:response":      (#1e0a11, #3c1a27, #6c3449, #8e4762, #d59bae, #f4dce3, #e50081, #ffd8e4),
-   "ibis:responds-to":   (#1f0a10, #3d1a24, #6e3445, #90465c, #d59ba9, #f4dce1, #e80071, #fed8e1),
-   "ibis:supports":      (#0a1309, #1a2918, #354c31, #476543, #84b87d, #a9f59d, #2b8800, #78fe59),
-   "ibis:supported-by":  (#0b1209, #1c2818, #384b31, #4b6543, #8bb67d, #acf591, #3e8700, #80fe26),
-   "ibis:opposes":       (#20090b, #40191c, #723237, #95454a, #d69c9f, #f4ddde, #ed0035, #ffd9db),
-   "ibis:opposed-by":    (#20090d, #3f1a20, #70333d, #934552, #d69ba3, #f4dcdf, #eb0054, #ffd9dd)
+    // hue 12
+    "ibis:Issue":         (#210909, #401919, #733232, #974444,
+                           #d79c9c, #f4dddd, #ef0006, #ffd9d9),
+    // hue 127
+    "ibis:Position":      (#091309, #182919, #314d31, #436643,
+                           #7db97d, #a6f4a7, #008a06, #71fe73),
+    // hue 265
+    "ibis:Argument":      (#0d0d27, #20204b, #3e3e85, #5656a0,
+                           #a7a7d2, #e0e0f3, #6261fe, #dfdffe),
+    // hue 308
+    "skos:Concept":       (#1a0b1a, #351c35, #613760, #804b7f,
+                           #d198d1, #f3daf3, #d200d1, #ffd5fe),
+    // hue 260
+    "ibis:generalizes":   (#0c0f20, #1e2340, #3a4372, #4e5a96,
+                           #a2a8d2, #dfe1f3, #376afe, #dce0fe),
+    // hue 265
+    "ibis:specializes":   (#0d0e26, #202149, #3d3f80, #5456a0,
+                           #a6a7d2, #e0e0f3, #5b63fe, #dfe0fe),
+    // hue 61
+    "ibis:suggests":      (#141009, #2b2419, #504531, #6a5c43,
+                           #bfa87d, #f4dfbd, #937200, #fedea1),
+    // hue 55
+    "ibis:suggested-by":  (#151009, #2c2419, #524431, #6d5b43,
+                           #c5a67d, #f4dfc7, #9a6f00, #ffddb3),
+    // hue 35
+    "ibis:questions":     (#180e09, #322219, #5b4032, #785644,
+                           #d89e7e, #f4ded4, #b26300, #ffdbca),
+    // hue 27
+    "ibis:questioned-by": (#1a0d09, #352019, #613d32, #805344,
+                           #d89d8b, #f4ddd8, #c15700, #ffdad1),
+    // hue 350
+    "ibis:response":      (#1e0a11, #3c1a27, #6c3449, #8e4762,
+                           #d59bae, #f4dce3, #e50081, #ffd8e4),
+    // hue 356
+    "ibis:responds-to":   (#1f0a10, #3d1a24, #6e3445, #90465c,
+                           #d59ba9, #f4dce1, #e80071, #fed8e1),
+    // hue 124
+    "ibis:supports":      (#0a1309, #1a2918, #354c31, #476543,
+                           #84b87d, #a9f59d, #2b8800, #78fe59),
+    // hue 120
+    "ibis:supported-by":  (#0b1209, #1c2818, #384b31, #4b6543,
+                           #8bb67d, #acf591, #3e8700, #80fe26),
+    // hue 9
+    "ibis:opposes":       (#20090b, #40191c, #723237, #95454a,
+                           #d69c9f, #f4ddde, #ed0035, #ffd9db),
+    // hue 4
+    "ibis:opposed-by":    (#20090d, #3f1a20, #70333d, #934552,
+                           #d69ba3, #f4dcdf, #eb0054, #ffd9dd),
+    // hue 268
+    "skos:broader":       (#0f0d26, #232049, #4e4895, #5a54a0,
+                           #a9a6d2, #e1e0f3, #6e5dfe, #e1dffe),
+    // hue 266
+    "skos:narrower":      (#110d25, #261f48, #524792, #5e53a0,
+                           #aba6d2, #e2e0f3, #7859fe, #e2dffe),
+    // hue 290
+    "skos:related":       (#1f0a09, #3e1b19, #7f3f3b, #914944,
+                           #d79c99, #f4dddc, #e32f00, #ffd9d8),
+    // hue 105
+    "dct:references":     (#0e1209, #212718, #4b563a, #566243,
+                           #9db27d, #cbee8e, #628100, #bdf500)
 );
 
 
@@ -546,7 +593,7 @@ fieldset {
          display: block;
       }
    }
-   
+
    &.types {
       position: absolute;
       top: 4em;
@@ -786,7 +833,7 @@ button {
          color: nth($pal, 2);
          a {
             color: inherit;
-            
+
             &:hover {
             //background-color: nth($pal, 6);
                color: nth($pal, 3);
@@ -1009,4 +1056,63 @@ section {
          hyphens: auto;
       }
    }
+}
+
+// D3 SVG STUFF
+
+@each $class in $CLASSES {
+    $pal: map-get($PALETTE, $class);
+    a[typeof~="#{$class}"] {
+        > circle {
+            fill: nth($pal, 5);
+            &.target {
+                fill: transparent;
+            }
+        }
+        &:hover, &.subject {
+            > circle {
+                fill: nth($pal, 6);
+                &.target {
+                    fill: transparent;
+                }
+            }
+        }
+    }
+}
+
+@each $prop in $PROPERTIES {
+    $i: str-index($prop, ":");
+    $prop-id: "#{str-slice($prop, 1, $i - 1)}.#{str-slice($prop, $i + 1)}";
+    $pal: map-get($PALETTE, $prop);
+
+    line[rel~="#{$prop}"] {
+        stroke: nth($pal, 7);
+        color: nth($pal, 7);
+        //marker-end: url(#arrowhead);
+        marker-end: url(##{$prop-id}) !important;
+        &.neighbour {
+            stroke: nth($pal, 8);
+            color: nth($pal, 8);
+            marker-end: url(##{$prop-id}.subject) !important;
+        }
+        &.subject {
+            stroke-width: 3;
+        }
+    }
+
+    polygon[about~="#{$prop}"] {
+        opacity: 1 !important;
+        fill: nth($pal, 7);
+        //fill: currentColor;
+        //stroke: none;
+        &.subject {
+            fill: nth($pal, 8);
+        }
+    }
+}
+
+marker polygon {
+    fill: currentColor;
+    stroke: none;
+    opacity: 1;
 }

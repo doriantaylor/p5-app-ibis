@@ -87,12 +87,11 @@ function toggleSelect (input) {
         var th = $(this);
         var opts = th.find("option:selected");
         if (th.attr('about') == uri) {
-            // 
+            //
             if (opts.length == 0) {
                 opts = th.find("option");
                 if (opts.length > 0) opts.first().prop('selected', true);
             }
-                
             th.show();
         }
         else {
@@ -169,16 +168,22 @@ $(document).ready(function () {
     /* */
     $('.type-toggle:checked').first().trigger('change');
 
+    /*
     var hov = function (mouse) {
-        var plots = $('object.hiveplot');
+        //var plots = $('object.hiveplot');
+        var plots = $(document).find('svg');
+        console.log(plots);
         return function () {
             var about = this.getAttribute('about');
             about = about.replace(/^urn:uuid:/, '/');
             //console.log(about);
             plots.map(function (i, x) {
-                x = x.contentDocument;
+                console.log(x);
+                //x = x.contentDocument;
                 if (x) {
-                    var sel = 'path[about*="' + about + '"].node';
+                    //var sel = 'path[about*="' + about + '"].node';
+                    var sel = 'circle[about*="' + about + '"]';
+                    console.log(sel);
                     var obj = $(x.querySelectorAll(sel));
                     if (obj.length > 0) {
                         obj.toggleClass('subject', mouse);
@@ -187,9 +192,25 @@ $(document).ready(function () {
                 }
             });
         };
+    };*/
+
+    // OKAY THE CORRECT WAY IS TO BROADCAST EVENTS INTO THE VOID
+
+    const hov = function (mouse) {
+        return function () {
+            const s = window.location.href;
+            const p = this.parentNode.getAttribute('rel');
+            const o = this.querySelector('a[href]').href;
+            const ev = new CustomEvent('graph', { detail: {
+                subject: s, predicate: p, object: o, selected: mouse
+            } });
+
+            document.querySelector('figure.aside > svg').dispatchEvent(ev);
+        };
     };
 
     $('aside.predicate li[about][typeof]').map(function (i, x) {
+        // console.log(x);
         $(x).hover(hov(true), hov(false));
     });
 });
@@ -240,3 +261,16 @@ function toggleFullscreen () {
         }
     }
 }
+
+// D3 SHIT
+
+const graph   = RDF.graph();
+const dataviz = new ForceRDF(graph, { width: '100%', height: '100%' });
+
+// grab the link
+const link = document.querySelector(
+    'html > head > link[href][rel~="alternate"][type~="text/turtle"]');
+
+// install the window onload
+if (link) dataviz.installFetchOnLoad(link.href, 'dataviz');
+else console.log("wah wah bitch link not found");
