@@ -82,9 +82,7 @@ export default function ForceRDF (
     const symmetric = this.symmetric = [this.ns['skos']('related')];
 
     // XXX THIS SUCKS JUST REWRITE THE URLS IN THE TURTLE OUTPUT
-    const root = this.root = new URL(window.location.href);
-    let path = root.pathname.split('/',).slice(1, -1).join('/');
-    root.pathname = '/' + path;
+    const root = this.getRoot();
 
     /*
     // we need this because javascript has strings and numbers that
@@ -95,10 +93,12 @@ export default function ForceRDF (
 
     // initialize the svg representation
     const svg = d3.create('svg')
-          .attr('width', width)
-          .attr('height', height)
-          .attr('viewBox', [-width/2, -height/2, width, height])
-          .attr("style", "max-width: 100%; max-height: 100%;");
+          .attr('viewBox', [-width/2, -height/2, width, height]);
+          // .attr("style", "width: 100%; height: 100%;");
+    if (d3Params.width)  svg.attr('width',  d3Params.width);
+    if (d3Params.height) svg.attr('height', d3Params.height);
+    if (d3Params.preserveAspectRatio)
+        svg.attr('preserveAspectRatio', d3Params.preserveAspectRatio);
 
     // this may be stupid
     this.svg = svg.node();
@@ -472,12 +472,21 @@ Object.assign(ForceRDF.prototype, {
         else console.error('window not available yet');
     },
 
-    rewriteUUID: function rewriteUUID (uuid) {
-        // XXX THIS SUCKS JUST REWRITE THE URLS IN THE TURTLE OUTPUT
-        const root = this.root = this.root || new URL(window.location.href);
-        let path = root.pathname.split('/',).slice(1, -1).join('/');
-        root.pathname = '/' + path;
+    getRoot: function getRoot () {
+        if (this.root) return this.root;
 
+        const root = this.root = new URL(window.location.href);
+        let path = root.pathname.split('/').slice(0, -1);
+        path.push('');
+        root.pathname = path.join('/');
+
+        return root;
+    },
+
+    rewriteUUID: function rewriteUUID (uuid) {
+        const root = this.getRoot();
+
+        // XXX THIS SUCKS JUST REWRITE THE URLS IN THE TURTLE OUTPUT
         return RDF.sym(uuid.value.replace('urn:uuid:', root.href));
     },
 

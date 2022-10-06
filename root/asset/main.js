@@ -265,12 +265,13 @@ function toggleFullscreen () {
 // D3 SHIT
 
 const graph   = RDF.graph();
-const dataviz = new ForceRDF(graph, { width: '100%', height: '100%' });
+const dataviz = new ForceRDF(graph, {}, {
+    preserveAspectRatio: 'xMidYMid slice' });
 
 // grab the link
 const link = document.querySelector(
     'html > head > link[href][rel~="alternate"][type~="text/turtle"]');
 
 // install the window onload
-if (link) dataviz.installFetchOnLoad(link.href, 'dataviz');
-else console.log("wah wah bitch link not found");
+if (link) dataviz.installFetchOnLoad(link.href, '#force');
+else console.log("wah wah link not found");

@@ -198,6 +198,27 @@ main {
    @include vendor(box-shadow, inset 0px 0px 40px #000);
 }
 
+body[typeof~="ibis:Network"] {
+    > main {
+        display: flex;
+        flex-wrap: wrap;
+        #force {
+            // margin: auto;
+            padding: 0;
+            width: 100%;
+            // flex: 0 0 100%;
+            max-height: 66%;
+            > svg {
+                display: block;
+                margin: auto;
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+        }
+    }
+}
+
 article {
    @include vendor(border-radius, 1em);
    display: inline-block;
@@ -993,11 +1014,12 @@ section {
    }
 
    &.index {
-      position: absolute;
-      top: 0;
-      width: 50%;
-      height: 66.66%;
-      padding: 0;
+       //position: absolute;
+       //top: 0;
+       width: 50%;
+       //height: 66.66%;
+       box-sizing: border-box;
+       padding: 0 1em;
 
       h1 {
          text-align: center;
@@ -1090,13 +1112,13 @@ section {
         color: nth($pal, 7);
         //marker-end: url(#arrowhead);
         marker-end: url(##{$prop-id}) !important;
-        &.neighbour {
+        &.subject {
             stroke: nth($pal, 8);
             color: nth($pal, 8);
             marker-end: url(##{$prop-id}.subject) !important;
         }
-        &.subject {
-            stroke-width: 3;
+        &.neighbour {
+            //stroke-width: 3;
         }
     }
 

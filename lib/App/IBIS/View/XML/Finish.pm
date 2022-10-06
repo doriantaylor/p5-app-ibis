@@ -254,7 +254,7 @@ sub process {
             # up the content-type header
             my $ct = $res->content_type || '';
             if (($ct =~ m!(?:application|text)/xml!i or $ct !~ /xml/i)
-                    and my @v = @{$CT{$root->namespaceURI || ''}}) {
+                    and my @v = @{$CT{$root->namespaceURI || ''} || []}) {
                 my $qs = 1.25; # this will get translated to 1
                 @v = map +[$_, $qs *= 0.8, $_, (undef) x 4],
                     (@v, 'application/xml');

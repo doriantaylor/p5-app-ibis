@@ -176,23 +176,25 @@ sub index :Path :Args(0) {
     my $doc = $c->stub(
         uri => $req->base,
         title => 'Welcome to App::IBIS: We Have Issues.',
+        attr => { typeof => 'ibis:Network' },
         content => [
             { -name => 'main', -content => [
+                { -name => 'figure', id => 'force' },
             { -name => 'section', class => 'index ibis',
               -content => [
                   { -name => 'h1', -content => 'Issue Network' },
-                  { -name => 'figure',
-                    -content => { -name => 'object',
-                                  type => 'image/svg+xml', data => 'ci2' } },
+                  # { -name => 'figure',
+                  #   -content => { -name => 'object',
+                  #                 type => 'image/svg+xml', data => 'ci2' } },
                   $self->_do_404($new), # not really a 404 but whatev
               ] },
             { -name => 'section', class => 'index skos',
               -content => [
                   { -name => 'h1', -content => 'Concept Scheme' },
-                  { -name => 'figure',
-                    -content => { -name => 'object',
-                                  type => 'image/svg+xml',
-                                  data => 'concepts?rotate=180' } },
+                  # { -name => 'figure',
+                  #   -content => { -name => 'object',
+                  #                 type => 'image/svg+xml',
+                  #                 data => 'concepts?rotate=180' } },
                   { %FORMBP, action => $new,
                     -content => { -name => 'fieldset', -content => [
                         { -name => 'legend',
@@ -823,6 +825,32 @@ sub dump :Local {
         return;
     };
 
+    my $ns = $self->ns;
+    my $m  = $c->rdf_cache;
+
+    # suck up all the dates
+    my @dates = _date_seq(
+        $m->objects(undef, $ns->dct->created),
+        $m->objects(undef, $ns->dct->modified));
+
+    # $c->log->debug(Data::Dumper::Dumper(\@dates));
+
+    # if there are any (which there should be...)
+    if (@dates) {
+        if (my $ims = $req->headers->if_modified_since) {
+            $ims = DateTime->from_epoch(epoch => $ims);
+
+            # return 304 if nothing is new
+            if ($ims >= $dates[-1]) {
+                $resp->status(304);
+                return;
+            }
+        }
+
+        # otherwise include LM header
+        $resp->headers->last_modified($dates[-1]->epoch);
+    }
+
     # override unless turtle is actually in the header
     my $type = $DUMP{$chosen};
     $type = 'text/plain' if $chosen eq 'turtle' and
@@ -974,7 +1002,7 @@ sub feed :Local {
             };
         }
 
-        my $doc = $c->stub;
+        my $doc = $self->_DOC;
         $self->_XML(
             doc => $doc,
             spec => {
@@ -1046,7 +1074,7 @@ sub _get_concept :Private {
                         $self->_do_concept_connect_form($c, $subject),
                     ] },
                 ] },
-                { -name => 'figure', id => 'dataviz', class => 'aside' }, # -content => DATAVIZ },
+                { -name => 'figure', id => 'force', class => 'aside' }, # -content => DATAVIZ },
 
                 # { -name => 'figure', class => 'aside', -content => [
                 #     { -name => 'object', class => 'baby hiveplot',
@@ -1082,76 +1110,16 @@ my @SKOS_SEQ = (
 sub _do_concept_neighbours {
     my ($self, $c, $subject) = @_;
 
-    my $bs  = $c->req->base;
-    my $m   = $c->rdf_cache;
+    my ($resources) = $self->_neighbour_structs($c, $subject);
+
     my $ns  = $self->ns;
-    my $inv = $self->inverse;
-    my $sv  = $subject->uri_value;
 
-    my @out;
+    # XXX PALLIATIVE SURGERY LOL
+    my @skosp = map {
+        $ns->skos->uri($_)
+    } qw(narrower narrowMatch related closeMatch exactMatch broader broadMatch);
 
-    for my $col (@SKOS_SEQ) {
-        my ($label, @row) = @$col;
-
-        my @subs;
-        for my $pair (@row) {
-            my ($sh, $p) = @$pair;
-            $p = $ns->skos->uri($p);
-
-            # collect forward and reverse versions of a given relation
-            my (@li, %seen);
-            for my $o ($m->objects($subject, $p),
-                       $m->subjects($inv->{$p->uri_value}[0], $subject)) {
-                next unless $o->is_resource;
-                next if $o->equal($subject);
-
-                # do not duplicate for redundantly asserted relations
-                my $ov = $o->uri_value;
-                next if $seen{$ov};
-                $seen{$ov} = $o;
-
-                # double-check this is a concept
-                next unless $m->count_statements
-                    ($o, $ns->rdf->type, $ns->skos->Concept);
-                next unless $o->uri_value =~ $UUID_URN;
-
-                # now convert to http uri
-                my $ou = URI->new($ov);
-                $ou = URI->new_abs($ou->uuid, $bs);
-
-                # get label
-                my ($lab) = $m->objects($o, $ns->skos->prefLabel);
-
-                # generate rdf-kv form keys
-                my $fp = sprintf '- %s :', $ns->abbreviate($p);
-                my $rp = sprintf '-! %s :',
-                    $ns->abbreviate($inv->{$p->uri_value}[0]);
-
-                # label may be undef
-                my $cnt = $lab ? $lab->literal_value : '';
-
-                # now make the list item
-                push @li, { -name => 'li', -content => { %FORMBP, -content => [
-                    { -name => 'input', type => 'hidden', name => $rp,
-                      value => $ov },
-                    { -name => 'button', class => 'disconnect fa fa-unlink',
-                      name => $fp, value => $ov },
-                    { href => $ou, -content => $cnt } ] } };
-            }
-
-            # now sort the bugger
-            @li = sort { $a->{-content}{-content}[-1]{-content}
-                             cmp $b->{-content}{-content}[-1]{-content} } @li;
-            if (@li) {
-                my @x = ({ -name => 'ul', -content => \@li });
-                unshift @x, { -name => 'h4', -content => $sh } if $sh;
-                push @subs, { -name => 'section', -content => \@x };
-            }
-        }
-
-        push @out, { -name => 'aside', class => 'predicate', -content => [
-            { -name => 'h3', -content => $label }, @subs ] } if @subs;
-    }
+    my @out = $self->_do_rels($c, $resources, \@skosp, $ns->skos->prefLabel);
 
     return { -name => 'section', class => 'relations', -content => \@out };
 }
@@ -1211,18 +1179,21 @@ sub _do_concept_create_form {
     my $new = $self->uuid4;
 
 
-    return { %FORMBP, id => 'create-new', action => $new, -content => [
-        { -name => 'input', type => 'hidden', name => 'rdf:type :',
-          value => 'skos:Concept' },
-        { -name => 'input', type => 'hidden', name => '! $predicate :',
-          value => $subject->uri_value },
-        { -name => 'fieldset', class => 'edit-group', -content => [
-            $self->_concept_menu($c, 1),
-            { -name => 'div', class => 'interaction', -content => [
-                { -name => 'input', type => 'text', class => 'new-value',
-                  name => 'skos:prefLabel' },
-                { -name => 'button', class => 'fa fa-plus', -content => '' }
-            ] } ] } ]};
+    return { %FORMBP,
+             id => 'create-new', action => $new, about => 'skos:Concept',
+             -content => [
+                 { -name => 'input', type => 'hidden', name => 'rdf:type :',
+                   value => 'skos:Concept' },
+                 { -name => 'input', type => 'hidden', name => '! $predicate :',
+                   value => $subject->uri_value },
+                 { -name => 'fieldset', class => 'edit-group', -content => [
+                     $self->_concept_menu($c, 1),
+                     { -name => 'div', class => 'interaction', -content => [
+                         { -name => 'input', type => 'text',
+                           class => 'new-value', name => 'skos:prefLabel' },
+                         { -name => 'button', class => 'fa fa-plus',
+                           -content => '' }
+                     ] } ] } ]};
 }
 
 sub _do_concept_connect_form {
@@ -1244,7 +1215,7 @@ sub _do_concept_connect_form {
         sort { $c{$a} cmp $c{$b} } keys %c;
 
     return { %FORMBP, id => 'connect-existing', action => '',
-             -content => {
+             about => 'skos:Concept', -content => {
                  -name => 'fieldset', class => 'edit-group', -content => [
                      $self->_concept_menu($c, 1),
                      { -name => 'div', class => 'interaction', -content => [
@@ -1369,7 +1340,7 @@ sub _get_ibis :Private {
                     $self->_do_connect_form($c, $subject, $type),
                     $self->_do_create_form($c, $uri, $type) ] },
             ] },
-            { -name => 'figure', id => 'dataviz', class => 'aside', # [
+            { -name => 'figure', id => 'force', class => 'aside', # [
                 # { -name => 'object', class => 'other baby hiveplot',
                 #   type => 'image/svg+xml',
                 #   data => $c->uri_for('concepts',
@@ -1693,37 +1664,39 @@ sub _do_index {
     wantarray ? @out : \@out;
 }
 
-sub _do_content {
-    my ($self, $c, $subject, $demote) = @_;
+sub _neighbour_structs {
+    my ($self, $c, $subject) = @_;
     my (%in, %res, %lit, $iter);
 
     my $m = $c->rdf_cache;
 
-    my $ns      = $self->ns;
     my $inverse = $self->inverse;
-    my $labels  = $self->labels;
+
+    # this flips around inverse relations
 
     $iter = $m->get_statements(undef, undef, $subject);
     while (my $stmt = $iter->next) {
-        #my $p = $NS->abbreviate($stmt->predicate) || $stmt->predicate->value;
         my $p = $stmt->predicate->value;
         my $s = $stmt->subject;
         if (my $inv = $inverse->{$p}) {
             $p = $inv->[0]->value;
+            # resources
             $res{$p} ||= {};
             $res{$p}{$s->value} ||= $s;
             #push @{$res{$p}}, $s;
         }
         else {
+            # inverses
             $in{$p} ||= {};
             $in{$p}{$s->value} ||= $s;
             #push @{$in{$p}}, $s;
         }
     }
 
+    # this gathers forward relations
+
     $iter = $m->get_statements($subject, undef, undef);
     while (my $stmt = $iter->next) {
-        #my $p = $NS->abbreviate($stmt->predicate) || $stmt->predicate->value;
         my $p = $stmt->predicate->value;
         my $o = $stmt->object;
         if ($o->is_literal) {
@@ -1733,24 +1706,36 @@ sub _do_content {
         else {
             $res{$p} ||= {};
             $res{$p}{$o->value} ||= $o;
-            #push @{$res{$p}}, $o;
         }
     }
 
+    my @out = (\%res, \%lit, \%in);
+
+    wantarray ? @out : \@out;
+}
+
+sub _do_rels {
+    my ($self, $c, $res, $predicates, $labelp) = @_;
+
+    my $m = $c->rdf_cache;
+
+    my $ns      = $self->ns;
+    my $inverse = $self->inverse;
+    my $labels  = $self->labels;
+
     my @asides;
-    my %p = map { $_ => 1 } (keys %in, keys %res);
 
-
-    for my $k ($self->predicate_seq) {
+    #
+    for my $k (@$predicates) {
 
         my $pred = $ns->abbreviate($k);
         $k       = $k->uri_value; # we don't need this as an iri obj anymore
         my $inv  = $inverse->{$k} ? $ns->abbreviate($inverse->{$k}[0]) : undef;
 
         my %li;
-        for my $o (values %{$res{$k} || {}}) {
+        for my $o (values %{$res->{$k} || {}}) {
             my ($type) = $m->objects($o, $ns->rdf->type);
-            my ($text) = $m->objects($o, $ns->rdf->value);
+            my ($text) = $m->objects($o, $labelp);
             # replicate the uuid if text is missing
             $text = $o unless $text;
 
@@ -1780,7 +1765,7 @@ sub _do_content {
 
         my @li = @li{$c->collator->sort(keys %li)};
 
-        if ($res{$k} && @li) {
+        if ($res->{$k} && @li) {
             my $abbrk = $ns->abbreviate($k);
             # XXX wtf is this even for anyway?
             my $first = $li[0]{-content}{-content}[-1]{href};
@@ -1795,13 +1780,34 @@ sub _do_content {
 
     }
 
+    wantarray ? @asides : \@asides;
+}
+
+sub _do_content {
+    my ($self, $c, $subject, $demote) = @_;
+    my (%in, %res, %lit, $iter);
+
+    my $m = $c->rdf_cache;
+
+    my $ns      = $self->ns;
+    my $inverse = $self->inverse;
+    my $labels  = $self->labels;
+
+    # XXX PALLIATIVE SURGERY LOL
+    my ($resources, $literals) = $self->_neighbour_structs($c, $subject);
+    %res = %$resources;
+    %lit = %$literals;
+
+    my @asides = $self->_do_rels(
+        $c, \%res, [$self->predicate_seq], $ns->rdf->value);
+
     my %c = (
         Issue    => 'fa-exclamation-triangle',
         Position => 'fa-gavel',
         Argument => 'fa-comments',
     );
 
-    # XXX 
+    # XXX
     my @buttons = map {
         my $t = "ibis:$_";
         my %attrs = (
