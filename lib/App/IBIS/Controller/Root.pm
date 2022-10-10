@@ -20,7 +20,7 @@ BEGIN {
 use RDF::Trine qw(iri blank literal);
 use RDF::Trine::Namespace qw(RDF);
 use constant IBIS => RDF::Trine::Namespace->new
-    ('https://privatealpha.com/ontology/ibis/1#');
+    ('https://vocab.methodandstructure.com/ibis#');
 
 use RDF::KV;
 use DateTime;
@@ -1381,7 +1381,7 @@ sub _post_uuid {
     # XXX lame
     my $ns = URI::NamespaceMap->new({
         rdf  => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        ibis => 'https://privatealpha.com/ontology/ibis/1#',
+        ibis => 'https://vocab.methodandstructure.com/ibis#',
         skos => 'http://www.w3.org/2004/02/skos/core#',
         dct  => 'http://purl.org/dc/terms/',
     });
@@ -1424,7 +1424,10 @@ sub _post_uuid {
     else {
         $m->end_bulk_ops;
         $c->log->debug("New size: " .$m->size);
+        # clear the cache
+        $c->rdf_cache(1);
     }
+
 
     #$m->_store->_model->sync;
 }

@@ -145,7 +145,7 @@ Object.assign(ForceRDF.prototype, {
         foaf: 'http://xmlns.com/foaf/0.1/',
         org:  'http://www.w3.org/ns/org#',
         skos: 'http://www.w3.org/2004/02/skos/core#',
-        ibis: 'https://privatealpha.com/ontology/ibis/1#',
+        ibis: 'https://vocab.methodandstructure.com/ibis#',
     }).reduce(
         // this will return `out` always
         (out, [key, value]) => (out[key] = new RDF.Namespace(value), out), {}),

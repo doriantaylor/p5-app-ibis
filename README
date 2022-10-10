@@ -2,7 +2,7 @@ App::IBIS - We have issues.
 
 This is an app initially designed to demo my RDF-KV protocol, but
 it has also turned out to be useful for kicking the tires on my IBIS
-vocabulary. See http://privatealpha.com/ontology/ibis/1# .
+vocabulary. See http://vocab.methodandstructure.com/ibis# .
 
 Before you begin, get JQuery by running script/get-jquery, which is a
 happy medium between sourcing it on the fly and bundling it in this

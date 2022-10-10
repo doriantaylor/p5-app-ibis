@@ -20,7 +20,7 @@ use Data::UUID::NCName ();
 
 my %XMLNS = (
     rdf   => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    ibis  => 'https://privatealpha.com/ontology/ibis/1#',
+    ibis  => 'https://vocab.methodandstructure.com/ibis#',
     skos  => 'http://www.w3.org/2004/02/skos/core#',
     dct   => 'http://purl.org/dc/terms/',
     xsd   => 'http://www.w3.org/2001/XMLSchema#',

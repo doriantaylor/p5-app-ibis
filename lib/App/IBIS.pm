@@ -37,7 +37,7 @@ use Catalyst qw/
 # /;
 use CatalystX::RoleApplicator;
 
-our $VERSION = '0.09_12';
+our $VERSION = '0.09_14';
 
 extends 'Catalyst';
 
