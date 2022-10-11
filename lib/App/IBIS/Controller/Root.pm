@@ -851,6 +851,9 @@ sub dump :Local {
         $resp->headers->last_modified($dates[-1]->epoch);
     }
 
+    # do this so the damn thing actually checks lol
+    $resp->header('Cache-Control', 'max-age=10');
+
     # override unless turtle is actually in the header
     my $type = $DUMP{$chosen};
     $type = 'text/plain' if $chosen eq 'turtle' and
@@ -1308,28 +1311,11 @@ sub _get_ibis :Private {
     # my $ci2 = $c->uri_for('ci2', { subject => $uu->uuid,
     #                                degrees => 240, rotate => 240, });
 
-    my $css = $c->config->{css} ||
-        ['asset/font-awesome.css', 'asset/main.css'];
-    $css = [$css] unless ref $css;
-    my @css = map {
-        { rel => 'stylesheet', type => 'text/css', href => $_ } } @$css;
 
-    my (undef, $doc) = $self->_XHTML(
+    my $doc = $c->stub(
         ns    => $self->uns,
         uri   => $uri,
         title => $label . $title ? $title->value : '',
-        link  => [
-            @css,
-            { rel => 'alternate', type => 'application/atom+xml',
-              href => 'feed' },
-            { rel => 'alternate', type => 'text/turtle', href => 'dump' },
-        ],
-        head  => [
-            (map +{ -name => 'script', type => 'text/javascript', src => $_ },
-            qw(asset/jquery.js asset/rdf asset/d3 asset/force-directed)),
-            { -name => 'script', type => 'text/javascript', defer => 'defer',
-              src => 'asset/main.js' }
-        ],
         attr  => \%attrs,
         content => [ { -name => 'main', -content => [
             { -name => 'article', -content => [
@@ -1401,7 +1387,7 @@ sub _post_uuid {
     my $patch = $kv->process($content);
     #warn Data::Dumper::Dumper($patch);
 
-    $c->log->debug("Initial size: " .$m->size);
+    $c->log->debug("Initial size: " . $m->size);
     # add a timestamp
     # eval { $m->count_statements($subject, undef, undef) };
     # if ($@) {

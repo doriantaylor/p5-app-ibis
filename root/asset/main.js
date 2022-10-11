@@ -1,5 +1,5 @@
 var NS = {
-    'ibis': 'https://privatealpha.com/ontology/ibis/1#'
+    'ibis': 'https://vocab.methodandstructure.com/ibis#'
 };
 
 var OTHER = {

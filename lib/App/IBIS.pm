@@ -32,12 +32,12 @@ use Catalyst qw/
 #    -Debug
 #    Static::Simple
 #    StackTrace
-#/;
+# /;
 #     +CatalystX::Profile
 # /;
 use CatalystX::RoleApplicator;
 
-our $VERSION = '0.09_14';
+our $VERSION = '0.09_15';
 
 extends 'Catalyst';
 
@@ -268,23 +268,78 @@ sub stub {
               href => $c->uri_for($_) }
     } @$css;
 
+    my @link = (
+        @css,
+        { rel => 'alternate', type => 'application/atom+xml',
+          href => $c->uri_for('feed') },
+        { rel => 'alternate', type => 'text/turtle',
+          href => $c->uri_for('dump') },
+    );
+
+    if (my $me = $c->whoami) {
+        # $c->log->debug("whoami: $me");
+        push @link, { rel => 'pav:retrievedBy', href => $me->value };
+    }
+    # else {
+    #     $c->log->debug("no whoami :(");
+    # }
+
     my ($body, $doc) = $c->_XHTML(
-        %p,
-        link  => [
-            @css,
-            { rel => 'alternate', type => 'application/atom+xml',
-              href => $c->uri_for('feed') },
-            { rel => 'alternate', type => 'text/turtle',
-              href => $c->uri_for('dump') } ],
+        link  => \@link,
         head  => [
             map +{ -name => 'script', type => 'text/javascript',
                    src => $c->uri_for($_) },
             qw(asset/jquery.js asset/rdf asset/d3 asset/force-directed
                asset/main.js) ],
-        ns => $c->uns,
+        ns    => $c->uns,
+        vocab => $c->uns->xhv->uri,
+        %p,
     );
 
     wantarray ? ($body, $doc) : $doc;
+}
+
+=head2 whoami
+
+Attempt to return the C<foaf:Agent> associated with C<REMOTE_USER> if
+there is one, otherwise return C<REMOTE_USER> as an
+L<RDF::Trine::Node::Resource>, or C<undef> if it is not present.
+
+=cut
+
+sub whoami {
+    my $c = shift;
+    my $m = $c->rdf_cache;
+    my $n = $c->ns;
+    my $u = $c->req->remote_user // $c->req->env->{REMOTE_USER} // '';
+
+    # trim the username in case there's spaces etc
+    $u =~ s/\A\s*(.*?)\s*\Z/$1/;
+
+    if ($u eq '') {
+        $c->log->debug("REMOTE_USER field empty");
+    }
+    else {
+        # if there is no uri scheme then we add one
+        unless ($u =~ /^[A-Za-z][0-9A-Za-z+.-]:/) {
+            # this is either something email-like or is not
+            $u = ($u =~ /@/) ? lc("mailto:$u") : "urn:x-user:$u";
+        }
+
+        $c->log->debug("user: $u");
+
+        $u = RDF::Trine::iri($u);
+        my %uniq = map { $_->sse => $_ }
+            ($m->objects($u, $n->sioc->account_of, undef, type => 'resource'),
+             $m->subjects($n->foaf->account, $u));
+
+        # there should only be one of thse
+        my @out = sort values %uniq;
+
+        return @out ? $out[0] : $u;
+    }
+
+    return;
 }
 
 =head1 SEE ALSO

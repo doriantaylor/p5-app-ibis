@@ -189,6 +189,7 @@ body[typeof~="bibo:Webpage"] {
 main {
    position: absolute;
    overflow: hidden;
+   width:100%;
    top: 0;
    left: 0;
    right: 0;
@@ -199,11 +200,19 @@ main {
 }
 
 body[typeof~="ibis:Network"] {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 2em;
     > main {
+        position: unset;
+        grid-row: 1;
+        //height: calc(100% - 2em);
         display: flex;
         flex-wrap: wrap;
         #force {
             // margin: auto;
+            margin: 0;
             padding: 0;
             width: 100%;
             // flex: 0 0 100%;
@@ -216,6 +225,10 @@ body[typeof~="ibis:Network"] {
                 object-fit: contain;
             }
         }
+    }
+    > footer {
+        position: unset;
+        grid-row: 2;
     }
 }
 
@@ -1017,6 +1030,7 @@ section {
        //position: absolute;
        //top: 0;
        width: 50%;
+       max-height: 8em;
        //height: 66.66%;
        box-sizing: border-box;
        padding: 0 1em;
@@ -1038,39 +1052,46 @@ section {
          }
       }
 
-      &.ibis {
-         left: 0;
-      }
+      // &.ibis {
+      //     left: 0;
+      // }
 
-      &.skos {
-         right: 0;
-      }
+      // &.skos {
+      //     right: 0;
+      // }
 
       &.list {
-         width: 100%;
-         height: 33.33%;
-         top: unset;
-         bottom: 0;
+          width: 100%;
+          // height: 33.33%;
+          // top: unset;
+          // bottom: 0;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: stretch;
+          min-height: 3em;
+          max-height: calc(33.3% - 8em);
 
-         > section {
-            float: left;
-            width: 25%;
-            height: 100%;
-            bottom: 0;
-            box-sizing: border-box;
-            font-size: 75%;
+          > section {
+              height: 100%;
+              //float: left;
+              width: 25%;
+              //height: 100%;
+              //bottom: 0;
+              box-sizing: border-box;
+              font-size: 75%;
 
-            > h2 {
-               text-align: center;
-            }
-         }
+              > h2 {
+                  text-align: center;
+              }
+          }
       }
 
       ul {
          overflow-y: auto;
          padding-left: 1.5em;
          padding-right: 0.5em;
-         height: 80%;
+         // width: 100%;
+         max-height: calc(100% - 4em);
       }
 
       li {

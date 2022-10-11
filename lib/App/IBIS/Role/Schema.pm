@@ -23,7 +23,15 @@ my %XMLNS = (
     ibis  => 'https://vocab.methodandstructure.com/ibis#',
     skos  => 'http://www.w3.org/2004/02/skos/core#',
     dct   => 'http://purl.org/dc/terms/',
+    bibo  => 'http://purl.org/ontology/bibo/',
+    foaf  => 'http://xmlns.com/foaf/0.1/',
+    org   => 'http://www.w3.org/ns/org#',
+    sioc  => 'http://rdfs.org/sioc/ns#',
+    sioct => 'http://rdfs.org/sioc/types#',
+    prov  => 'http://www.w3.org/ns/prov#',
+    pav   => 'http://purl.org/pav/',
     xsd   => 'http://www.w3.org/2001/XMLSchema#',
+    xhv   => 'http://www.w3.org/1999/xhtml/vocab#',
     xlink => 'http://www.w3.org/1999/xlink',
 );
 
