@@ -33,3 +33,4 @@ root/asset/main.css
 root/asset/sugiyama.js
 js/node_modules
 js/package-lock.json
+local/

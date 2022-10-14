@@ -14,6 +14,12 @@ on develop => sub {
     requires 'Catalyst::Devel';
 };
 
+on runtime => sub {
+    recommends 'DBD::SQLite';
+    recommends 'DBD::Pg';
+    recommends 'Starman';
+};
+
 # moose stuff
 requires 'Moose';
 requires 'MooseX::Types::Moose';
@@ -35,6 +41,7 @@ requires 'Config::General';
 # app-specific third-party
 requires 'Catalyst::Model::RDF'         => '0.03';
 requires 'Data::GUID::Any'              => '0.004';
+requires 'Data::UUID::NCName'           => '0.07';
 requires 'RDF::Trine'                   => '1.019';
 requires 'URI::NamespaceMap'            => '0.06';
 requires 'URI::urn::uuid'               => '0.03';
@@ -43,6 +50,8 @@ requires 'HTTP::Negotiate'              => '6.00';
 requires 'Convert::Color::HUSL'         => '1.000';
 requires 'Unicode::Collate'             => '1.19';
 requires 'CSS::Sass'                    => 'v3.6.4';
+requires 'XML::LibXML';
+requires 'XML::LibXSLT';
 
 # stuff i made
 requires 'Role::Markup::XML'            => '0.03';
