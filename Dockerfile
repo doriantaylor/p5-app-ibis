@@ -38,7 +38,7 @@ VOLUME /vendor
 EXPOSE 5000
 
 # lol
-ENV EMAIL=hi@doriantaylor.com
+ENV EMAIL=test@hi.lol
 
 # no clue why this thing can't just get the dirs right
 CMD ["carton", "exec", "starman", "-Ilib", "-I/carton/lib/perl5", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
