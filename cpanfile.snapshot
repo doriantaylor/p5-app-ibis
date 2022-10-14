@@ -884,15 +884,16 @@ DISTRIBUTIONS
     requirements:
       Digest::MD5 0
       ExtUtils::MakeMaker 0
-  Data-UUID-NCName-0.06
-    pathname: D/DO/DORIAN/Data-UUID-NCName-0.06.tar.gz
+  Data-UUID-NCName-0.07
+    pathname: D/DO/DORIAN/Data-UUID-NCName-0.07.tar.gz
     provides:
-      Data::UUID::NCName 0.06
+      Data::UUID::NCName 0.07
     requirements:
-      Encode::Base58 0.01
+      Encode::Base58::BigInt 0.03
       ExtUtils::MakeMaker 6.59
       MIME::Base32 1.303
       MIME::Base64 3.15
+      Math::BigInt 1.999811
       Test::More 0
       Type::Tiny 1.002002
       UUID::Tiny 1.04
@@ -1427,6 +1428,16 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.42
       Filter::Util::Call 0
       Test::More 0
+  Encode-Base58-BigInt-0.03
+    pathname: S/SA/SATOH/Encode-Base58-BigInt-0.03.tar.gz
+    provides:
+      Encode::Base58::BigInt 0.03
+    requirements:
+      Exporter::Lite 0
+      ExtUtils::MakeMaker 6.36
+      Filter::Util::Call 0
+      Math::BigInt 0
+      Test::Most 0
   Encode-Locale-1.05
     pathname: G/GA/GAAS/Encode-Locale-1.05.tar.gz
     provides:
@@ -1481,6 +1492,16 @@ DISTRIBUTIONS
       base 0
       overload 0
       perl 5.008001
+      strict 0
+      warnings 0
+  Exporter-Lite-0.09
+    pathname: N/NE/NEILB/Exporter-Lite-0.09.tar.gz
+    provides:
+      Exporter::Lite 0.09
+    requirements:
+      Carp 0
+      ExtUtils::MakeMaker 6.3
+      perl 5.006
       strict 0
       warnings 0
   Exporter-Tiny-1.004003
@@ -3901,6 +3922,20 @@ DISTRIBUTIONS
       Test::Differences 0.47
       Test::Simple 0.62
       Test::Tester 0.107
+  Test-Most-0.38
+    pathname: O/OV/OVID/Test-Most-0.38.tar.gz
+    provides:
+      Test::Most 0.38
+      Test::Most::Exception 0.38
+    requirements:
+      Exception::Class 1.14
+      ExtUtils::MakeMaker 0
+      Test::Deep 0.119
+      Test::Differences 0.64
+      Test::Exception 0.43
+      Test::Harness 3.35
+      Test::More 1.302047
+      Test::Warn 0.30
   Test-Requires-0.11
     pathname: T/TO/TOKUHIROM/Test-Requires-0.11.tar.gz
     provides:
@@ -3938,6 +3973,17 @@ DISTRIBUTIONS
       Test::SharedFork 0.29
       Time::HiRes 0
       perl 5.008001
+  Test-Warn-0.37
+    pathname: B/BI/BIGJ/Test-Warn-0.37.tar.gz
+    provides:
+      Test::Warn 0.37
+    requirements:
+      Carp 1.22
+      ExtUtils::MakeMaker 0
+      Sub::Uplevel 0.12
+      Test::Builder 0.13
+      Test::Builder::Tester 1.02
+      perl 5.006
   Text-Aligner-0.16
     pathname: S/SH/SHLOMIF/Text-Aligner-0.16.tar.gz
     provides:

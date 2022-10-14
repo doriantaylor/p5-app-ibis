@@ -3,7 +3,7 @@ version: '3'
 services:
   web:
     build: .
-    command: carton exec starman -Ilib app_ibis.psgi
+    command: carton exec starman -I/carton/lib/perl5 -Ilib -e 'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}' app_ibis.psgi
     volumes:
       - .:/code
       - carton:/carton
