@@ -829,6 +829,8 @@ button {
    }
 
    body[typeof~="#{$class}"] {
+       
+
       article {
          background-color: nth($pal, 3);
       }

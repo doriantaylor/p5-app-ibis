@@ -1,4 +1,6 @@
 syntax: glob
+\#*
+.\#*
 blib*
 Makefile
 Makefile.old
@@ -16,6 +18,7 @@ App-IBIS-*
 root/static/*
 inc/*
 META.yml
+META.json
 MYMETA.yml
 MYMETA.json
 nytprof*

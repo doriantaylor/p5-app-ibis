@@ -1,0 +1,11 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ibis: <https://vocab.methodandstructure.com/ibis#>
+PREFIX dct:  <http://purl.org/dc/terms/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT DISTINCT ?subject ?date ?value WHERE {
+#  ?subject a ?t . FILTER (?t IN (ibis:Issue, ibis:Position, ibis:Argument))
+  ?subject a skos:Concept .
+#  ?subject rdf:value ?value ; dct:created ?date .
+  ?subject skos:prefLabel ?value ; dct:created ?date .
+} ORDER BY ?value # ?date

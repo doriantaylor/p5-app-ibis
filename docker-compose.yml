@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: carton exec ./script/myapp_server.pl -d -r
+    volumes:
+      - .:/code
+      - carton:/carton
+      - vendor:/vendor
+    networks:
+      - web
+    ports:
+      - "3000:3000"
+
+networks:
+  web:
+
+volumes:
+  carton:
+  vendor:

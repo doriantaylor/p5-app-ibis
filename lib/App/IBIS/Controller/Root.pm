@@ -704,19 +704,23 @@ sub uuid :Private {
             $self->_post_uuid($c, $uuid, $req->body_parameters);
         };
         if ($@) {
-            $c->res->body("wat $@");
+            $resp->status(409);
+            $resp->content_type('text/plain');
+            $resp->body("wat $@");
+            return;
         }
         else {
-            $resp->redirect($path);
+            $resp->redirect($path, 303);
         }
     }
     elsif ($method eq 'GET' or $method eq 'HEAD') {
         # do this for now until we can handle html properly
         $resp->content_type('application/xhtml+xml');
         # check model for subject
-        my $m = $c->model('RDF');
-        my $g = $c->graph;
-        if (my @o = $m->objects($uuid, $self->ns->rdf->type, $g)) {
+        # my $m = $c->model('RDF');
+        # my $g = $c->graph;
+        my $m = $c->rdf_cache;
+        if (my @o = $m->objects($uuid, $self->ns->rdf->type)) {
             # GHETTO FRESNEL
             my $d = $self->_dispatch;
             if (my ($handler) = map { $d->{$_->value} }
@@ -825,6 +829,9 @@ sub dump :Local {
         return;
     };
 
+    # do this so the damn thing actually checks lol
+    $resp->header('Cache-Control', 'max-age=10');
+
     my $ns = $self->ns;
     my $m  = $c->rdf_cache;
 
@@ -850,9 +857,6 @@ sub dump :Local {
         # otherwise include LM header
         $resp->headers->last_modified($dates[-1]->epoch);
     }
-
-    # do this so the damn thing actually checks lol
-    $resp->header('Cache-Control', 'max-age=10');
 
     # override unless turtle is actually in the header
     my $type = $DUMP{$chosen};

@@ -122,3 +122,8 @@ maint/
 root/asset/jquery-2.*
 js/
 root/bogon.*
+
+# docker stuff
+.dockerignore
+Dockerfile
+docker-compose.yml
