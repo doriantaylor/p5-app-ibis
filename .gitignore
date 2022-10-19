@@ -28,6 +28,8 @@ root/asset/jq*
 root/asset/font*
 root/asset/rdf.js
 root/asset/d3.js
+root/asset/rdf-viz.js
+root/asset/hierarchical.js
 root/asset/force-directed.js
 root/asset/main.css
 root/asset/sugiyama.js

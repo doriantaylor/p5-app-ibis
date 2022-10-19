@@ -1,12 +1,14 @@
 // rollup.config.js
-import resolve  from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import pkg      from './package.json';
+import { babel } from '@rollup/plugin-babel';
+import resolve   from '@rollup/plugin-node-resolve';
+import commonjs  from '@rollup/plugin-commonjs';
+import pkg       from './package.json';
 
 const PLUGINS = [
     // so Rollup can find its dependencies
 	resolve({ preferBuiltins: false, mainFields: ['browser'] }),
-	commonjs() // so Rollup can convert dependendies to ES modules
+	commonjs(), // so Rollup can convert dependendies to ES modules
+    babel({ babelHelpers: 'bundled' })
 ];
 
 export default [

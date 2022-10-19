@@ -10,9 +10,11 @@
     "rdflib": "^2.2.20"
   },
   "devDependencies": {
+    "@rollup/plugin-babel": "^6.0.0",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "rollup": "^2.79.0"
+    "rollup": "^2.79.0",
+    "@babel/preset-env": "^7.19.4"
   },
   "scripts": {
     "build": "rollup -c",
