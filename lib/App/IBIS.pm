@@ -37,7 +37,7 @@ use Catalyst qw/
 # /;
 use CatalystX::RoleApplicator;
 
-our $VERSION = '0.09_15';
+our $VERSION = '0.09_16';
 
 extends 'Catalyst';
 
@@ -210,10 +210,29 @@ sub rdf_cache {
     $model = $cache->{$g->value} = RDF::Trine::Model->new
         (RDF::Trine::Store::Hexastore->new);
 
+    # run this for side effects
+    $c->global_mtime;
+
     $model->add_iterator
         ($c->model('RDF')->get_statements(undef, undef, undef, $g));
 
     $model;
+}
+
+=head2 global_mtime
+
+this will of course be a per-process mtime of the rdf cache but better than nothing
+
+=cut
+
+sub global_mtime {
+    my $c = shift;
+
+    my $g = $c->graph;
+
+    my $mtimes = $c->stash->{mtime} ||= {};
+
+    $mtimes->{$g->value} ||= DateTime->now;
 }
 
 =head2 graph

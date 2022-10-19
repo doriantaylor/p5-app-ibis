@@ -376,10 +376,17 @@ sub process {
         # note this produces a byte string, so doing this
         # for the content-length will be accurate.
         my $str = $body->toString(1);
-        $res->content_length(length $str);
 
-        # nevertheless, Catalyst seems to interfere, so we do this:
-        utf8::decode($str) if lc $body->actualEncoding eq 'utf-8';
+        if ($body->actualEncoding =~ /utf[_-]?8/i) {
+            # nevertheless, Catalyst seems to interfere, so we do this:
+            $c->log->debug('re-decoding UTF-8 bytes for Catalyst');
+            utf8::decode($str);
+        }
+        else {
+            $c->log->debug(
+                sprintf 'actual encoding is %s', $body->actualEncoding);
+            $res->content_length(length $str);
+        }
 
         # punt it out
         $res->body($str);

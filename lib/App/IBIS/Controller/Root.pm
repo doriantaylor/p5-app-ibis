@@ -215,7 +215,8 @@ sub index :Path :Args(0) {
                 -name => 'nav', -content => {
                     -name => 'ul', -content => [
                         { -name => 'li', -content => {
-                            href => './', -content => "\xa0" } }, # empty overview
+                            # XXX WTF \xa0 MAKES THIS TURN TO LATIN1 ???? WTFFF
+                            href => './', -content => "\x{200b}" } }, # empty overview
                         { -name => 'li', -content => {
                             href => 'we-have-issues',
                             -content => 'What is this thing?' } },
@@ -836,9 +837,13 @@ sub dump :Local {
     my $m  = $c->rdf_cache;
 
     # suck up all the dates
-    my @dates = _date_seq(
-        $m->objects(undef, $ns->dct->created),
-        $m->objects(undef, $ns->dct->modified));
+    # my @dates = _date_seq(
+    #     $m->objects(undef, $ns->dct->created),
+    #     $m->objects(undef, $ns->dct->modified));
+
+    # XXX JUST DO THIS FOR NOW
+    my @dates;
+    push @dates, $c->global_mtime;
 
     # $c->log->debug(Data::Dumper::Dumper(\@dates));
 

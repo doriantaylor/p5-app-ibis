@@ -49,7 +49,7 @@ requires 'DateTime::Format::W3CDTF'     => '0.06';
 requires 'HTTP::Negotiate'              => '6.00';
 requires 'Convert::Color::HUSL'         => '1.000';
 requires 'Unicode::Collate'             => '1.19';
-requires 'CSS::Sass'                    => 'v3.6.4';
+requires 'CSS::Sass'                    => 'v3.6.3';
 requires 'XML::LibXML';
 requires 'XML::LibXSLT';
 
