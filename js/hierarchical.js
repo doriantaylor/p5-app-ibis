@@ -192,142 +192,190 @@ export default class HierRDF extends RDFViz {
 
         // XXX END SUPERCLASSABLES
 
-        // run the layout
-
-        const d3c = d3.dagConnect().decycle(true).single(true);
-
-        const seen = new Set();
-
-        const dag = this.dag = d3c(links.map(x => (seen.add(x.source), seen.add(x.target), [x.source, x.target])).concat(
-            nodes.filter(x => !seen.has(x.id)).map(x => [x.id, x.id])));
-
-        /* boo doesn't work (yet?)
-        const dag = this.dag = d3c(links.map(x => (seen.add(x.source), seen.add(x.target), [nmap[x.source], nmap[x.target]])).concat(
-            nodes.filter(x => !seen.has(x.id)).map(x => [x, x])));
-        */
-
         const d3p = this.d3Params;
-
-        const nodeSize = node => {
-            const padding = 1.5;
-            const base = d3p.radius * 2 * padding;
-            const size = node ? base : base / 4;
-            return [1.2 * size, size];
-        };
-
-        const layout = d3.sugiyama().layering(d3p.layering).decross(
-            d3p.decross).coord(d3p.coord).nodeSize(nodeSize);
-        const { width, height } = layout(dag);
-        dag.width  = width;
-        dag.height = height;
-
-        svg.append('circle').attr('id', 'backdrop')
-            .attr('cx', 0).attr('cy', 0).attr('r', d3p.width / 2);
-
-        const edgeg = svg.append('g').attr('class', 'hier edge');
-
-        const nodeg = svg.append('g').attr('class', 'hier node');
-
-        // XXX maybe a little more elegant than this?
-        const rho = d3p.hyperbolic ?
-              r => r == 0 ? 0 : Math.tanh(Math.log(1 / (1 - r))) : r => r;
-
-        const descs = dag.descendants();
 
         // FU URL
         const me = new URL(window.location.href);
         me.search = '';
         me.hash   = '';
 
-        let offsets = descs.find(n => n.data.id == me.href) || { x: 0, y: 0 };
-        if (offsets.x !== 0 && offsets.y !== 0) {
-            offsets = {
-                x: offsets.x / width,
-                y: (d3p.yOffset + offsets.y) / (d3p.yOffset + height)
+        svg.append('circle').attr('id', 'backdrop')
+            .attr('cx', 0).attr('cy', 0).attr('r', d3p.width / 2);
+
+        const edgeg = svg.append('g').attr('class', 'hier edge');
+        const nodeg = svg.append('g').attr('class', 'hier node');
+
+        // run the layout
+
+        // XXX THIS ONLY WORKS IF THERE ARE 2+ NODES
+        if (nodes.length > 1) {
+            const d3c = d3.dagConnect().decycle(true).single(true);
+
+            const seen = new Set();
+
+            const dag = this.dag = d3c(links.map(
+                x => (seen.add(x.source), seen.add(x.target),
+                      [x.source, x.target])).concat(
+                          nodes.filter(
+                              x => !seen.has(x.id)).map(x => [x.id, x.id])));
+
+            const nodeSize = node => {
+                const padding = 1.5;
+                const base = d3p.radius * 2 * padding;
+                const size = node ? base : base / 4;
+                return [1.2 * size, size];
             };
-        }
-        let coff = new Complex(
-            { phi: offsets.x * 2 * Math.PI, r: rho(offsets.y) }).neg();
 
-        // console.log(offsets);
+            // XXX THIS LINE OF CODE IS EXPENSIVE AF AND ONLY NEEDS TO BE
+            // RUN ONCE PER GRAPH CHANGE. FIND SOME WAY TO CACHE IT. EVEN
+            // BETTER: RUN IT ON THE SERVER.
+            const layout = d3.sugiyama().layering(d3p.layering).decross(
+                d3p.decross).coord(d3p.coord).nodeSize(nodeSize);
+            const { width, height } = layout(dag);
+            dag.width  = width;
+            dag.height = height;
 
-        descs.forEach(node => {
-            let rnode = nmap[node.data.id];
+            // XXX maybe a little more elegant than this?
+            const rho = d3p.hyperbolic ?
+                  r => r == 0 ? 0 : Math.tanh(Math.log(1 / (1 - r))) : r => r;
 
-            // let r = (d3p.yOffset + node.y - offsets.y) / (d3p.yOffset + height);
-            let r = (d3p.yOffset + node.y) / (d3p.yOffset + height);
-            // let theta = (node.x - offsets.x) / (width - offsets.x) * Math.PI * 2;
-            let theta = node.x / width * Math.PI * 2;
-
-            // let rprime = rho(r) * (d3p.width / 2);
-
-            let z1 = new Complex({ phi: theta, r: rho(r) });
-
-            let p1 = (coff.abs() > 0 ? Zt(Complex.ONE, coff)(z1) : z1);
-            // let p1 = z1.add(coff).sqrt().tanh();
-
-            // console.log(coff, p1);
-
-            /*
-            let xprime = rprime * Math.cos(theta);
-            let yprime = rprime * Math.sin(theta);
-            */
-
-            let xprime = d3p.width / 2 * p1.re;
-            let yprime = d3p.width / 2 * p1.im;
-
-            const a = nodeg.append('a').attr('xlink:href', node.data.id)
-                .attr('typeof', this.abbreviate(nmap[node.data.id].type))
-                .attr('xlink:title', rnode.title);
-
-            if (node.data.id == me.href) a.attr('class', 'subject');
-
-            a.append('circle').attr('class', 'target').attr('cx', xprime)
-                .attr('cy', yprime).attr('r', d3p.radius * 2);
-            a.append('circle').attr('cx', xprime ).attr('cy', yprime).attr('r', d3p.radius);
-
-            node.dataChildren.forEach(c => {
-                //let r2 = (d3p.yOffset + c.child.y - offsets.y) / (d3p.yOffset + height);
-                let r2 = (d3p.yOffset + c.child.y) / (d3p.yOffset + height);
-                //let theta2 = (c.child.x - offsets.x) / (width - offsets.x) * Math.PI * 2;
-                let theta2 = c.child.x / width * Math.PI * 2;
-
-                // let rprime2 = rho(r2) * (d3p.width / 2);
-
-                let z2 = new Complex({ phi: theta2, r: rho(r2) });
-
-                let p2 = Zt(Complex.ONE, coff)(z2);
-                // let p2 = z2.add(coff).sqrt().tanh();
-
-                /*
-                let xprime2 = rprime2 * Math.cos(theta2);
-                let yprime2 = rprime2 * Math.sin(theta2);
-                */
-
-                let xprime2 = d3p.width / 2 * p2.re;
-                let yprime2 = d3p.width / 2 * p2.im;
-
-                let s = node.data.id;
-                let o = c.child.data.id;
-                if (c.reversed) {
-                    let tmp = s;
-                    s = o;
-                    o = tmp;
-                }
-
-                let line = edgeg.append('line')
-                    .attr('about', s).attr('resource', o)
-                    .attr('x1', xprime).attr('y1', yprime)
-                    .attr('x2', xprime2).attr('y2', yprime2);
-
-                if (s == me.href || o == me.href) line.attr('class', 'subject');
-
-                const fk = `${RDF.sym(s)} ${RDF.sym(o)}`;
-                const rk = `${RDF.sym(o)} ${RDF.sym(s)}`;
-
-                if (lmap2.has(fk)) line.attr('rel', this.abbreviate(lmap2.get(fk)));
-                if (lmap2.has(rk)) line.attr('rev', this.abbreviate(lmap2.get(rk)));
+            // OKAY HERE WE GET THE MINIMUM Y-OFFSET
+            const firsts = new Map();
+            dag.roots().forEach(root => {
+                const x = firsts.get(root.y) || [];
+                x.push(root);
+                firsts.set(root.y, x);
             });
-        });
+            const ymin   = Array.from(firsts.keys()).sort()[0] || 0;
+            const nroots = firsts.has(ymin) ? firsts.get(ymin).length : 0;
+
+            // we want a radius that is big enough to fit the entire first
+            // row with enough room that it isn't too crowded
+            const yoff = nroots > 1 ?
+                  (2 * d3p.radius) * (2 * nroots - 1) / Math.PI
+                  : nroots == 1 ? -ymin : 0;
+
+            const descs = dag.descendants();
+
+            let offsets =
+                descs.find(n => n.data.id == me.href) || { x: 0, y: 0 };
+            if (offsets.x !== 0 && offsets.y !== 0) {
+                offsets = {
+                    x: offsets.x / width,
+                    y: (yoff + offsets.y) / (yoff + height)
+                };
+            }
+            let coff = new Complex(
+                { phi: offsets.x * 2 * Math.PI, r: rho(offsets.y) }).neg();
+
+            // console.log(offsets);
+
+            const atdeg = z => {
+                let t = Math.atan2(z.im, z.re) * 180 / Math.PI;
+                return t < 0 ? t + 360 : t;
+            };
+
+            descs.forEach(node => {
+                // XXX find a way to put this data in the dag structure
+                let rnode = nmap[node.data.id];
+
+                // draw the point
+
+                const r1 = (yoff + node.y) / (yoff + height);
+                const t1 = node.x / width * Math.PI * 2;
+                const z1 = new Complex({ phi: t1, r: rho(r1) });
+                const p1 = (coff.abs() > 0 ? Zt(Complex.ONE, coff)(z1) : z1)
+                      .mul(d3p.width / 2);
+
+                const a = nodeg.append('a').attr('xlink:href', node.data.id)
+                      .attr('typeof', this.abbreviate(nmap[node.data.id].type))
+                      .attr('xlink:title', rnode.title);
+
+                if (node.data.id == me.href) a.attr('class', 'subject');
+
+                a.append('circle').attr('class', 'target').attr('cx', p1.re)
+                    .attr('cy', p1.im).attr('r', d3p.radius * 2);
+                a.append('circle').attr('cx', p1.re)
+                    .attr('cy', p1.im).attr('r', d3p.radius);
+
+                // draw any lines
+
+                node.dataChildren.forEach(c => {
+                    const r2 = (yoff + c.child.y) / (yoff + height);
+                    const t2 = c.child.x / width * Math.PI * 2;
+                    const z2 = new Complex({ phi: t2, r: rho(r2) });
+                    const p2 = Zt(Complex.ONE, coff)(z2).mul(d3p.width / 2);
+
+                    // subject and object identities
+                    let s = node.data.id;
+                    let o = c.child.data.id;
+                    if (c.reversed) {
+                        let tmp = s; // yo can't we do multiple assign?
+                        s = o;
+                        o = tmp;
+                    }
+
+                    /*
+                    let line = edgeg.append('line')
+                        .attr('about', s).attr('resource', o)
+                        .attr('x1', p1.re).attr('y1', p1.im)
+                        .attr('x2', p2.re).attr('y2', p2.im);
+
+                    if (s == me.href || o == me.href)
+                        line.attr('class', 'subject');
+                    */
+
+                    let m = p1.add(p2).div(2);
+
+                    // r^2 / |m|
+                    let r3 = Math.pow(d3p.width / 2, 2) / m.abs();
+                    let t3 = Math.atan2(m.im, m.re);
+
+                    let n = new Complex({ phi: t3, r: r3 });
+
+                    // nodeg.append('circle').attr('cx', m.re).attr('cy', m.im).attr('r', 2.5);
+                    // nodeg.append('circle').attr('cx', n.re).attr('cy', n.im).attr('r', 2.5);
+
+                    let t3d = atdeg(m);
+
+                    // if one of these is the origin draw a line
+                    const d = p1.abs() == 0 || p2.abs() == 0 ?
+                          `M${p1.re},${p1.im} L${p2.re},${p2.im}` :
+                          `M${p1.re},${p1.im} A${r3},${r3} ${t3d} 0,${atdeg(p1) > t3d ? 1 : 0 } ${p2.re},${p2.im}`;
+
+                    const path = edgeg.append('path').attr('d', d)
+                          .attr('about', s).attr('resource', o);
+
+                    if (s == me.href || o == me.href)
+                        path.attr('class', 'subject');
+
+                    // handle forward and reverse predicates
+
+                    const fk = `${RDF.sym(s)} ${RDF.sym(o)}`;
+                    const rk = `${RDF.sym(o)} ${RDF.sym(s)}`;
+
+                    if (lmap2.has(fk))
+                        path.attr('rel', this.abbreviate(lmap2.get(fk)));
+                    if (lmap2.has(rk))
+                        path.attr('rev', this.abbreviate(lmap2.get(rk)));
+                });
+            });
+        }
+        else if (nodes.length == 1) {
+            // note this is an rdf node, not a dag node
+            const node = nodes[0];
+
+            const a = nodeg.append('a').attr('xlink:href', node.id)
+                  .attr('typeof', this.abbreviate(node.type))
+                  .attr('xlink:title', node.title);
+
+            if (node.id == me.href) a.attr('class', 'subject');
+
+            a.append('circle').attr('class', 'target')
+                .attr('cx', 0).attr('cy', 0).attr('r', d3p.radius * 2);
+            a.append('circle')
+                .attr('cx', 0).attr('cy', 0).attr('r', d3p.radius);
+        }
+        // otherwise do nothing
     }
 }
