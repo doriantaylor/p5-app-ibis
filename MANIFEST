@@ -42,6 +42,7 @@ META.yml
 README
 root/asset/chevron-r.svg
 root/asset/circos.css
+root/asset/complex.js
 root/asset/d3.js
 root/asset/font-awesome.css
 root/asset/font-awesome/fontawesome-webfont.eot
@@ -50,11 +51,13 @@ root/asset/font-awesome/fontawesome-webfont.ttf
 root/asset/font-awesome/fontawesome-webfont.woff
 root/asset/font-awesome/FontAwesome.otf
 root/asset/force-directed.js
+root/asset/hierarchical.js
 root/asset/jquery-3.4.1.js
 root/asset/jquery.js
 root/asset/main.css
 root/asset/main.js
 root/asset/rdf.js
+root/asset/rdf-viz.js
 root/asset/svg.css
 root/favicon.ico
 root/icon.svg

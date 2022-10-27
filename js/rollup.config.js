@@ -1,6 +1,7 @@
 // rollup.config.js
 import { babel } from '@rollup/plugin-babel';
 import resolve   from '@rollup/plugin-node-resolve';
+import nodePolyfills  from 'rollup-plugin-polyfill-node';
 import commonjs  from '@rollup/plugin-commonjs';
 import pkg       from './package.json';
 
@@ -8,7 +9,8 @@ const PLUGINS = [
     // so Rollup can find its dependencies
 	resolve({ preferBuiltins: false, mainFields: ['browser'] }),
 	commonjs(), // so Rollup can convert dependendies to ES modules
-    babel({ babelHelpers: 'bundled' })
+    babel({ babelHelpers: 'bundled' }),
+    nodePolyfills()
 ];
 
 export default [
@@ -61,7 +63,7 @@ export default [
 		plugins: PLUGINS
 	},
     {
-        external: ['rdf', 'd3', 'rdf-viz'],
+        external: ['rdf', 'd3', 'rdf-viz', 'complex'],
 		input: 'hierarchical.js',
 		output: {
 			name: 'HierRDF',
@@ -69,6 +71,7 @@ export default [
                 rdf:       'RDF',
                 d3:        'd3',
                 'rdf-viz': 'RDFViz',
+                'complex': 'Complex'
             },
 			file: '../root/asset/hierarchical.js',
 			format: 'umd'

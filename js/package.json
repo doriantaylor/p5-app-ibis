@@ -5,16 +5,19 @@
   "browser": "../root/asset/ibis-visualization.js",
   "dependencies": {
     "buffer": "^6.0.3",
+    "complex.js": "^2.1.1",
     "d3": "^7.6.1",
+    "d3-dag": "^0.11.5",
     "d3-force": "^3.0.0",
     "rdflib": "^2.2.20"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.19.4",
     "@rollup/plugin-babel": "^6.0.0",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "rollup": "^2.79.0",
-    "@babel/preset-env": "^7.19.4"
+    "rollup-plugin-polyfill-node": "^0.10.2"
   },
   "scripts": {
     "build": "rollup -c",

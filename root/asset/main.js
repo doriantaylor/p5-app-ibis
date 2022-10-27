@@ -262,11 +262,12 @@ function toggleFullscreen () {
     }
 }
 
-// D3 SHIT
+// D3 STUFF
 
 const graph   = RDF.graph();
-const dataviz = new ForceRDF(graph, {}, {
-    preserveAspectRatio: 'xMidYMid slice' });
+const dataviz = new HierRDF(graph, {}, {
+    preserveAspectRatio: 'xMidYMid meet', layering: 'LongestPath',
+    coord: 'Simplex', radius: 5, yOffset: 40, hyperbolic: true });
 
 // grab the link
 const link = document.querySelector(

@@ -2,7 +2,7 @@ import * as RDF from 'rdf';
 import * as d3 from 'd3';
 
 export default class RDFViz {
-    ns = Object.entries({
+    static ns = Object.entries({
         rdf:  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
         rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
         owl:  'http://www.w3.org/2002/07/owl#',
@@ -17,11 +17,76 @@ export default class RDFViz {
         // this will return `out` always
         (out, [key, value]) => (out[key] = new RDF.Namespace(value), out), {});
 
+    static validTypes = [
+        'foaf:Agent', 'foaf:Person', 'org:Organization',
+        'org:FormalOrganization', 'org:OrganizationalUnit', 'skos:Concept',
+        'ibis:Issue', 'ibis:Position', 'ibis:Argument'];
+
+    static labels = {
+        'foaf:Person':            'foaf:name',
+        'foaf:Organization':      'foaf:name',
+        'org:Organization':       'foaf:name',
+        'org:OrganizationalUnit': 'foaf:name',
+        'org:FormalOrganization': 'foaf:name',
+        'skos:Concept':           'skos:prefLabel',
+        'ibis:Issue':             'rdf:value',
+        'ibis:Position':          'rdf:value',
+        'ibis:Argument':          'rdf:value',
+    };
+
+    static symmetric = ['skos:related'];
+
     constructor (graph, rdfParams = {}, d3Params = {}) {
         if (!graph) graph = RDF.graph();
         this.graph     = graph;
-        this.rdfParams = rdfParams;
-        this.d3Params  = d3Params;
+        this.rdfParams = Object.assign({}, rdfParams ||= {});
+        this.d3Params  = Object.assign({ width: 1000, height: 1000 },
+                                       d3Params ||= {});
+
+        // XXX there is probably something that easily does this
+
+        this.ns = Object.entries(Object.assign(
+            {}, this.constructor.ns, rdfParams.ns || {})).reduce(
+                (x, [k, v]) => {
+                    // XXX RDF.Namespace isn't a constructor???
+                    if (typeof v !== 'function')
+                        v = new RDF.Namespace(v.toString());
+                    x[k] = v;
+                    return x;
+                }, {});
+
+        // rdf:type
+        this.a = this.ns.rdf('type');
+
+        this.validTypes = [].concat(
+            this.constructor.validTypes, rdfParams.validTypes || []).map(
+                x => this.expand(x)).reduce((o, x) => {
+                    x = this.expand(x);
+                    if (!(o.some(y => x.equals(y)))) o.push(x);
+                    return o;
+                }, []);
+
+        this.labels = Object.entries(Object.assign(
+            {}, this.constructor.labels, rdfParams.labels || {})).reduce(
+                (x, [k, v]) => {
+                    x[this.expand(k).value] = this.expand(v);
+                    return x;
+                }, {});
+
+        this.inverses = Object.entries(Object.assign(
+            {}, this.constructor.inverses, rdfParams.inverses || {})).reduce(
+                (x, [k, v]) => {
+                    x[this.expand(k).value] = this.expand(v);
+                    return x;
+                }, {});
+
+        this.symmetric = [].concat(
+            this.constructor.symmetric, rdfParams.symmetric || []).map(
+                x => this.expand(x)).reduce((o, x) => {
+                    x = this.expand(x);
+                    if (!(o.some(y => x.equals(y)))) o.push(x);
+                    return o;
+                }, []);
     }
 
     init () {
@@ -31,16 +96,6 @@ export default class RDFViz {
     abbreviate (uris, scalar = true) {
         // first we coerce the input into an array
         if (!(uris instanceof Array)) uris = [uris];
-
-        /*
-        // get some prefixes
-        const rev = Object.entries(this.ns).reduce((out, [prefix, ns]) => {
-            out[ns('').value] = prefix;
-            return out;
-        }, {});
-        */
-
-        // console.log(this);
 
         uris = uris.map(uri => {
             uri = uri.value ? uri.value : uri.toString();
@@ -68,6 +123,7 @@ export default class RDFViz {
     }
 
     expand (curie) {
+        if (curie instanceof RDF.NamedNode) return curie;
         let [prefix, slug] = curie.split(':', 2);
         if (slug == undefined) {
             slug = prefix;

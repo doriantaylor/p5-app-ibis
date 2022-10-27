@@ -1,209 +1,68 @@
 import * as RDF from 'rdf'; // not rdflib
 import * as d3 from 'd3';
+import RDFViz from 'rdf-viz';
+
 /*
 import {
     forceLink, forceManyBody, forceCenter, forceCollide, forceSimulation
 } from 'd3-force';
 */
 
-const RDFNS = new RDF.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
-
 //console.log(d3);
 
-export default function ForceRDF (
-    graph,           // we can get the nodes/edges from this
-    rdfParams = {},
-    d3Params  = {},
-    /*
-    palette    = {}, // maps rdf terms to colours
-    classes    = {}, // all the (sub)classes/equivalents
-    properties = {}, // all the (sub)properties/equivalents
-    inverses   = {}, // all the inverse property pairs
-    symmetric  = []  // all the symmetric properties
-    */
-) {
-    if (!graph) graph = RDF.graph();
-    // graph, store, whatever
-    this.graph = graph;
+export default class ForceRDF extends RDFViz {
+    constructor (graph, rdfParams = {}, d3Params = {}) {
+        super(graph, rdfParams, d3Params);
 
-    // these should be inputs
-    const width  = d3Params.width  || 1000;
-    const height = d3Params.height || 1000;
+        // these should be inputs
+        const width  = d3Params.width  || 1000;
+        const height = d3Params.height || 1000;
 
-    // rdf:type
-    const a = this.ns.rdf('type');
+        // initialize the svg representation
+        const svg = d3.create('svg')
+              .attr('viewBox', [-width/2, -height/2, width, height]);
+        // .attr("style", "width: 100%; height: 100%;");
+        if (d3Params.width)  svg.attr('width',  d3Params.width);
+        if (d3Params.height) svg.attr('height', d3Params.height);
+        if (d3Params.preserveAspectRatio)
+            svg.attr('preserveAspectRatio', d3Params.preserveAspectRatio);
 
-    // XXX SEE HERE IS WHERE A REASONER WOULD BE NICE
+        // this may be stupid
+        this.svg = svg.node();
+        this.svg.forceGraph = this;
 
-    const validTypes = this.validTypes = [
-        ['foaf', 'Agent'],
-        ['foaf', 'Person'],
-        ['org',  'Organization'],
-        ['org',  'FormalOrganization'],
-        ['org',  'OrganizationalUnit'],
-        ['skos', 'Concept'],
-        ['ibis', 'Issue'],
-        ['ibis', 'Position'],
-        ['ibis', 'Argument'],
-    ].map(([key, value]) => this.ns[key](value));
+        this.svg.addEventListener('graph', e => {
+            const {
+                subject: s, predicate: p, object: o, selected: t } = e.detail;
+            const n = e.target;
+            const g = (n.ownerSVGElement || n).forceGraph;
 
-    // predicates where labels live
-    const labels = this.labels = Object.entries({
-        'foaf:Person':            'foaf:name',
-        'foaf:Organization':      'foaf:name',
-        'org:Organization':       'foaf:name',
-        'org:OrganizationalUnit': 'foaf:name',
-        'org:FormalOrganization': 'foaf:name',
-        'skos:Concept':           'skos:prefLabel',
-        'ibis:Issue':             'rdf:value',
-        'ibis:Position':          'rdf:value',
-        'ibis:Argument':          'rdf:value',
-    }).reduce((out, [key, value]) => {
-        out[this.expand(key).value] = this.expand(value);
-        return out;
-    }, {});
+            // invert the inverses
+            const i = Object.entries(g.inverses).reduce((h, [k, v]) => {
+                h[g.abbreviate(k)] = g.abbreviate(v);
+                return h;
+            }, {});
 
-    // meh
-    const inverses = this.inverses = Object.entries({
-        'skos:broader':       'skos:narrower',
-        'ibis:specializes':   'ibis:generalizes',
-        'ibis:replaced-by':   'ibis:replaces',
-        'ibis:suggested-by':  'ibis:suggests',
-        'ibis:questioned-by': 'ibis:questions',
-        'ibis:response':      'ibis:responds-to',
-        'ibis:supported-by':  'ibis:supports',
-        'ibis:opposed-by':    'ibis:opposes',
-    }).reduce((out, [key, value]) => {
-        out[this.expand(key).value] = this.expand(value);
-        return out;
-    }, {});
+            const me = window.location.href;
+            //console.log(o);
 
-    // double meh
-    const symmetric = this.symmetric = [this.ns['skos']('related')];
+            // edges
+            let sel =
+                `g.edge line[about~="${s}"][rel~="${p}"][resource~="${o}"]`;
+            if (i[p]) sel +=
+                `, g.edge line[about~="${o}"][rel~="${i[p]}"][resource~="${s}"]`;
+            const m = n.querySelectorAll(sel);
+            Array.from(m).forEach(
+                c => c.classList[t ? 'add' : 'remove']('subject'));
 
-    // XXX THIS SUCKS JUST REWRITE THE URLS IN THE TURTLE OUTPUT
-    const root = this.getRoot();
-
-    /*
-    // we need this because javascript has strings and numbers that
-    // are primitives as well as object versions of the same things
-    function intern (obj) {
-        return obj !== null && typeof obj === 'object' ? obj.valueOf() : obj;
-    }*/
-
-    // initialize the svg representation
-    const svg = d3.create('svg')
-          .attr('viewBox', [-width/2, -height/2, width, height]);
-          // .attr("style", "width: 100%; height: 100%;");
-    if (d3Params.width)  svg.attr('width',  d3Params.width);
-    if (d3Params.height) svg.attr('height', d3Params.height);
-    if (d3Params.preserveAspectRatio)
-        svg.attr('preserveAspectRatio', d3Params.preserveAspectRatio);
-
-    // this may be stupid
-    this.svg = svg.node();
-    this.svg.forceGraph = this;
-
-    this.svg.addEventListener('graph', e => {
-        const { subject: s, predicate: p, object: o, selected: t } = e.detail;
-        const n = e.target;
-        const g = (n.ownerSVGElement || n).forceGraph;
-
-        // invert the inverses
-        const i = Object.entries(g.inverses).reduce((h, [k, v]) => {
-            h[g.abbreviate(k)] = g.abbreviate(v);
-            return h;
-        }, {});
-
-        const me = window.location.href;
-        //console.log(o);
-
-        // edges
-        let sel = `g.edge line[about~="${s}"][rel~="${p}"][resource~="${o}"]`;
-        if (i[p]) sel +=
-            `, g.edge line[about~="${o}"][rel~="${i[p]}"][resource~="${s}"]`;
-        const m = n.querySelectorAll(sel);
-        Array.from(m).forEach(
-            c => c.classList[t ? 'add' : 'remove']('subject'));
-
-        // nodes
-        const x = n.querySelectorAll(`g.node a[about="${o}"]`);
-        Array.from(x).forEach(
-            c => c.classList[t ? 'add' : 'remove']('subject'));
-    });
-};
-Object.assign(ForceRDF.prototype, {
-    RDF: RDF, // XXX get rid of this when you sort out JS provisioning
-
-    ns: Object.entries({
-        rdf:  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
-        owl:  'http://www.w3.org/2002/07/owl#',
-        xsd:  'http://www.w3.org/2001/XMLSchema#',
-        dct:  'http://purl.org/dc/terms/',
-        bibo: 'http://purl.org/ontology/bibo/',
-        foaf: 'http://xmlns.com/foaf/0.1/',
-        org:  'http://www.w3.org/ns/org#',
-        skos: 'http://www.w3.org/2004/02/skos/core#',
-        ibis: 'https://vocab.methodandstructure.com/ibis#',
-    }).reduce(
-        // this will return `out` always
-        (out, [key, value]) => (out[key] = new RDF.Namespace(value), out), {}),
-
-    abbreviate: function abbreviate (uris, scalar = true) {
-        // first we coerce the input into an array
-        if (!(uris instanceof Array)) uris = [uris];
-
-        /*
-        // get some prefixes
-        const rev = Object.entries(this.ns).reduce((out, [prefix, ns]) => {
-            out[ns('').value] = prefix;
-            return out;
-        }, {});
-        */
-
-        // console.log(this);
-
-        uris = uris.map(uri => {
-            uri = uri.value ? uri.value : uri.toString();
-
-            let prefix = null, namespace = null;
-            Object.entries(this.ns).forEach(([pfx, nsURI]) => {
-                nsURI = nsURI('').value;
-                if (uri.startsWith(nsURI)) {
-                    if (!namespace || namespace.length < nsURI.length) {
-                        prefix    = pfx;
-                        namespace = nsURI;
-                    }
-                }
-            });
-
-            // bail out if there is no match
-            if (prefix == null) return uri;
-
-            // otherwise we have a curie (or slug potentially)
-            const rest = uri.substring(namespace.length);
-            return prefix == '' ? rest : [prefix, rest].join(':');
+            // nodes
+            const x = n.querySelectorAll(`g.node a[about="${o}"]`);
+            Array.from(x).forEach(
+                c => c.classList[t ? 'add' : 'remove']('subject'));
         });
+    }
 
-        return scalar ? uris.join(' ') : uris;
-    },
-
-    expand: function expand (curie) {
-        let [prefix, slug] = curie.split(':', 2);
-        if (slug == undefined) {
-            slug = prefix;
-            prefix = '';
-        }
-
-        // console.log(this);
-
-        if (this.ns[prefix] !== undefined) return this.ns[prefix](slug);
-
-        return curie;
-    },
-
-    init: function init () {
+    init () {
         // select the svg into the d3 wrapper
         const svg = d3.select(this.svg);
 
@@ -453,61 +312,8 @@ Object.assign(ForceRDF.prototype, {
 
         // move this down here because it misbehaves otherwise
         simulation.on('tick', ticked);
-    },
-
-    installFetchOnLoad: function installFetchOnLoad (url, target) {
-        if (window) window.addEventListener('load', e => {
-            // console.log('wat', this);
-            const fetcher = new RDF.Fetcher(this.graph);
-            // okay now load
-            fetcher.load(url, {
-                baseURI: window.location.href,
-                headers: { Accept: 'text/turtle;q=1' }
-            }).then(() => {
-                // console.log('lol', this);
-                this.init();
-                if (target) this.attach(target);
-            });
-        });
-        else console.error('window not available yet');
-    },
-
-    getRoot: function getRoot () {
-        if (this.root) return this.root;
-
-        const root = this.root = new URL(window.location.href);
-        let path = root.pathname.split('/').slice(0, -1);
-        path.push('');
-        root.pathname = path.join('/');
-
-        return root;
-    },
-
-    rewriteUUID: function rewriteUUID (uuid) {
-        const root = this.getRoot();
-
-        // XXX THIS SUCKS JUST REWRITE THE URLS IN THE TURTLE OUTPUT
-        return RDF.sym(uuid.value.replace('urn:uuid:', root.href));
-    },
-
-    attach: function attach (selector) {
-        // bail out early if this is a node
-        if (selector instanceof Node) return selector.appendChild(this.svg);
-
-        if (typeof document !== 'undefined') {
-            // now we assume it's an id
-            let elem = document.getElementById(selector);
-            // otherwise it's a query selector
-            if (!elem) elem = document.querySelector(selector);
-
-            if (elem) return elem.appendChild(this.svg);
-        }
-
-        console.error(`could not attach to ${selector}`);
-
-        return null;
-    },
-});
+    }
+}
 
 // add uniq
 Array.prototype.uniq = Array.prototype.uniq || function () {

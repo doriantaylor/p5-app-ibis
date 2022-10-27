@@ -7,10 +7,14 @@
     <link rel="alternate" type="text/turtle" href="dump"/>
     <script type="text/javascript" src="/asset/rdf"></script>
     <script type="text/javascript" src="/asset/d3"></script>
-    <script type="text/javascript" src="/asset/force-directed"></script>
+    <script type="text/javascript" src="/asset/rdf-viz"></script>
+    <script type="text/javascript" src="/asset/hierarchical"></script>
     <script type="text/javascript">
       const graph   = RDF.graph();
-      const dataviz = new ForceRDF(graph, { width: '100%', height: '100%' });
+      //const dataviz = new ForceRDF(graph, { width: '100%', height: '100%' });
+      // layering: Simplex LongestPath CoffmanGraham
+      // coord: Simplex Quad Greedy Center
+      const dataviz = new HierRDF(graph, {}, { layering: 'LongestPath', coord: 'Simplex', radius: 5, yOffset: 40, hyperbolic: true });
 
       // attach the svg (only if script is not in the head)
       // dataviz.attach('force');
@@ -23,9 +27,26 @@
       if (link) dataviz.installFetchOnLoad(link.href, 'force');
       </script>
     <style type="text/css">
+      body {
+      min-width: 100vw;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      }
       svg {
-      max-height: 600px;
+      display: block;
+      /* max-height: 600px;*/
       margin: auto;
+      }
+      figure {
+      display: block;
+      margin: auto;
+      height: auto;
+      }
+      circle#backdrop {
+      opacity: 0.05;
       }
 
       g.force.edge {

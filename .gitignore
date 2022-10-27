@@ -27,6 +27,7 @@ nytprof*
 root/asset/jq*
 root/asset/font*
 root/asset/rdf.js
+root/asset/complex.js
 root/asset/d3.js
 root/asset/rdf-viz.js
 root/asset/hierarchical.js

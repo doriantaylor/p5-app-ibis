@@ -1,5 +1,6 @@
 // repackage rdflib
-import * as d3 from 'd3';
+import * as d3base from 'd3';
+import * as d3dag  from 'd3-dag';
 
 // aand back out
-export { d3 as default };
+export default Object.assign({}, d3base, d3dag);

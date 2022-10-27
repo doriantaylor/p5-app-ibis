@@ -37,7 +37,7 @@ use Catalyst qw/
 # /;
 use CatalystX::RoleApplicator;
 
-our $VERSION = '0.09_16';
+our $VERSION = '0.09_17';
 
 extends 'Catalyst';
 
@@ -253,17 +253,20 @@ sub graph {
     $c->log->debug("Using base $g as context");
 
     if (my $cfg = $c->config->{graph}) {
+        my $x = 0;
         if (ref $cfg eq 'HASH') {
+            $x = 1;
             $g = $cfg->{$g} || $g;
         }
         elsif (!ref $cfg and $cfg) {
+            $x = 1;
             $g = $cfg;
         }
 
-        $c->log->debug("Using context graph $g from config");
+        $c->log->debug("Using context graph $g from config") if $x;
     }
 
-    # i suppose this oculd theoretically
+    # i suppose this could theoretically (?)
     RDF::Trine::Node::Resource->new("$g");
 }
 
@@ -308,8 +311,8 @@ sub stub {
         head  => [
             map +{ -name => 'script', type => 'text/javascript',
                    src => $c->uri_for($_) },
-            qw(asset/jquery.js asset/rdf asset/d3 asset/force-directed
-               asset/main.js) ],
+            qw(asset/jquery.js asset/rdf asset/d3 asset/rdf-viz
+               asset/complex asset/hierarchical asset/main.js) ],
         ns    => $c->uns,
         vocab => $c->uns->xhv->uri,
         %p,
