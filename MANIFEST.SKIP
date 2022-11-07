@@ -27,10 +27,11 @@
 \bCVS\b
 \b.cvsignore\b
 \b_darcs\b
-\B\.git\b
+\B\.git/.*
 \B\.gitignore\b
 \B\.gitmodules\b
-\B\.hg\b
+\B\.hg/.*
+^.hg.*
 \B\.hgignore\b
 \B\.hgtags\b
 \bRCS\b

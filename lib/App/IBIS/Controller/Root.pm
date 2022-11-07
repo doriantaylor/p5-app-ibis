@@ -1956,10 +1956,11 @@ sub _do_concept_form {
         next if $li{$concept->uri_value};
 
         # XXX REDO LABELS
-        my ($label) = $m->objects($concept, $ns->skos->prefLabel);
+        my ($label) = ($m->objects($concept, $ns->skos->prefLabel),
+                       $m->objects($concept, $ns->rdfs->label));
 
         push @opt, { -name => 'option', value => $concept->uri_value,
-                     -content => $label->value };
+                     -content => $label ? $label->value : $concept->uri_value };
     }
 
     my $cl = $c->collator;

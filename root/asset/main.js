@@ -265,9 +265,11 @@ function toggleFullscreen () {
 // D3 STUFF
 
 const graph   = RDF.graph();
+// layering: Simplex LongestPath CoffmanGraham
+// coord: Simplex Quad Greedy Center
 const dataviz = new HierRDF(graph, {}, {
     preserveAspectRatio: 'xMidYMid meet', layering: 'LongestPath',
-    coord: 'Simplex', radius: 5, yOffset: 40, hyperbolic: true });
+    coord: 'Simplex', radius: 5, hyperbolic: true });
 
 // grab the link
 const link = document.querySelector(

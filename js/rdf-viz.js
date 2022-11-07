@@ -34,7 +34,59 @@ export default class RDFViz {
         'ibis:Argument':          'rdf:value',
     };
 
+    static inverses = {
+        // IBIS
+        'ibis:endorses':      'ibis:endorsed-by',
+        'ibis:concerns':      'ibis:concern-of',
+        'ibis:generalizes':   'ibis:specializes',
+        'ibis:specializes':   'ibis:generalizes',
+        'ibis:replaces':      'ibis:replaced-by',
+        'ibis:replaced-by':   'ibis:replaces',
+        'ibis:questions':     'ibis:questioned-by',
+        'ibis:questioned-by': 'ibis:questions',
+        'ibis:suggests':      'ibis:suggested-by',
+        'ibis:suggested-by':  'ibis:suggests',
+        'ibis:response':      'ibis:responds-to',
+        'ibis:responds-to':   'ibis:response',
+        'ibis:supports':      'ibis:supported-by',
+        'ibis:supported-by':  'ibis:supports',
+        'ibis:opposes':       'ibis:opposed-by',
+        'ibis:opposed-by':    'ibis:opposes',
+        // SKOS
+        'skos:related':            'skos:related',
+        'skos:narrower':           'skos:broader',
+        'skos:broader':            'skos:narrower',
+        'skos:narrowerTransitive': 'skos:broaderTransitive',
+        'skos:broaderTransitive':  'skos:narrowerTransitive',
+        'skos:narrowMatch':        'skos:broadMatch',
+        'skos:broadMatch':         'skos:narrowMatch',
+        'skos:closeMatch':         'skos:closeMatch',
+        'skos:exactMatch':         'skos:exactMatch',
+    };
+
     static symmetric = ['skos:related'];
+      // layering: Simplex LongestPath CoffmanGraham
+      // coord: Simplex Quad Greedy Center
+
+    // note these have been munged from what we actually want them to
+    // be so the sugiyama graph is tighter
+    static prefer = {
+        'ibis:concern-of':    'ibis:concerns',
+        'ibis:endorsed-by':   'ibis:endorses',
+        'ibis:specializes':   'ibis:generalizes',
+        'ibis:replaced-by':   'ibis:replaces',
+        // 'ibis:questioned-by': 'ibis:questions',
+        'ibis:questions': 'ibis:questioned-by',
+        'ibis:suggested-by':  'ibis:suggests',
+        // 'ibis:response':      'ibis:responds-to',
+        'ibis:responds-to':   'ibis:response',
+        // 'ibis:supported-by':  'ibis:supports',
+        'ibis:supports':     'ibis:supported-by',
+        // 'ibis:opposed-by':    'ibis:opposes',
+        'ibis:opposes':   'ibis:opposed-by',
+        // 'skos:narrower':      'skos:broader',
+        'skos:broader': 'skos:narrower',
+    };
 
     constructor (graph, rdfParams = {}, d3Params = {}) {
         if (!graph) graph = RDF.graph();
@@ -87,6 +139,13 @@ export default class RDFViz {
                     if (!(o.some(y => x.equals(y)))) o.push(x);
                     return o;
                 }, []);
+
+        this.prefer = Object.entries(Object.assign(
+            {}, this.constructor.prefer, rdfParams.prefer || {})).reduce(
+                (x, [k, v]) => {
+                    x[this.expand(k).value] = this.expand(v);
+                    return x;
+                }, {});
     }
 
     init () {

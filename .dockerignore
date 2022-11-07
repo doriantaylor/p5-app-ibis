@@ -1,1 +1,16 @@
+.hg
+.git
+maint
+blib
+# js
+js/node_modules
+local
+node_modules
+*.db
+*.out
+*.ttl
+*.org
+*.yml
+*.gz
+*.zip
 root/asset/main.scss

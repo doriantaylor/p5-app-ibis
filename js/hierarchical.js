@@ -95,7 +95,8 @@ export default class HierRDF extends RDFViz {
               validTypes = this.validTypes,
               labels     = this.labels,
               inverses   = this.inverses,
-              symmetric  = this.symmetric;
+              symmetric  = this.symmetric,
+              prefer     = this.prefer;
 
         // first we collect the valid nodes
         const nmap  = {};
@@ -147,9 +148,10 @@ export default class HierRDF extends RDFViz {
                 if (!nmap[stmt.object.value]) return;
 
                 let s = stmt.subject, p = stmt.predicate, o = stmt.object;
-                if (inverses[p.value]) {
+
+                if (prefer[p.value]) {
                     s = stmt.object;
-                    p = inverses[p.value];
+                    p = prefer[p.value];
                     o = stmt.subject;
                 }
 
@@ -252,7 +254,7 @@ export default class HierRDF extends RDFViz {
             // we want a radius that is big enough to fit the entire first
             // row with enough room that it isn't too crowded
             const yoff = nroots > 1 ?
-                  (2 * d3p.radius) * (2 * nroots - 1) / Math.PI
+                  (2 * d3p.radius) * (2 * nroots - 1) / Math.PI / 2
                   : nroots == 1 ? -ymin : 0;
 
             const descs = dag.descendants();
@@ -270,9 +272,9 @@ export default class HierRDF extends RDFViz {
 
             // console.log(offsets);
 
-            const atdeg = z => {
+            const atdeg = (z, half) => {
                 let t = Math.atan2(z.im, z.re) * 180 / Math.PI;
-                return t < 0 ? t + 360 : t;
+                return t < 0 && !half ? t + 360 : t;
             };
 
             descs.forEach(node => {
@@ -306,6 +308,9 @@ export default class HierRDF extends RDFViz {
                     const z2 = new Complex({ phi: t2, r: rho(r2) });
                     const p2 = Zt(Complex.ONE, coff)(z2).mul(d3p.width / 2);
 
+                    // swappable points
+                    let l1 = p1, l2 = p2;
+
                     // subject and object identities
                     let s = node.data.id;
                     let o = c.child.data.id;
@@ -313,6 +318,10 @@ export default class HierRDF extends RDFViz {
                         let tmp = s; // yo can't we do multiple assign?
                         s = o;
                         o = tmp;
+
+                        tmp = l1;
+                        l1 = l2;
+                        l2 = tmp;
                     }
 
                     /*
@@ -325,29 +334,48 @@ export default class HierRDF extends RDFViz {
                         line.attr('class', 'subject');
                     */
 
-                    let m = p1.add(p2).div(2);
+                    let m = l1.add(l2).div(2);
 
                     // r^2 / |m|
                     let r3 = Math.pow(d3p.width / 2, 2) / m.abs();
-                    let t3 = Math.atan2(m.im, m.re);
+                    // let t3 = Math.atan2(m.im, m.re);
 
-                    let n = new Complex({ phi: t3, r: r3 });
+                    // let n = new Complex({ phi: t3, r: r3 });
 
-                    // nodeg.append('circle').attr('cx', m.re).attr('cy', m.im).attr('r', 2.5);
+                    // edgeg.append('circle').attr('cx', m.re).attr('cy', m.im).attr('r', 2.5);
                     // nodeg.append('circle').attr('cx', n.re).attr('cy', n.im).attr('r', 2.5);
 
-                    let t3d = atdeg(m);
+                    let t3d = atdeg(m.conjugate());
+                    /*
+                    const sb = Math.atan2(l2.im, l2.re) -
+                          Math.atan2(l1.im, l1.re) < 0 ? 1 : 0;
+                    */
+
+                    const l1d = atdeg(l1.conjugate());
+                    const l2d = atdeg(l2.conjugate());
+                    let dd = l2d - l1d;
+                    if (dd < -180) dd += 360; // fix wrap around
+
+                    const sb = dd >= 0 && dd <= 180 ? 1 : 0;
+
+                    // sb can be if you get from l1 to l2 if you add the angle vs if you subtract it
+
+                    // const sb = dd < 180 ? 1 : dd < 0 || dd > 180 ? 0 : 1;
+                    // const sb = dd < 0 ? 0 : 1;
 
                     // if one of these is the origin draw a line
-                    const d = p1.abs() == 0 || p2.abs() == 0 ?
-                          `M${p1.re},${p1.im} L${p2.re},${p2.im}` :
-                          `M${p1.re},${p1.im} A${r3},${r3} ${t3d} 0,${atdeg(p1) > t3d ? 1 : 0 } ${p2.re},${p2.im}`;
+                    const d = `M${l1.re},${l1.im} ` +
+                          ([l1, l2, m].some(p => p.abs() == 0) || dd == 0 ?
+                          `L${l2.re},${l2.im}` :
+                          `A${r3},${r3} ${t3d} 0,${sb} ${l2.re},${l2.im}`);
 
                     const path = edgeg.append('path').attr('d', d)
                           .attr('about', s).attr('resource', o);
 
                     if (s == me.href || o == me.href)
                         path.attr('class', 'subject');
+
+                    // path.attr('data-dd', `${Math.round(l1d, 3)} ${Math.round(l2d, 3)}; ${Math.round(dd, 3)}`);
 
                     // handle forward and reverse predicates
 

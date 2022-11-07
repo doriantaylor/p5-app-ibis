@@ -41,7 +41,6 @@ requires 'Config::General';
 # app-specific third-party
 requires 'Catalyst::Model::RDF'         => '0.03';
 requires 'Data::GUID::Any'              => '0.004';
-requires 'Data::UUID::NCName'           => '0.07';
 requires 'RDF::Trine'                   => '1.019';
 requires 'URI::NamespaceMap'            => '0.06';
 requires 'URI::urn::uuid'               => '0.03';
@@ -56,5 +55,5 @@ requires 'XML::LibXSLT';
 # stuff i made
 requires 'Role::Markup::XML'            => '0.03';
 requires 'RDF::KV'                      => '0.08';
-requires 'Data::UUID::NCName'           => '0.03';
+requires 'Data::UUID::NCName'           => '0.07';
 requires 'CatalystX::Action::Negotiate' => '0.04';

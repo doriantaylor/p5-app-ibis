@@ -12,8 +12,8 @@ use RDF::Trine;
 
 extends 'Catalyst::Model::RDF';
 
-class_type Resource => { class => 'RDF::Trine::Node::Resource' };
-coerce Resource => from Str => via { RDF::Trine::Node::Resource->new(shift) };
+class_type Node => { class => 'RDF::Trine::Node' };
+coerce Node => from Str => via { RDF::Trine::Node::Resource->new(shift) };
 
 # after BUILD => sub {
 #     my $self = shift;
@@ -23,7 +23,7 @@ coerce Resource => from Str => via { RDF::Trine::Node::Resource->new(shift) };
 
 has graph => (
     is      => 'ro',
-    isa     => 'Resource',
+    isa     => 'Node',
     coerce  => 1,
     default => sub { RDF::Trine::Node::Nil->new },
 );
