@@ -51,7 +51,7 @@
 # Editors
 ~$
 \#$
-\b\.#
+\.\#.*
 \.kpf$
 \.sw[pmno]$
 ^\.vimrc$
@@ -74,6 +74,7 @@
 ^debian/
 ^devel\.
 ^.devel-local$
+^local/
 ^out$
 ^tmon.out$
 

@@ -702,17 +702,20 @@ sub uuid :Private {
     if ($method eq 'POST') {
         # check for input
         eval {
+            # $c->log->debug('gonna post it lol');
             $self->_post_uuid($c, $uuid, $req->body_parameters);
+            # $c->log->debug('welp posted it lol');
         };
         if ($@) {
             $resp->status(409);
             $resp->content_type('text/plain');
             $resp->body("wat $@");
-            return;
         }
         else {
+            $c->log->debug("see other: $uuid");
             $resp->redirect($path, 303);
         }
+        return;
     }
     elsif ($method eq 'GET' or $method eq 'HEAD') {
         # do this for now until we can handle html properly
@@ -1076,6 +1079,12 @@ sub _get_concept :Private {
                               name => '= skos:definition', -content => $desc },
                             { -name => 'button', class => 'update fa fa-repeat',
                               -content => '' } ] },
+                        $self->_do_link_form($c, $subject, {
+                            predicate => $ns->skos->altLabel, literal =>1,
+                            class => 'label', label => 'Alternative Labels' }),
+                        $self->_do_link_form($c, $subject, {
+                            predicate => $ns->skos->hiddenLabel, literal => 1,
+                            class => 'label hidden', label => 'Hidden Labels' }),
                         $self->_do_link_form($c, $subject),
                         $self->_do_link_form($c, $subject, 1),
                     ] },
@@ -1373,12 +1382,13 @@ sub _post_uuid {
     my ($self, $c, $subject, $content) = @_;
     my $uuid = URI->new($subject->uri_value);
 
-    # XXX lame
+    # XXX lame; i forgot why i'm doing this again
     my $ns = URI::NamespaceMap->new({
         rdf  => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
         ibis => 'https://vocab.methodandstructure.com/ibis#',
         skos => 'http://www.w3.org/2004/02/skos/core#',
         dct  => 'http://purl.org/dc/terms/',
+        xsd  => 'http://www.w3.org/2001/XMLSchema#',
     });
 
     my $rns = $self->ns;
@@ -1411,6 +1421,18 @@ sub _post_uuid {
         $patch->add_this($subject, $rns->dct->created, $now, $g);
     }
 
+    eval {
+        my $me = $c->whoami;
+        if ($me and not
+            $m->count_statements($subject, $rns->dct->creator, undef, $g)) {
+            $patch->add_this($subject, $rns->dct->creator, $me, $g);
+        }
+    };
+    if ($@) {
+        $c->log->error("wtf fail lol $@");
+        return;
+    }
+
     $m->begin_bulk_ops;
     eval { $patch->apply($m) };
     if ($@) {
@@ -1418,9 +1440,12 @@ sub _post_uuid {
     }
     else {
         $m->end_bulk_ops;
-        $c->log->debug("New size: " .$m->size);
         # clear the cache
-        $c->rdf_cache(1);
+        eval { $c->rdf_cache(1) };
+        if ($@) {
+            $c->log->error("wtf cache: $@");
+        }
+        $c->log->debug("New size: " . $m->size);
     }
 
 
@@ -1853,37 +1878,76 @@ sub _do_content {
     );
 }
 
+# XXX this is no longer just a link form lol
 sub _do_link_form {
-    my ($self, $c, $subject, $reverse, $name) = @_;
+    my ($self, $c, $subject, $reverse, $tag) = @_;
 
     my $m  = $c->rdf_cache;
     my $ns = $self->ns;
-    my $bs  = $c->req->base;
+    my $bs = $c->req->base;
 
-    $name ||= 'aside';
+    my %p;
+    if (ref $reverse eq 'HASH') {
+        %p = (%p, %$reverse);
+        $p{tag} ||= $tag if $tag;
+        $reverse = $p{reverse};
+    }
+    $p{predicate} ||= $ns->dct->references;
+    $p{class} ||= 'link';
 
-    my @in = $reverse ? $m->subjects($ns->dct->references, $subject) :
-        $m->objects($subject, $ns->dct->references);
+    $tag ||= 'aside';
+
+    my $pred = $ns->abbreviate($p{predicate});
+
+    my @in = $reverse ? $m->subjects($p{predicate}, $subject) :
+        $m->objects($subject, $p{predicate});
 
     my @li;
     for my $link (@in) {
-        next unless $link->is_resource;
-        my $uri = URI->new($link->uri_value);
-        if ($uri->isa('URI::urn::uuid')) {
-            # skip concepts
-            next if $m->count_statements
-                ($link, $ns->rdf->type, $ns->skos->Concept);
-            $uri = URI->new_abs($uri->uuid, $bs);
+        my ($elem, $minus);
+
+        my $value;
+        if ($link->is_resource) {
+            my $uri = URI->new($link->uri_value);
+            if ($uri->isa('URI::urn::uuid')) {
+                # skip concepts
+                next if $m->count_statements
+                    ($link, $ns->rdf->type, $ns->skos->Concept);
+                $uri = URI->new_abs($uri->uuid, $bs);
+            }
+
+            # XXX do labels here
+            my $label = $c->label_for($link);
+
+            $elem = { href => $uri, -content => $label->value };
+
+            $minus = sprintf '-%s %s :', $reverse ? '!' : '', $pred;
+            $value = "$uri";
+        }
+        elsif ($link->is_literal) {
+            $minus = "- $pred";
+            $value = $link->literal_value;
+
+            $elem = { -content => $link->value };
+            if ($link->has_language) {
+                my $lang = $link->literal_value_language;
+                $elem->{'xml:lang'} = $lang;
+                $minus = sprintf '%s @%s', $minus, $lang;
+            }
+            elsif ($link->has_datatype) {
+                my $dt = $link->literal_datatype;
+                $dt = $ns->abbreviate($dt) || $dt;
+                $elem->{datatype} = $dt;
+                $minus = sprintf '%s ^%s', $minus, $dt;
+            }
+        }
+        else {
+            next;
         }
 
-        # XXX do labels here
-        my $label = $c->label_for($link);
-
-        my $pred = sprintf '-%s dct:references :', $reverse ? '!' : '';
-
         push @li, { -name => 'li', -content => { %FORMBP, -content => [
-            { href => $uri, -content => $label->value },
-            { -name => 'button', name => $pred, value => $uri,
+            $elem,
+            { -name => 'button', name => $minus, value => $value,
               class => 'disconnect fa fa-unlink', -content => '' } ] } };
     }
 
@@ -1892,17 +1956,31 @@ sub _do_link_form {
         $a->{-content}{-content}[0]{-content}
             cmp $b->{-content}{-content}[0]{-content} } @li;
 
+    my $designator = do {
+        if ($p{literal}) {
+            Scalar::Util::blessed($p{literal}) ?
+                  sprintf(' ^%s', $ns->abbreviate($p{literal})) :
+                  $p{literal} =~ /^[A-Za-z-]+$/ ? " \@$p{literal}" : '';
+        }
+        else {
+            ' :';
+        }
+    };
+
+    my $plus = sprintf '%s%s', $pred, $designator;
+    $plus = "! $plus" if $reverse;
+
     # default list item to add a new link
     push @li, { -name => 'li', -content => { %FORMBP, -content => [
-        { -name => 'input', type => 'text', name => 'dct:references :' },
+        { -name => 'input', type => 'text', name => $plus },
         { -name => 'button', class=> 'fa fa-plus', -content => '' } ] } };
 
-    my $lab = 'Links';
-    $lab = 'Inbound ' . $lab if $reverse;
+    my $lab = $p{label} || ($reverse ? 'Inbound Links' : 'Links');
 
-    return { -name => $name, class => 'predicate link', -content => [
-        { -name => 'h3', class => 'label', -content => $lab },
-        { -name => 'ul', -content => \@li } ] };
+    return { -name => $tag, class => sprintf('predicate %s', $p{class}),
+             -content => [
+                 { -name => 'h3', class => 'label', -content => $lab },
+                 { -name => 'ul', -content => \@li } ] };
 }
 
 sub _do_concept_form {

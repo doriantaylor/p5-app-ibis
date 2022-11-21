@@ -1,12 +1,13 @@
 from node:latest as node-prereq
 
-ENV PATH="/code/js/node_modules/.bin:/usr/local/bin:${PATH}"
+ENV PATH="/nodejs/js/node_modules/.bin:/usr/local/bin:${PATH}"
 # ENV NODE_ENV=development
 
-WORKDIR /code
-COPY js /code/js
+WORKDIR /nodejs
+COPY root /nodejs/root
+COPY js /nodejs/js
 
-WORKDIR /code/js
+WORKDIR /nodejs/js
 # RUN npm install -g --no-audit --no-fund --link --force
 RUN npm config set timeout=5 registry=http://registry.npmjs.org/
 # RUN npm install -g --no-audit --no-fund rollup
@@ -15,9 +16,6 @@ RUN npm install --no-audit --no-fund --omit=optional
 # RUN ls node_modules
 # RUN npm bin -g
 RUN npm run build
-
-WORKDIR /code
-COPY root /code/root
 
 FROM perl:latest
 
@@ -29,34 +27,36 @@ ENV PERL5LIB=/code/lib:/carton/lib/perl5
 # lol
 ENV EMAIL=test@hi.lol
 
+ENV PATH="/carton/bin:${PATH}"
+
 # RUN curl -sL https://deb.nodesource.com/setup_18.x | bash \
 #      && apt-get update && apt-get install -y nodejs
 # RUN apt-get update
 # RUN apt-get install -y nodejs
 
-COPY --from=node-prereq root /code/root
+COPY --from=node-prereq /nodejs/root /code/root
+RUN rm -rf /nodejs
 
 RUN cpanm App::cpm \
     && cpm install -g Carton Starman Plack::Middleware::ForceEnv \
     && mkdir /carton /vendor \
     && useradd -m catalyst -g users \
     && chown -R catalyst:users /carton /vendor \
-    && rm -rf /root/.cpanm /tmp/* /home/catalyst/.perl-cpm
+    && rm -rf /root/.{cpanm,perl-cpm} /home/catalyst/.{cpanm,perl-cpm} /tmp/*
 
 COPY cpanfile /code/
-# ugh fine freeze the deps
 COPY cpanfile.snapshot /code/
 
 RUN cpm install -L /carton \
     && rm -rf /home/catalyst/.cpanm /home/catalyst/.perl-cpm /tmp/*
 
-COPY app_ibis.psgi /code/
+COPY app_ibis.* /code/
 COPY lib  /code/lib
-COPY root /code/root
+# COPY root /code/root
 
 # lol make this sqlite not postgres
 # RUN sed -i -e 's!\(dsn.*\)dbi:Pg.*!\1dbi:SQLite:dbname=/home/catalyst/trine.db!' app_ibis.conf
-RUN perl -pe 's!dbi:Pg:.*!dbi:SQLite:dbname=/home/catalyst/trine.db!' app_ibis.conf > app_ibis.conf.new && mv app_ibis.conf.new app_ibis.conf
+RUN perl -pi -e 's!dbi:Pg:.*!dbi:SQLite:dbname=/home/catalyst/trine.db!' app_ibis.conf
 
 USER catalyst:users
 
@@ -70,4 +70,5 @@ EXPOSE 5000
 
 # no clue why this thing can't just get the dirs right
 # CMD ["carton", "exec", "starman", "-Ilib", "-I/carton/lib/perl5", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
-CMD ["carton", "exec", "starman", "-Ilib", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
+# CMD ["carton", "exec", "starman", "-Ilib", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
+CMD ["cat", "app_ibis.conf"]

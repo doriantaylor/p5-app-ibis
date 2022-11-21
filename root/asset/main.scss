@@ -465,54 +465,67 @@ span.date {
 /* form stuff */
 
 body[typeof~="skos:Concept"] {
-   section.self {
-      h1 {
-         display: flex;
-         height: initial;
-         > form {
-            width: 100%;
-         }
+    section.relations {
+        top: 19em;
+    }
+    section.self {
+        h1 {
+            display: flex;
+            height: initial;
+            > form {
+                width: 100%;
+            }
 
-         input {
-            width: 100%;
-         }
-         button {
-            flex: 1;
-         }
-      }
-      > form {
-         display: flex;
+            input {
+                width: 100%;
+            }
+            button {
+                flex: 1;
+            }
+        }
+        > form {
+            display: flex;
 
-         textarea {
-            font-size: 80%;
-            border-style: solid;
-            border-width: 0.1em;
-            @include vendor(border-radius, 0.333em);
-         }
-         button {
-            position: initial;
-            top: initial;
-            right: initial;
-            flex: 1;
-         }
-      }
+            textarea {
+                font-size: 80%;
+                border-style: solid;
+                border-width: 0.1em;
+                @include vendor(border-radius, 0.333em);
+            }
+            button {
+                position: initial;
+                top: initial;
+                right: initial;
+                flex: 1;
+            }
+        }
 
-      aside.predicate.link {
-         width: auto;
-         left: 0;
-         right: 0;
-      }
-   }
+        aside.predicate {
+            height: 5.5em;
+            &.label {
+                width: 46.5%;
+                &.hidden {
+                    right: 0;
+                }
+            }
+            &.link {
+                top: 15em;
+                width: auto;
+                left: 0;
+                right: 0;
+            }
+        }
+    }
 
-   form#toggle-which {
-      width: 100%;
-      left: 0;
-      text-align: center;
-      label {
-         display: inline-block;
-         padding: 0 1em;
-      }
-   }
+    form#toggle-which {
+        width: 100%;
+        left: 0;
+        text-align: center;
+        label {
+            display: inline-block;
+            padding: 0 1em;
+        }
+    }
 }
 
 form {

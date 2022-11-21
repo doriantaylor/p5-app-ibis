@@ -5,10 +5,10 @@ services:
     build:
       network: host
       context: .
-    command: carton exec starman -I/carton/lib/perl5 -Ilib -e 'enable ForceEnv => REMOTE_USER => $$ENV{EMAIL}' app_ibis.psgi
-    # command: cat app_ibis.conf
+    # command: carton exec starman -I/carton/lib/perl5 -Ilib -e 'enable ForceEnv => REMOTE_USER => $$ENV{EMAIL}' app_ibis.psgi
+    command: cat app_ibis.conf
     volumes:
-      - .:/code
+      # - .:/code
       - carton:/carton
       - vendor:/vendor
     networks:

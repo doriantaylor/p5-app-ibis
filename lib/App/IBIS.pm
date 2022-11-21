@@ -26,18 +26,15 @@ use Catalyst::Runtime 5.80;
 # Static::Simple: will serve static files from the application's root
 #                 directory
 
-use Catalyst qw/
-    ConfigLoader
-/;
-#    -Debug
-#    Static::Simple
-#    StackTrace
-# /;
+use Catalyst qw/ConfigLoader/;
+
+# use Catalyst qw/ConfigLoader -Debug Static::Simple StackTrace/;
+
 #     +CatalystX::Profile
 # /;
 use CatalystX::RoleApplicator;
 
-our $VERSION = '0.09_18';
+our $VERSION = '0.10';
 
 extends 'Catalyst';
 
@@ -204,7 +201,7 @@ sub rdf_cache {
         return $model unless $reset;
         # make sure we empty this thing before overwriting it in case
         # there are cyclical references
-        $model->nuke;
+        $model->_store->nuke;
     }
 
     $model = $cache->{$g->value} = RDF::Trine::Model->new
