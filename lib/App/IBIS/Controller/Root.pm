@@ -17,7 +17,7 @@ BEGIN {
 }
 
 # constants
-use RDF::Trine qw(iri blank literal);
+use RDF::Trine qw(iri blank literal statement);
 use RDF::Trine::Namespace qw(RDF);
 use constant IBIS => RDF::Trine::Namespace->new
     ('https://vocab.methodandstructure.com/ibis#');
@@ -67,11 +67,13 @@ has _dispatch => (
         my $ibis = $ns->ibis;
         my $skos = $ns->skos;
         return {
-            $ibis->Issue->value      => '_get_ibis',
-            $ibis->Position->value   => '_get_ibis',
-            $ibis->Argument->value   => '_get_ibis',
-            $skos->Concept->value    => '_get_concept',
-            $skos->Collection->value => '_get_collection',
+            $ibis->Network->value       => '_get_concept_scheme',
+            $ibis->Issue->value         => '_get_ibis',
+            $ibis->Position->value      => '_get_ibis',
+            $ibis->Argument->value      => '_get_ibis',
+            $skos->Concept->value       => '_get_concept',
+            $skos->Collection->value    => '_get_collection',
+            $skos->ConceptScheme->value => '_get_concept_scheme',
         };
     },
 );
@@ -702,14 +704,15 @@ sub uuid :Private {
     if ($method eq 'POST') {
         # check for input
         eval {
-            # $c->log->debug('gonna post it lol');
+            $c->log->debug('gonna post it lol');
             $self->_post_uuid($c, $uuid, $req->body_parameters);
-            # $c->log->debug('welp posted it lol');
+            $c->log->debug('welp posted it lol');
         };
         if ($@) {
             $resp->status(409);
             $resp->content_type('text/plain');
-            $resp->body("wat $@");
+            $resp->body('wtf');
+            # $resp->body(sprintf 'wat %s', $@ // '');
         }
         else {
             $c->log->debug("see other: $uuid");
@@ -1378,6 +1381,46 @@ sub _from_urn {
     URI->new_abs($uuid->uuid, $base);
 }
 
+# POST RIDERS SHOULD BE IDEMPOTENT IN CASE THEY GET RUN MORE THAN ONCE
+
+my @DEFAULT_RIDER = (
+    sub {
+        my ($self, $c, $p) = @_;
+        my ($m, $g, $s, $n) = @{$p}{qw(model graph subject ns)};
+
+        # $c->log->debug("running dct:created rider on g: $g s: $s");
+
+        unless ($m->count_statements($s, $n->dct->created, undef, $g)) {
+            my $now = literal(DateTime->now . 'Z', undef, $n->xsd->dateTime);
+            my $st  = statement($s, $n->dct->created, $now, $g);
+            $m->add_statement($st);
+        }
+    },
+    sub {
+        my ($self, $c, $p) = @_;
+        my ($m, $g, $s, $n) = @{$p}{qw(model graph subject ns)};
+
+        # $c->log->debug("running dct:creator rider on g: $g s: $s");
+
+        if (my $me = $c->whoami and not
+            $m->count_statements($s, $n->dct->creator, undef, $g)) {
+            my $st = statement($s, $n->dct->creator, $me, $g);
+            $m->add_statement($st);
+        }
+    },
+);
+
+# XXX we repeat because we can't do inferences in perl
+my %RIDER = (
+    'ibis:Issue'         => [@DEFAULT_RIDER],
+    'ibis:Position'      => [@DEFAULT_RIDER],
+    'ibis:Argument'      => [@DEFAULT_RIDER],
+    'ibis:Network'       => [@DEFAULT_RIDER],
+    'skos:Concept'       => [@DEFAULT_RIDER],
+    'skos:ConceptScheme' => [@DEFAULT_RIDER],
+    'skos:Collection'    => [@DEFAULT_RIDER],
+);
+
 sub _post_uuid {
     my ($self, $c, $subject, $content) = @_;
     my $uuid = URI->new($subject->uri_value);
@@ -1406,50 +1449,66 @@ sub _post_uuid {
     my $patch = $kv->process($content);
     #warn Data::Dumper::Dumper($patch);
 
-    $c->log->debug("Initial size: " . $m->size);
-    # add a timestamp
-    # eval { $m->count_statements($subject, undef, undef) };
-    # if ($@) {
-    #     $c->log->debug($@);
-    #     return;
-    # }
+    # $c->log->debug('got here 0');
 
-    # XXX HACK this should really apply to all subjects (resources?)
-    # in the graph but RDF::KV has no way of spitting them all out
-    unless ($m->count_statements($subject, $rns->dct->created, undef, $g)) {
-        my $now = literal(DateTime->now . 'Z', undef, $rns->xsd->dateTime);
-        $patch->add_this($subject, $rns->dct->created, $now, $g);
-    }
-
-    eval {
-        my $me = $c->whoami;
-        if ($me and not
-            $m->count_statements($subject, $rns->dct->creator, undef, $g)) {
-            $patch->add_this($subject, $rns->dct->creator, $me, $g);
-        }
-    };
-    if ($@) {
-        $c->log->error("wtf fail lol $@");
+    my @bad = grep { !$g->equal($_) } $patch->affected_graphs;
+    if (@bad) {
+        $c->log->error(sprintf 'Modification of graph(s) %s not allowed (%s)',
+                       join(', ', map { $_ // '' } @bad), $g);
         return;
     }
+
+    # $c->log->debug('got here 1');
+
+    # ensure that all the statements in the patch match the graph
+    # grep { $_->graph->value } map { $patch->$_ } qw(to_add to_remove);
+
+    $c->log->debug("Initial size: " . $m->size);
+
+    # apply the patch
 
     $m->begin_bulk_ops;
     eval { $patch->apply($m) };
     if ($@) {
         $c->log->error("cannot apply patch: $@");
+        return;
     }
-    else {
-        $m->end_bulk_ops;
-        # clear the cache
-        eval { $c->rdf_cache(1) };
-        if ($@) {
-            $c->log->error("wtf cache: $@");
+    # $c->log->debug('got here 2');
+
+    eval {
+        # now we add a rider
+        for my $pair ($patch->affected_subjects(1)) {
+            # $c->log->debug('got here 3');
+
+            my $ag = $pair->[0];         # affected graph
+            for my $as (@{$pair->[1]}) { # affected subjects
+                $c->log->debug("$ag $as");
+                # get the type for the subject
+                my @t = $m->objects($as, $rns->rdf->type, $ag);
+                my @r = map { @{$RIDER{$rns->abbreviate($_)} || []} } @t;
+                # run each of the riders
+                for my $rider (@r) {
+                    my %p = (model => $m, graph => $ag,
+                             ns => $rns, subject => $as);
+                    $rider->($self, $c, \%p);
+                }
+            }
         }
-        $c->log->debug("New size: " . $m->size);
+    };
+    if ($@) {
+        $c->log->debug($@);
+        return;
+    };
+
+    $m->end_bulk_ops;
+    # clear the cache
+    eval { $c->rdf_cache(1) };
+    if ($@) {
+        $c->log->error("wtf cache: $@");
     }
+    $c->log->debug("New size: " . $m->size);
 
-
-    #$m->_store->_model->sync;
+    $m->size;
 }
 
 =head2 default
@@ -1774,7 +1833,7 @@ sub _do_rels {
 
             $li{$tv . $uri} = {
                 -name => 'li', about => $o->value,
-                typeof => $ns->abbreviate($type),
+                typeof => $ns->abbreviate($type) || $type,
                 -content => { %FORMBP, -content => [
                     @baleet, { about => $o->value, href => $uri,
                                property => 'rdf:value', -content => $tv } ] }

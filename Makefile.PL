@@ -17,11 +17,10 @@ requires_external_bin 'psass';
 # this makes it more amenable to dockerization among other things
 cpanfile;
 
-catalyst_ignore(
-    qw(
-          MANIFEST.* blib maint js node_modules Dockerfile \.dockerignore
-          .*\.(db|out|ttl|org|yml|gz|zip)
-  ));
+catalyst_ignore(qw(
+                      MANIFEST.* blib maint js node_modules Dockerfile
+                      \.dockerignore .*\.(db|out|ttl|org|yml|gz|zip)
+              ));
 
 catalyst;
 

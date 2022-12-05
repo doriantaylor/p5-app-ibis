@@ -26,15 +26,15 @@ use Catalyst::Runtime 5.80;
 # Static::Simple: will serve static files from the application's root
 #                 directory
 
-use Catalyst qw/ConfigLoader/;
+# use Catalyst qw/ConfigLoader/;
 
-# use Catalyst qw/ConfigLoader -Debug Static::Simple StackTrace/;
+use Catalyst qw/ConfigLoader -Debug Static::Simple StackTrace/;
 
 #     +CatalystX::Profile
 # /;
 use CatalystX::RoleApplicator;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 extends 'Catalyst';
 

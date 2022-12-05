@@ -23,6 +23,7 @@ my %XMLNS = (
     rdfs  => 'http://www.w3.org/2000/01/rdf-schema#',
     ibis  => 'https://vocab.methodandstructure.com/ibis#',
     skos  => 'http://www.w3.org/2004/02/skos/core#',
+    ci    => 'https://vocab.methodandstructure.com/content-inventory#',
     dct   => 'http://purl.org/dc/terms/',
     bibo  => 'http://purl.org/ontology/bibo/',
     foaf  => 'http://xmlns.com/foaf/0.1/',
