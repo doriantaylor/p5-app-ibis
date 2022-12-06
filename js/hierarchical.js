@@ -81,6 +81,8 @@ export default class HierRDF extends RDFViz {
         this.svg = svg.node();
         this.svg.plumbing = this;
 
+        this.validateNode = rdfParams.validateNode;
+        this.validateEdge = rdfParams.validateEdge;
     }
 
     init () {
@@ -89,97 +91,132 @@ export default class HierRDF extends RDFViz {
         const svg = d3.select(this.svg);
 
         // make these shorter to type lol
-        const graph      = this.graph,
-              a          = this.a,
-              ns         = this.ns,
-              validTypes = this.validTypes,
-              labels     = this.labels,
-              inverses   = this.inverses,
-              symmetric  = this.symmetric,
-              prefer     = this.prefer;
+        const graph        = this.graph,
+              a            = this.a,
+              ns           = this.ns,
+              validTypes   = this.validTypes,
+              labels       = this.labels,
+              inverses     = this.inverses,
+              symmetric    = this.symmetric,
+              prefer       = this.prefer,
+              validateNode = this.validateNode,
+              validateEdge = this.validateEdge;
 
         // first we collect the valid nodes
         const nmap  = {};
-        const nodes = this.nodes = [];
+
+        // take one pass to obtain all the nominally valid subjects
         graph.match(null, a).forEach(stmt => {
-            if (validTypes.some(t => t.equals(stmt.object))) {
-                let label = stmt.subject.value;
-                // label predicates
-                const lp = [ns['dct']('title'), ns['rdfs']('label')];
-                if (labels[stmt.object.value])
-                    lp.unshift(labels[stmt.object.value]);
-                for (let i = 0; i < lp.length; i++) {
-                    let x = graph.match(stmt.subject, lp[i]).filter(
-                        s => s.object.termType == 'Literal');
-                    if (x.length > 0) {
-                        label = x[0].object.value;
-                        break;
-                    }
+            const s = stmt.subject, type = stmt.object;
+            // bail if we aren't on the list
+            if (!(RDF.isNamedNode(s) &&
+                  s.value.toLowerCase().startsWith('urn:uuid:')) ||
+                !validTypes.some(t => t.equals(type))) return;
+
+            // give us an initial label, the node itself
+            let label = s.value;
+
+            // get label, beginning with default label predicates
+            const lp = [ns['dct']('title'), ns['rdfs']('label')];
+            if (labels[type.value]) lp.unshift(labels[type.value]);
+            for (let i = 0; i < lp.length; i++) {
+                let x = graph.match(s, lp[i]).filter(
+                    s => RDF.isLiteral(s.object));
+                if (x.length > 0) {
+                    label = x[0].object.value;
+                    break; // XXX maybe sort??
                 }
-
-                // establish the subject URI
-                const s = this.rewriteUUID(stmt.subject);
-
-                // get the in+outdegree
-                const degree = graph.match(stmt.subject).filter(
-                    s => s.object.termType == 'NamedNode').length +
-                      graph.match(null, null, stmt.subject).filter(
-                          s => s.subject.termType == 'NamedNode').length - 1;
-
-                // add this mess to the list
-                if (!nmap[stmt.subject.value])
-                    // XXX DECIDE WHAT TO DO ABOUT URLS
-                    nodes.push(nmap[stmt.subject.value] = nmap[s.value] = {
-                        id:      s.value, // for d3
-                        title:   label, // for d3
-                        subject: stmt.subject,
-                        type:    stmt.object,
-                        degree:  degree,
-                    });
             }
+
+            // get dereferenceable subject uri
+            const uri = this.rewriteUUID(s);
+
+            const obj = nmap[uri.value] ||= {
+                id:         uri.value, // for d3
+                title:      label,     // for d3
+                subject:    s,
+                type:       [], // for now
+                neighbours: [], // for later
+            };
+            // add the type
+            if (!obj.type.some(o => o.equals(type))) obj.type.push(type);
         });
 
-        const lmap  = {};
-        const lmap2 = new Map();
-        const links = this.links = [];
-        nodes.forEach(rec => {
-            graph.match(rec.subject).forEach(stmt => {
-                // only look at edges containing nodes we already have
-                if (!nmap[stmt.object.value]) return;
+        // snag predicates and put them aside
+        const pmap = {};
 
+        // take a second pass to get the edges spanning the nodes
+        const lmap = {};
+        Object.values(nmap).forEach(rec => {
+            graph.match(rec.subject).forEach(stmt => {
+                // shorthands
                 let s = stmt.subject, p = stmt.predicate, o = stmt.object;
 
-                if (prefer[p.value]) {
-                    s = stmt.object;
-                    p = prefer[p.value];
-                    o = stmt.subject;
-                }
+                // filter only resources
+                if (!RDF.isNamedNode(s) && !RDF.isNamedNode(o)) return;
 
-                let src = this.rewriteUUID(s);
-                let tgt = this.rewriteUUID(o);
+                // optionally reverse edge direction
+                if (prefer[p.value])
+                    s = stmt.object, p = prefer[p.value], o = stmt.subject;
 
-                let k = `${src} ${tgt}`;
-                // lol get all that??
-                (lmap2.has(k) ? lmap2 : lmap2.set(k, [])).get(k).push(p);
+                // generate dereferenceable URIs
+                const src = this.rewriteUUID(s), tgt = this.rewriteUUID(o);
 
-                // this ensures we have no duplicate edges
-                if (!lmap[p.value]) lmap[p.value] = {};
-                if (!lmap[p.value][s.value]) lmap[p.value][s.value] = {};
-                if (lmap[p.value][s.value][o.value]) return;
+                // only care about edges between nodes with valid types
+                if (!nmap[src.value] || !nmap[tgt.value]) return;
 
-                links.push(lmap[p.value][s.value][o.value] = {
-                    source: src.value, // for d3
-                    target: tgt.value, // for d3
+                // XXX TODO add pruning constraint, eg at least one
+                // node must be the same type (or on the same list)
+                // as the page's subject
+                if (validateEdge &&
+                    !validateEdge(nmap[src.value], nmap[tgt.value], p)) return;
+
+                // okay now we add the record if it isn't already there
+                lmap[src.value] ||= {};
+                let edge = lmap[src.value][tgt.value] ||= {
+                    source: src.value,
+                    target: tgt.value,
                     subject: s,
-                    predicate: p,
-                    object: o
+                    predicate: [],
+                    object: o,
+                };
+                // add the predicate to the list
+                if (!edge.predicate.some(ep => ep.equals(p)))
+                    edge.predicate.push(p);
+
+                // add it to the predicate map too
+                pmap[p.value] = p;
+
+                // now we add the node as a neighbour; note this will
+                // only happen if the edge hasn't already been filtered
+                [[src, tgt], [tgt, src]].forEach(([a, b]) => {
+                    if (!nmap[a.value].neighbours.some(n => n.equals(b)))
+                        nmap[a.value].neighbours.push(b);
                 });
             });
         });
 
+        // take a third pass to prune out the extraneous nodes
+        for (const [k, rec] of Object.entries(nmap)) {
+            if (validateNode && !validateNode(rec)) {
+                rec.neighbours.forEach(n => {
+                    const v = n.value;
+                    if ((lmap[k] || {})[v]) delete lmap[k][v];
+                    if ((lmap[v] || {})[k]) delete lmap[v][k];
+                    if (lmap[k] && lmap[k].length == 0) delete lmap[k];
+                    if (lmap[v] && lmap[v].length == 0) delete lmap[v];
+                });
+                delete nmap[k];
+            }
+        }
+
+        const nodes = this.nodes = Object.values(nmap);
+        const links = this.links = Object.values(lmap).reduce(
+            (a, o) => (Object.values(o).forEach(e => a.push(e)), a), []);
+
         const defs = svg.append('defs');
 
-        Object.keys(lmap).forEach(predicate => {
+        Object.values(pmap).forEach(predicate => {
             const about = this.abbreviate(predicate);
             const id = about.replace(':', '.'); // make this a legal id
             ['', '.subject'].forEach(x => {
@@ -293,6 +330,8 @@ export default class HierRDF extends RDFViz {
                       .attr('typeof', this.abbreviate(nmap[node.data.id].type))
                       .attr('xlink:title', rnode.title);
 
+                // console.log(node.data.id, me);
+
                 if (node.data.id == me.href) a.attr('class', 'subject');
 
                 a.append('circle').attr('class', 'target').attr('cx', p1.re)
@@ -379,13 +418,11 @@ export default class HierRDF extends RDFViz {
 
                     // handle forward and reverse predicates
 
-                    const fk = `${RDF.sym(s)} ${RDF.sym(o)}`;
-                    const rk = `${RDF.sym(o)} ${RDF.sym(s)}`;
+                    const rel = (lmap[s] || {})[o];
+                    const rev = (lmap[o] || {})[s];
 
-                    if (lmap2.has(fk))
-                        path.attr('rel', this.abbreviate(lmap2.get(fk)));
-                    if (lmap2.has(rk))
-                        path.attr('rev', this.abbreviate(lmap2.get(rk)));
+                    if (rel) path.attr('rel', this.abbreviate(rel.predicate));
+                    if (rev) path.attr('rev', this.abbreviate(rev.predicate));
                 });
             });
         }

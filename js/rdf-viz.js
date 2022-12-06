@@ -7,6 +7,7 @@ export default class RDFViz {
         rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
         owl:  'http://www.w3.org/2002/07/owl#',
         xsd:  'http://www.w3.org/2001/XMLSchema#',
+        xhv:  'http://www.w3.org/1999/xhtml/vocab#',
         dct:  'http://purl.org/dc/terms/',
         bibo: 'http://purl.org/ontology/bibo/',
         foaf: 'http://xmlns.com/foaf/0.1/',
@@ -217,18 +218,30 @@ export default class RDFViz {
         if (this.root) return this.root;
 
         const root = this.root = new URL(window.location.href);
-        let path = root.pathname.split('/').slice(0, -1);
+        const path = root.pathname.split('/').slice(0, -1);
         path.push('');
         root.pathname = path.join('/');
+        root.hash     = ''; // the root is never a fragment
+        root.search   = ''; // it probably shouldn't be a query either
+
+        // (i might regret the latter but we'll see)
 
         return root;
     }
 
     rewriteUUID (uuid) {
-        const root = this.getRoot();
+        if (!uuid instanceof RDF.NamedNode) uuid = RDF.sym(uuid.toString());
+
+        if (!uuid.value.toLowerCase().startsWith('urn:uuid')) return uuid;
+
+        // clone the uri
+        const uri = new URL(this.getRoot().href);
+
+        let path = uuid.value.replace('urn:uuid:', uri.pathname);
+        uri.pathname = path;
 
         // XXX THIS SUCKS JUST REWRITE THE URLS IN THE TURTLE OUTPUT
-        return RDF.sym(uuid.value.replace('urn:uuid:', root.href));
+        return RDF.sym(uri.href);
     }
 
     attach (selector) {

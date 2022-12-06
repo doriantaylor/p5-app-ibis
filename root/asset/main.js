@@ -264,17 +264,60 @@ function toggleFullscreen () {
 
 // D3 STUFF
 
-const graph   = RDF.graph();
-// layering: Simplex LongestPath CoffmanGraham
-// coord: Simplex Quad Greedy Center
-const dataviz = new HierRDF(graph, {}, {
-    preserveAspectRatio: 'xMidYMid meet', layering: 'LongestPath',
-    coord: 'Simplex', radius: 5, hyperbolic: true });
+document.addEventListener('DOMContentLoaded', function () {
+    this.graph = RDF.graph();
+    this.rdfa  = new RDF.RDFaProcessor(
+        this.graph, { base: window.location.href });
 
-// grab the link
-const link = document.querySelector(
-    'html > head > link[href][rel~="alternate"][type~="text/turtle"]');
+    this.rdfa.process(this);
 
-// install the window onload
-if (link) dataviz.installFetchOnLoad(link.href, '#force');
-else console.log("wah wah link not found");
+    const ibis = RDF.Namespace('https://vocab.methodandstructure.com/ibis#');
+    const skos = RDF.Namespace('http://www.w3.org/2004/02/skos/core#');
+
+    const ibisTypes = ['Issue', 'Position', 'Argument'].map(t => ibis(t));
+    const skosc = skos('Concept');
+
+    const me = RDF.sym(window.location.href);
+    const a  = RDF.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
+    let types = this.graph.match(me, a).filter(
+        s => RDF.isNamedNode(s.object)).map(s => s.object);
+
+    let isEntity = types.some(t => t.equals(skosc));
+
+    if (ibisTypes.some(t => types.some(u => t.equals(u)))) {
+        isEntity = true;
+        types = ibisTypes;
+    }
+
+    const test = ts => ts.filter(t => types.some(x => x.equals(t))).length > 0;
+
+    console.log(types);
+
+    // layering: Simplex LongestPath CoffmanGraham
+    // coord: Simplex Quad Greedy Center
+    const dataviz = this.dataviz = new HierRDF(this.graph, {
+        validateNode: function (node) {
+            //return true;
+            if (!isEntity) return true;
+            return node.neighbours.length > 0 ? true : test(node.type);
+        },
+        validateEdge: function (source, target) {
+            //return true;
+            if (!isEntity) return true;
+            return test(source.type) || test(target.type);
+        },
+    }, {
+        preserveAspectRatio: 'xMidYMid meet', layering: 'LongestPath',
+        coord: 'Simplex', radius: 5, hyperbolic: true });
+
+    // grab the link
+    const link = this.querySelector(
+        'html > head > link[href][rel~="alternate"][type~="text/turtle"]');
+
+    // install the window onload
+    if (link) this.dataviz.installFetchOnLoad(link.href, '#force');
+    else console.log("wah wah link not found");
+
+
+    return true;
+});
