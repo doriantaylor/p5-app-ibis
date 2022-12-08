@@ -7,11 +7,6 @@ use warnings FATAL => 'all';
 use Moose;
 use namespace::autoclean;
 
-use Convert::Color   ();
-use HTTP::Negotiate  ();
-use Unicode::Collate ();
-use RDF::Trine       ();
-
 use Catalyst::Runtime 5.80;
 
 # Set flags and add plugins for the application.
@@ -26,15 +21,37 @@ use Catalyst::Runtime 5.80;
 # Static::Simple: will serve static files from the application's root
 #                 directory
 
-use Catalyst qw/ConfigLoader/;
+# XXX NOTE THAT THIS STRUCTURE IS ****EXTREMELY**** SENSITIVE TO
+# THE SEQUENCE IT SHOWS UP IN THE CODE. DO NOT FUCK AROUND WITH IT.
+BEGIN {
+    # this should always go first otherwise it loads up blank
+    my @INIT_ARGS = qw/ConfigLoader/;
+
+    # and now the debug modules
+    if ($ENV{CATALYST_DEBUG}) {
+        # not sure why it doesn't flip these on by default anyway
+        push @INIT_ARGS, qw/-Debug StackTrace/;
+        push @INIT_ARGS, '+CatalystX::Profile' if int($ENV{CATALYST_DEBUG}) > 1;
+    }
+
+    # use this for other init modules
+    # push @INIT_ARGS, $whatever;
+
+    # NOTE `perldoc -f use`: this is what `use` is shorthand for
+    require Catalyst;
+    Catalyst->import(@INIT_ARGS);
+}
+
+use CatalystX::RoleApplicator;
 
 # use Catalyst qw/ConfigLoader -Debug StackTrace/;
 
-#     +CatalystX::Profile
-# /;
-use CatalystX::RoleApplicator;
+use Convert::Color   ();
+use HTTP::Negotiate  ();
+use Unicode::Collate ();
+use RDF::Trine       ();
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 extends 'Catalyst';
 
@@ -89,7 +106,8 @@ after setup_finalize => sub {
     my $m  = $app->model('RDF');
     my $ns = $m->ns;
 
-    $app->log->debug('Contexts: ' . join ' ', $m->get_contexts);
+    $app->log->debug('Statements: ' . $m->size);
+    $app->log->debug('Contexts: '   . join ', ', $m->get_contexts);
 
     @LABELS  = grep { defined $_ } map { $ns->uri($_) }
         qw(skos:prefLabel rdfs:label foaf:name dct:title
@@ -246,6 +264,8 @@ later.)
 sub graph {
     my $c = shift;
 
+    return $c->stash->{context_graph} if $c->stash->{context_graph};
+
     my $g = $c->req->base;
     $c->log->debug("Using base $g as context");
 
@@ -264,7 +284,7 @@ sub graph {
     }
 
     # i suppose this could theoretically (?)
-    RDF::Trine::Node::Resource->new("$g");
+    $c->stash->{context_graph} = RDF::Trine::iri("$g");
 }
 
 =head2 stub %PARAMS
@@ -340,6 +360,8 @@ sub whoami {
         $c->log->debug("REMOTE_USER field empty");
     }
     else {
+        return $c->stash->{resolved_user} if $c->stash->{resolved_user};
+
         # if there is no uri scheme then we add one
         unless ($u =~ /^[A-Za-z][0-9A-Za-z+.-]:/) {
             # this is either something email-like or is not
@@ -356,7 +378,7 @@ sub whoami {
         # there should only be one of thse
         my @out = sort values %uniq;
 
-        return @out ? $out[0] : $u;
+        return $c->stash->{resolved_user} = @out ? $out[0] : $u;
     }
 
     return;

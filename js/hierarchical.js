@@ -285,7 +285,8 @@ export default class HierRDF extends RDFViz {
                 x.push(root);
                 firsts.set(root.y, x);
             });
-            const ymin   = Array.from(firsts.keys()).sort()[0] || 0;
+            const ymin   = Array.from(firsts.keys()).sort(
+                (a, b) => a - b)[0] || 0;
             const nroots = firsts.has(ymin) ? firsts.get(ymin).length : 0;
 
             // we want a radius that is big enough to fit the entire first

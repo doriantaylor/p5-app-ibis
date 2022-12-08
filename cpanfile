@@ -54,6 +54,6 @@ requires 'XML::LibXSLT';
 
 # stuff i made
 requires 'Role::Markup::XML'            => '0.03';
-requires 'RDF::KV'                      => '0.13';
+requires 'RDF::KV'                      => '0.14';
 requires 'Data::UUID::NCName'           => '0.07';
 requires 'CatalystX::Action::Negotiate' => '0.04';
