@@ -262,7 +262,8 @@ function toggleFullscreen () {
     }
 }
 
-// D3 STUFF
+// yo if we want to sponge the document for information about what to
+// do next, we have to wait for it to load
 
 document.addEventListener('DOMContentLoaded', function () {
     this.graph = RDF.graph();
@@ -291,7 +292,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const test = ts => ts.filter(t => types.some(x => x.equals(t))).length > 0;
 
-    console.log(types);
+    // console.log(types);
+
+    // D3 STUFF
 
     // layering: Simplex LongestPath CoffmanGraham
     // coord: Simplex Quad Greedy Center
@@ -307,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return test(source.type) || test(target.type);
         },
     }, {
-        preserveAspectRatio: 'xMidYMid meet', layering: 'LongestPath',
+        preserveAspectRatio: 'xMidYMid meet', layering: 'Simplex',
         coord: 'Simplex', radius: 5, hyperbolic: true });
 
     // grab the link

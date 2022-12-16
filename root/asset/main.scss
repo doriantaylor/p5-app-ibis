@@ -11,6 +11,17 @@ $PROPERTIES: (
     "ibis:opposes", "ibis:opposed-by"
 );
 
+$BOUNDARIES: (
+    "ibis:concerns", "ibis:concern-of", "dct:references", "dct:isReferencedBy");
+
+$FADE: (
+    "ibis:Issue":    (("skos:Concept"), $BOUNDARIES),
+    "ibis:Position": (("skos:Concept"), $BOUNDARIES),
+    "ibis:Argument": (("skos:Concept"), $BOUNDARIES),
+    "skos:Concept":  (
+        ("ibis:Issue", "ibis:Position", "ibis:Argument"), $BOUNDARIES)
+);
+
 $FIELDSETS: ("ibis:Issue": issue, "ibis:Position": position,
              "ibis:Argument": argument, "skos:Concept": concept);
 
@@ -1170,6 +1181,33 @@ section {
         //stroke: none;
         &.subject {
             fill: nth($pal, 8);
+        }
+    }
+}
+
+// XXX THIS IS NOT THE BEST BUT IT WILL WORK FOR NOW LOL
+@each $class, $pair in $FADE {
+    $classes: nth($pair, 1);
+    $props: nth($pair, 2);
+
+    body[typeof~="#{$class}"] {
+        svg {
+            g.edge {
+                @each $p in $props {
+                    line, path {
+                        &[rel~="#{$p}"], &[rev~="#{$p}"] {
+                            opacity: 0.5;
+                        }
+                    }
+                }
+            }
+            g.node {
+                @each $c in $classes {
+                    a[typeof~="#{$c}"] circle {
+                        opacity: 0.5;
+                    }
+                }
+            }
         }
     }
 }

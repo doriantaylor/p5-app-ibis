@@ -9,7 +9,8 @@ COPY js /nodejs/js
 
 WORKDIR /nodejs/js
 # RUN npm install -g --no-audit --no-fund --link --force
-RUN npm config set timeout=5 registry=http://registry.npmjs.org/
+#RUN npm config set timeout=5 registry=http://registry.npmjs.org/
+RUN npm config set registry=http://registry.npmjs.org/
 # RUN npm install -g --no-audit --no-fund rollup
 RUN npm install --no-audit --no-fund --omit=optional
 # RUN ls /usr/local/lib/node_modules
