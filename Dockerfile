@@ -40,13 +40,17 @@ RUN rm -rf /nodejs
 
 RUN cpanm App::cpm \
     && cpm install -g Carton Starman Plack::Middleware::ForceEnv \
-    && mkdir /carton /vendor \
+    Catalyst::Plugin::StackTrace && mkdir /carton /vendor \
     && useradd -m catalyst -g users \
     && chown -R catalyst:users /carton /vendor \
     && rm -rf /root/.{cpanm,perl-cpm} /home/catalyst/.{cpanm,perl-cpm} /tmp/*
 
 COPY cpanfile /code/
 COPY cpanfile.snapshot /code/
+COPY script/get* /tmp/
+
+RUN /tmp/get-jquery
+RUN /tmp/get-fa
 
 RUN cpm install -L /carton \
     && rm -rf /home/catalyst/.cpanm /home/catalyst/.perl-cpm /tmp/*
@@ -71,5 +75,5 @@ EXPOSE 5000
 
 # no clue why this thing can't just get the dirs right
 # CMD ["carton", "exec", "starman", "-Ilib", "-I/carton/lib/perl5", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
-# CMD ["carton", "exec", "starman", "-Ilib", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
-CMD ["cat", "app_ibis.conf"]
+CMD ["carton", "exec", "starman", "-Ilib", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
+# CMD ["cat", "app_ibis.conf"]

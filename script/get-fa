@@ -1,10 +1,20 @@
 #!/bin/sh
-
-SLUG=font-awesome-4.7.0
-TARGET=/tmp/durrr
-ZIP=`mktemp -u`
-curl -o $ZIP http://fontawesome.io/assets/$SLUG.zip
-unzip -d $TARGET -j $ZIP $SLUG/css/font-awesome.css
-unzip -d $TARGET/font-awesome -j $ZIP $SLUG/fonts/*
-rm $ZIP
-sed -i 's!\.\./fonts/!/asset/font-awesome/!g' $TARGET/font-awesome.css 
+# 2022-12-16 current https://use.fontawesome.com/releases/v6.2.1/fontawesome-free-6.2.1-web.zip
+# LTS https://use.fontawesome.com/releases/v5.15.4/fontawesome-free-5.15.4-web.zip
+BASE=https://use.fontawesome.com/releases
+VERSION=5.15.4
+SLUG=fontawesome-free-$VERSION-web
+URL=$BASE/v$VERSION/$SLUG.zip
+TARGET=root/asset
+ZIP=`mktemp -u`.zip
+echo $URL
+if curl -o $ZIP $URL; then
+    mkdir -p $TARGET
+    unzip -d $TARGET/font-awesome -j $ZIP $SLUG/webfonts/*
+    unzip -p -j $ZIP $SLUG/css/all.css > $TARGET/font-awesome.css
+    rm $ZIP
+    sed -i 's!\.\./webfonts/!font-awesome/!g' $TARGET/font-awesome.css
+else
+    echo "Could not download $URL" >&2
+    exit 1
+fi

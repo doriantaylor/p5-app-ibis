@@ -709,6 +709,7 @@ sub uuid :Private {
             $c->log->debug('welp posted it lol');
         };
         if ($@) {
+            $c->log->debug($@);
             $resp->status(409);
             $resp->content_type('text/plain');
             $resp->body('wtf');
@@ -1075,12 +1076,12 @@ sub _get_concept :Private {
                             { -name => 'input', type => 'text',
                               name => '= skos:prefLabel',
                               value => $label->literal_value },
-                            { -name => 'button', class => 'fa fa-repeat',
+                            { -name => 'button', class => 'fa fa-sync',
                               -content => '', } ] } },
                         { %FORMBP, -content => [
                             { -name => 'textarea', class => 'description',
                               name => '= skos:definition', -content => $desc },
-                            { -name => 'button', class => 'update fa fa-repeat',
+                            { -name => 'button', class => 'update fa fa-sync',
                               -content => '' } ] },
                         $self->_do_link_form($c, $subject, {
                             predicate => $ns->skos->altLabel, literal =>1,
@@ -1927,7 +1928,7 @@ sub _do_content {
                 { %FORMBP, class => 'description', -content => [
                     { -name => 'textarea', class => 'heading',
                       name => '= rdf:value', -content => $text },
-                    { -name => 'button', class => 'fa fa-repeat',
+                    { -name => 'button', class => 'fa fa-sync',
                       -content => '' } ] } ] },
             $meta,
             $self->_do_concept_form($c, $subject),
