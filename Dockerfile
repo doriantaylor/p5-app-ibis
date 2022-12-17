@@ -65,15 +65,18 @@ RUN perl -pi -e 's!dbi:Pg:.*!dbi:SQLite:dbname=/home/catalyst/trine.db!' app_ibi
 
 USER catalyst:users
 
+# expose this so state persists/you can grab it off
+VOLUME /home/catalyst
+
 # arguably more trouble than it's worth
-VOLUME /carton
+# VOLUME /carton
 
 # not sure what goes here (cargo cult)
-VOLUME /vendor
+# VOLUME /vendor
 
 EXPOSE 5000
 
 # no clue why this thing can't just get the dirs right
+# CMD ["cat", "app_ibis.conf"]
 # CMD ["carton", "exec", "starman", "-Ilib", "-I/carton/lib/perl5", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
 CMD ["carton", "exec", "starman", "-Ilib", "-e", "'enable ForceEnv => REMOTE_USER => $ENV{EMAIL}'", "app_ibis.psgi"]
-# CMD ["cat", "app_ibis.conf"]

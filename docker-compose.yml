@@ -10,14 +10,16 @@ services:
     # command: cat app_ibis.conf
     volumes:
       # - .:/code
-      - carton:/carton
-      - vendor:/vendor
+      # - carton:/carton
+      # - vendor:/vendor
+      # - /tmp:/home/catalyst
+      - .:/home/catalyst
     networks:
       - web
     ports:
       - "5000:5000"
     environment:
-      CATALYST_DEBUG: 1
+      # CATALYST_DEBUG: 1
       PERL_CARTON_PATH: /carton
       PERL5LIB: /code/lib:/carton/lib/perl5
       EMAIL: test@lol.biz
@@ -25,6 +27,6 @@ services:
 networks:
   web:
 
-volumes:
-  carton:
-  vendor:
+# volumes:
+#   carton:
+#   vendor:
