@@ -38,9 +38,12 @@ ENV PATH="/carton/bin:${PATH}"
 COPY --from=node-prereq /nodejs/root /code/root
 RUN rm -rf /nodejs
 
+RUN apt-get update
+RUN apt-get install -y libsass-dev libxml2-dev libxslt1-dev
+
 RUN cpanm App::cpm \
     && cpm install -g Carton Starman Plack::Middleware::ForceEnv \
-    Catalyst::Plugin::StackTrace && mkdir /carton /vendor \
+    Catalyst::Plugin::StackTrace CSS::Sass && mkdir /carton /vendor \
     && useradd -m catalyst -g users \
     && chown -R catalyst:users /carton /vendor \
     && rm -rf /root/.{cpanm,perl-cpm} /home/catalyst/.{cpanm,perl-cpm} /tmp/*
@@ -51,6 +54,8 @@ COPY script/get* /tmp/
 
 RUN /tmp/get-jquery
 RUN /tmp/get-fa
+
+RUN cd root/asset; psass -t expanded -o main.css main.scss; cd -
 
 RUN cpm install -L /carton \
     && rm -rf /home/catalyst/.cpanm /home/catalyst/.perl-cpm /tmp/*

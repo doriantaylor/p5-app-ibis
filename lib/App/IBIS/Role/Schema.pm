@@ -21,31 +21,41 @@ use Data::UUID::NCName ();
 my %XMLNS = (
     rdf   => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     rdfs  => 'http://www.w3.org/2000/01/rdf-schema#',
-    ibis  => 'https://vocab.methodandstructure.com/ibis#',
-    skos  => 'http://www.w3.org/2004/02/skos/core#',
+    cgto  => 'https://vocab.methodandstructure.com/graph-tool#',
     ci    => 'https://vocab.methodandstructure.com/content-inventory#',
     dct   => 'http://purl.org/dc/terms/',
     bibo  => 'http://purl.org/ontology/bibo/',
     foaf  => 'http://xmlns.com/foaf/0.1/',
+    ibis  => 'https://vocab.methodandstructure.com/ibis#',
     org   => 'http://www.w3.org/ns/org#',
+    pav   => 'http://purl.org/pav/',
+    pm    => 'https://vocab.methodandstructure.com/process-model#',
+    prov  => 'http://www.w3.org/ns/prov#',
     sioc  => 'http://rdfs.org/sioc/ns#',
     sioct => 'http://rdfs.org/sioc/types#',
-    prov  => 'http://www.w3.org/ns/prov#',
-    pav   => 'http://purl.org/pav/',
-    xsd   => 'http://www.w3.org/2001/XMLSchema#',
+    skos  => 'http://www.w3.org/2004/02/skos/core#',
     xhv   => 'http://www.w3.org/1999/xhtml/vocab#',
     xlink => 'http://www.w3.org/1999/xlink',
+    xsd   => 'http://www.w3.org/2001/XMLSchema#',
 );
 
 my $NS = RDF::Trine::NamespaceMap->new(\%XMLNS);
 
 my $IBIS_RE = do { my $x = $NS->ibis->uri->value; qr/^$x/; };
 
+sub _expand {
+    my $x = $_[0] // $_;
+    # this will give us ibis objects
+    my %y = map { $_ => ucfirst($_) } qw(issue position argument);
+    $x =~ /:/ ? $NS->uri($x) : $NS->ibis->uri($y{$x} // $x);
+}
+
 my %LABELS = map {
-    my $x = $_->[0];
-    $x = $x =~ /:/ ? $NS->uri($x) : $NS->ibis->uri($x);
+    my $x = _expand($_->[0]);
     $x->uri_value => [$x, $_->[1]] } (
         # IBIS
+        ['concerns',      'Concerns'],
+        ['concern-of',    'Concern of'],
         ['endorses',      'Endorses'],
         ['endorsed-by',   'Endorsed by'],
         ['generalizes',   'Generalizes'],
@@ -63,7 +73,7 @@ my %LABELS = map {
         ['opposes',       'Opposes'],
         ['opposed-by',    'Opposed by'],
         # SKOS
-        ['skos:related',            'Related To'],
+        ['skos:related',            'Related to'],
         ['skos:narrower',           'Has Narrower'],
         ['skos:broader',            'Has Broader'],
         ['skos:narrowerTransitive', 'Has Narrower (Transitive)'],
@@ -72,40 +82,34 @@ my %LABELS = map {
         ['skos:broadMatch',         'Has Broader Match'],
         ['skos:closeMatch',         'Has Close Match'],
         ['skos:exactMatch',         'Has Exact Match'],
+        # ORG`
 );
 
 my %INVERSE = map {
-    my ($x, $y) = @$_;
-    $x = $x =~ /:/ ? $NS->uri($x) : $NS->ibis->uri($x);
-    $y = $y =~ /:/ ? $NS->uri($y) : $NS->ibis->uri($y);
-    $x->uri_value => $LABELS{$y->uri_value} } (
+    my ($x, $y) = map(_expand, @$_);
+    my @out = ($x->uri_value => $LABELS{$y->uri_value});
+    $x->equal($y) ? @out : (@out, $y->uri_value => $LABELS{$x->uri_value});
+} (
+        [qw(concerns concern-of)],
         [qw(endorses endorsed-by)],
         [qw(generalizes specializes)],
-        [qw(specializes generalizes)],
         [qw(replaces replaced-by)],
-        [qw(replaced-by replaces)],
         [qw(questions questioned-by)],
-        [qw(questioned-by questions)],
         [qw(suggests suggested-by)],
-        [qw(suggested-by suggests)],
-#        [qw(questions suggests)],
-#        [qw(suggests questions)],
         [qw(response responds-to)],
-        [qw(responds-to response)],
         [qw(supports supported-by)],
-        [qw(supported-by supports)],
         [qw(opposes opposed-by)],
-        [qw(opposed-by opposes)],
         # SKOS
         [qw(skos:related skos:related)],
         [qw(skos:narrower skos:broader)],
-        [qw(skos:broader skos:narrower)],
         [qw(skos:narrowerTransitive skos:broaderTransitive)],
-        [qw(skos:broaderTransitive skos:narrowerTransitive)],
         [qw(skos:narrowMatch skos:broadMatch)],
-        [qw(skos:broadMatch skos:narrowMatch)],
         [qw(skos:closeMatch skos:closeMatch)],
         [qw(skos:exactMatch skos:exactMatch)],
+        # ORG
+        [qw(org:memberOf org:hasMember)],
+        [qw(org:hasSubOrganization org:isSubOrganizationOf)],
+        [qw(org:hasUnit org:isUnitOf)],
 );
 
 my %MAP = (
@@ -133,6 +137,12 @@ my %MAP = (
             [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],
+        'skos:Concept' => [
+            [$NS->ibis->concerns,                  'Concerns'],
+        ],
+        'foaf:Person' => [
+            [$NS->ibis->uri('endorsed-by'),        'Concerns'],
+        ],
     },
     position => {
         issue => [
@@ -148,6 +158,12 @@ my %MAP = (
             [$NS->ibis->uri('supported-by'),   'Supported by'],
             [$NS->ibis->uri('opposed-by'),       'Opposed by'],
             [$NS->ibis->uri('responds-to'),     'Responds to'],
+        ],
+        'skos:Concept' => [
+            [$NS->ibis->concerns,                  'Concerns'],
+        ],
+        'foaf:Person' => [
+            [$NS->ibis->uri('endorsed-by'),        'Concerns'],
         ],
     },
     argument => {
@@ -174,6 +190,12 @@ my %MAP = (
             [$NS->ibis->questions,                'Questions'],
             [$NS->ibis->uri('questioned-by'), 'Questioned by'],
         ],
+        'skos:Concept' => [
+            [$NS->ibis->concerns,                  'Concerns'],
+        ],
+        'foaf:Person' => [
+            [$NS->ibis->uri('endorsed-by'),        'Concerns'],
+        ],
     },
     'skos:Concept' => {
         'skos:Concept' => [
@@ -187,18 +209,150 @@ my %MAP = (
             [$NS->skos->closeMatch,         'Has Close Match'],
             [$NS->skos->exactMatch,         'Has Exact Match'],
         ],
+        issue => [
+            [$NS->ibis->uri('concern-of'), 'Concern Of'],
+        ],
+        position => [
+            [$NS->ibis->uri('concern-of'), 'Concern Of'],
+        ],
+        argument => [
+            [$NS->ibis->uri('concern-of'), 'Concern Of'],
+        ],
+    },
+    # this is where you get a combinatorial explosion
+    'foaf:Person' => {
+        'org:Organization' => [
+            [$NS->org->memberOf, 'Member Of'],
+            [$NS->org->headOf,     'Head Of'],
+        ],
+        'org:FormalOrganization' => [
+            [$NS->org->memberOf, 'Member Of'],
+            [$NS->org->headOf,     'Head Of'],
+        ],
+        'org:OrganizationalUnit' => [
+            [$NS->org->memberOf, 'Member Of'],
+            [$NS->org->headOf,     'Head Of'],
+        ],
+        'org:OrganizationalCollaboration' => [
+            [$NS->org->memberOf, 'Member Of'],
+            [$NS->org->headOf,     'Head Of'],
+        ],
+        'issue' => [
+            [$NS->ibis->endorses, 'Endorses'],
+        ],
+        'position' => [
+            [$NS->ibis->endorses, 'Endorses'],
+        ],
+        'argument' => [
+            [$NS->ibis->endorses, 'Endorses'],
+        ],
+    },
+    'org:Organization' => {
+        'org:Organization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:FormalOrganization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:OrganizationalCollaboration' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:OrganizationalUnit' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+            [$NS->org->hasUnit,                           'Has Unit'],
+        ],
+        'foaf:Person' => [
+            [$NS->org->hasMember, 'Has Member'],
+        ],
+    },
+    'org:FormalOrganization' => {
+        'org:Organization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:FormalOrganization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:OrganizationalCollaboration' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:OrganizationalUnit' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+            [$NS->org->hasUnit,                           'Has Unit'],
+        ],
+        'foaf:Person' => [
+            [$NS->org->hasMember,                       'Has Member'],
+        ],
+    },
+    'org:OrganizationalCollaboration' => {
+        'org:Organization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:FormalOrganization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+        ],
+        'org:OrganizationalUnit' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+            [$NS->org->hasUnit,                           'Has Unit'],
+        ],
+        'foaf:Person' => [
+            [$NS->org->hasMember,                       'Has Member'],
+        ],
+    },
+    'org:OrganizationalUnit' => {
+        'org:Organization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+            [$NS->org->unitOf,                             'Unit Of'],
+        ],
+        'org:FormalOrganization' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+            [$NS->org->unitOf,                             'Unit Of'],
+        ],
+        'org:OrganizationalUnit' => [
+            [$NS->org->hasSubOrganization,    'Has Sub-Organization'],
+            [$NS->org->isSubOrganizationOf, 'Is Sub-Organization Of'],
+            [$NS->org->linkedTo,                         'Linked To'],
+            [$NS->org->hasUnit,                           'Has Unit'],
+            [$NS->org->unitOf,                             'Unit Of'],
+        ],
+        'foaf:Person' => [
+            [$NS->org->hasMember,                       'Has Member'],
+        ],
     },
 );
+
 
 # rewrite this sucka
 %MAP = map {
     my $x = $_;
-    my $y = $x =~ /:/ ? $NS->uri($x) : $NS->ibis->uri(ucfirst $x);
+    my $y = _expand($x);
     $y->uri_value => {
-        map {
-            my $z = $_ =~ /:/ ? $NS->uri($_) : $NS->ibis->uri(ucfirst $_);
-            $z->uri_value => $MAP{$x}{$_}
-        } keys %{$MAP{$x}}
+        map { _expand($_)->uri_value => $MAP{$x}{$_} } keys %{$MAP{$x}}
     }
 } keys %MAP;
 

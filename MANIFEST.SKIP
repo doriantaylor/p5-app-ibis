@@ -122,6 +122,7 @@ App-IBIS.*
 root/asset/main.scss
 maint/
 root/asset/jquery-2.*
+root/asset/font-awesome.old
 js/
 root/bogon.*
 
