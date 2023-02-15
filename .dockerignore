@@ -13,4 +13,4 @@ node_modules
 *.yml
 *.gz
 *.zip
-root/asset/main.scss
+# root/asset/main.scss

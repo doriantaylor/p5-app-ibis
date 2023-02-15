@@ -5,8 +5,15 @@ ENV PATH="/nodejs/js/node_modules/.bin:/usr/local/bin:${PATH}"
 
 WORKDIR /nodejs
 COPY root /nodejs/root
-COPY js /nodejs/js
 
+RUN apt-get update
+RUN apt-get install -y libsass-dev sassc libxml2-dev libxslt1-dev
+
+WORKDIR /nodejs/root/asset
+
+RUN sassc -t expanded main.scss main.css
+
+COPY js /nodejs/js
 WORKDIR /nodejs/js
 # RUN npm install -g --no-audit --no-fund --link --force
 #RUN npm config set timeout=5 registry=http://registry.npmjs.org/
@@ -38,9 +45,6 @@ ENV PATH="/carton/bin:${PATH}"
 COPY --from=node-prereq /nodejs/root /code/root
 RUN rm -rf /nodejs
 
-RUN apt-get update
-RUN apt-get install -y libsass-dev libxml2-dev libxslt1-dev
-
 RUN cpanm App::cpm \
     && cpm install -g Carton Starman Plack::Middleware::ForceEnv \
     Catalyst::Plugin::StackTrace CSS::Sass && mkdir /carton /vendor \
@@ -55,14 +59,14 @@ COPY script/get* /tmp/
 RUN /tmp/get-jquery
 RUN /tmp/get-fa
 
-RUN cd root/asset; psass -t expanded -o main.css main.scss; cd -
-
 RUN cpm install -L /carton \
     && rm -rf /home/catalyst/.cpanm /home/catalyst/.perl-cpm /tmp/*
 
 COPY app_ibis.* /code/
 COPY lib  /code/lib
+# this already happens above
 # COPY root /code/root
+# RUN psass -t expanded -o root/asset/main.css root/asset/main.scss
 
 # lol make this sqlite not postgres
 # RUN sed -i -e 's!\(dsn.*\)dbi:Pg.*!\1dbi:SQLite:dbname=/home/catalyst/trine.db!' app_ibis.conf
