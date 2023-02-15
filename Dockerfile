@@ -6,23 +6,17 @@ ENV PATH="/nodejs/js/node_modules/.bin:/usr/local/bin:${PATH}"
 WORKDIR /nodejs
 COPY root /nodejs/root
 
+# make the sass stuff happen here (and the rest of apt while we're at it)
 RUN apt-get update
 RUN apt-get install -y libsass-dev sassc libxml2-dev libxslt1-dev
-
 WORKDIR /nodejs/root/asset
-
 RUN sassc -t expanded main.scss main.css
 
+# okay now do the javascript stuff
 COPY js /nodejs/js
 WORKDIR /nodejs/js
-# RUN npm install -g --no-audit --no-fund --link --force
-#RUN npm config set timeout=5 registry=http://registry.npmjs.org/
 RUN npm config set registry=http://registry.npmjs.org/
-# RUN npm install -g --no-audit --no-fund rollup
 RUN npm install --no-audit --no-fund --omit=optional
-# RUN ls /usr/local/lib/node_modules
-# RUN ls node_modules
-# RUN npm bin -g
 RUN npm run build
 
 FROM perl:latest
@@ -36,11 +30,6 @@ ENV PERL5LIB=/code/lib:/carton/lib/perl5
 ENV EMAIL=test@hi.lol
 
 ENV PATH="/carton/bin:${PATH}"
-
-# RUN curl -sL https://deb.nodesource.com/setup_18.x | bash \
-#      && apt-get update && apt-get install -y nodejs
-# RUN apt-get update
-# RUN apt-get install -y nodejs
 
 COPY --from=node-prereq /nodejs/root /code/root
 RUN rm -rf /nodejs
@@ -64,9 +53,6 @@ RUN cpm install -L /carton \
 
 COPY app_ibis.* /code/
 COPY lib  /code/lib
-# this already happens above
-# COPY root /code/root
-# RUN psass -t expanded -o root/asset/main.css root/asset/main.scss
 
 # lol make this sqlite not postgres
 # RUN sed -i -e 's!\(dsn.*\)dbi:Pg.*!\1dbi:SQLite:dbname=/home/catalyst/trine.db!' app_ibis.conf
