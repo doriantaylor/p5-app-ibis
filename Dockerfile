@@ -18,6 +18,7 @@ WORKDIR /nodejs/js
 RUN npm config set registry=http://registry.npmjs.org/
 RUN npm install --no-audit --no-fund --omit=optional
 RUN npm run build
+RUN cp node_modules/complex.js/complex.js /nodejs/root/asset/
 
 FROM perl:latest
 
@@ -32,6 +33,7 @@ ENV EMAIL=test@hi.lol
 ENV PATH="/carton/bin:${PATH}"
 
 COPY --from=node-prereq /nodejs/root /code/root
+
 RUN rm -rf /nodejs
 
 RUN cpanm App::cpm \
