@@ -51,7 +51,7 @@ use HTTP::Negotiate  ();
 use Unicode::Collate ();
 use RDF::Trine       ();
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 extends 'Catalyst';
 

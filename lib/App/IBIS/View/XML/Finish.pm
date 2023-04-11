@@ -23,6 +23,8 @@ use constant RDFNS   => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 use constant SVGNS   => 'http://www.w3.org/2000/svg';
 use constant ATOMNS  => 'http://www.w3.org/2005/Atom';
 
+our $VERSION = '0.13';
+
 my %NS = (
     xml   => XMLNS,
     xsl   => XSLTNS,
@@ -376,6 +378,7 @@ sub process {
         # note this produces a byte string, so doing this
         # for the content-length will be accurate.
         my $str = $body->toString(1);
+        my $len = length $str;
 
         if ($body->actualEncoding =~ /utf[_-]?8/i) {
             # nevertheless, Catalyst seems to interfere, so we do this:
@@ -385,11 +388,14 @@ sub process {
         else {
             $c->log->debug(
                 sprintf 'actual encoding is %s', $body->actualEncoding);
-            $res->content_length(length $str);
         }
 
         # punt it out
         $res->body($str);
+        $res->content_length($len); # set this after the body
+
+        # what do we return?
+        $str;
     }
 }
 
