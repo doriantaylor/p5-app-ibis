@@ -57,21 +57,21 @@ my %LABELS = map {
         ['concerns',      'Concerns'],
         ['concern-of',    'Concern of'],
         ['endorses',      'Endorses'],
-        ['endorsed-by',   'Endorsed by'],
+        ['endorsed-by',   'Endorsed By'],
         ['generalizes',   'Generalizes'],
         ['specializes',   'Specializes'],
         ['replaces',      'Replaces'],
-        ['replaced-by',   'Replaced by'],
+        ['replaced-by',   'Replaced By'],
         ['questions',     'Questions'],
-        ['questioned-by', 'Questioned by'],
+        ['questioned-by', 'Questioned By'],
         ['suggests',      'Suggests'],
-        ['suggested-by',  'Suggested by'],
+        ['suggested-by',  'Suggested By'],
         ['response',      'Has Response'],
         ['responds-to',   'Responds to'],
         ['supports',      'Supports'],
-        ['supported-by',  'Supported by'],
+        ['supported-by',  'Supported By'],
         ['opposes',       'Opposes'],
-        ['opposed-by',    'Opposed by'],
+        ['opposed-by',    'Opposed By'],
         # SKOS
         ['skos:related',            'Related to'],
         ['skos:narrower',           'Has Narrower'],
@@ -118,52 +118,52 @@ my %MAP = (
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
-            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested By'],
             [$NS->ibis->questions,                'Questions'],
-            [$NS->ibis->uri('questioned-by'), 'Questioned by'],
+            [$NS->ibis->uri('questioned-by'), 'Questioned By'],
             #[$NS->ibis->replaces,                  'Replaces'],
-            #[$NS->ibis->uri('replaced-by'),     'Replaced by'],
+            #[$NS->ibis->uri('replaced-by'),     'Replaced By'],
         ],
         position => [
             [$NS->ibis->response,              'Has Response'],
-            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested By'],
             [$NS->ibis->questions,                'Questions'],
         ],
         argument => [
             #[$NS->ibis->generalizes,            'Generalizes'],
             #[$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
-            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested By'],
             [$NS->ibis->questions,                'Questions'],
-            [$NS->ibis->uri('questioned-by'), 'Questioned by'],
+            [$NS->ibis->uri('questioned-by'), 'Questioned By'],
         ],
         'skos:Concept' => [
             [$NS->ibis->concerns,                  'Concerns'],
         ],
         'foaf:Person' => [
-            [$NS->ibis->uri('endorsed-by'),        'Concerns'],
+            [$NS->ibis->uri('endorsed-by'),     'Endorsed By'],
         ],
     },
     position => {
         issue => [
             [$NS->ibis->uri('responds-to'),     'Responds to'],
             [$NS->ibis->suggests,                  'Suggests'],
-            [$NS->ibis->uri('questioned-by'), 'Questioned by'],
+            [$NS->ibis->uri('questioned-by'), 'Questioned By'],
         ],
         position => [
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
         ],
         argument => [
-            [$NS->ibis->uri('supported-by'),   'Supported by'],
-            [$NS->ibis->uri('opposed-by'),       'Opposed by'],
-            [$NS->ibis->uri('responds-to'),     'Responds to'],
+            [$NS->ibis->uri('supported-by'),   'Supported By'],
+            [$NS->ibis->uri('opposed-by'),       'Opposed By'],
+            [$NS->ibis->uri('responds-to'),     'Responds To'],
         ],
         'skos:Concept' => [
             [$NS->ibis->concerns,                  'Concerns'],
         ],
         'foaf:Person' => [
-            [$NS->ibis->uri('endorsed-by'),        'Concerns'],
+            [$NS->ibis->uri('endorsed-by'),     'Endorsed By'],
         ],
     },
     argument => {
@@ -171,30 +171,30 @@ my %MAP = (
             #[$NS->ibis->generalizes,            'Generalizes'],
             #[$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
-            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested By'],
             [$NS->ibis->questions,                'Questions'],
-            [$NS->ibis->uri('questioned-by'), 'Questioned by'],
+            [$NS->ibis->uri('questioned-by'), 'Questioned By'],
         ],
         position => [
             [$NS->ibis->supports,                  'Supports'],
             [$NS->ibis->opposes,                    'Opposes'],
             [$NS->ibis->questions,                'Questions'],
-            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested By'],
             [$NS->ibis->response,              'Has Response'],
         ],
         argument => [
             [$NS->ibis->generalizes,            'Generalizes'],
             [$NS->ibis->specializes,            'Specializes'],
             [$NS->ibis->suggests,                  'Suggests'],
-            [$NS->ibis->uri('suggested-by'),   'Suggested by'],
+            [$NS->ibis->uri('suggested-by'),   'Suggested By'],
             [$NS->ibis->questions,                'Questions'],
-            [$NS->ibis->uri('questioned-by'), 'Questioned by'],
+            [$NS->ibis->uri('questioned-by'), 'Questioned By'],
         ],
         'skos:Concept' => [
             [$NS->ibis->concerns,                  'Concerns'],
         ],
         'foaf:Person' => [
-            [$NS->ibis->uri('endorsed-by'),        'Concerns'],
+            [$NS->ibis->uri('endorsed-by'),     'Endorsed By'],
         ],
     },
     'skos:Concept' => {
@@ -372,7 +372,7 @@ my %PREFER = map {
 my @SEQ = map { $NS->ibis->uri($_) }
     qw(supports opposes responds-to response supported-by opposed-by
        suggests suggested-by questions questioned-by generalizes specializes
-       replaces replaced-by);
+       replaces replaced-by concerns concern-of);
 
 # do {
 #     my %seq;

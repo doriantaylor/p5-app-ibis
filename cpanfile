@@ -33,6 +33,7 @@ requires 'Catalyst::Plugin::Static::Simple';
 requires 'Catalyst::Action::RenderView';
 requires 'CatalystX::RoleApplicator';
 requires 'Catalyst::TraitFor::Request::ProxyBase';
+requires 'Catalyst::ScriptRunner';
 
 # This should reflect the config file format you've chosen
 # See Catalyst::Plugin::ConfigLoader for supported formats
@@ -40,15 +41,16 @@ requires 'Config::General';
 
 # app-specific third-party
 requires 'Catalyst::Model::RDF'         => '0.03';
+requires 'Convert::Color'               => '0.17';
+requires 'Convert::Color::HUSL'         => '1.000';
+requires 'CSS::Sass'                    => 'v3.6.3';
 requires 'Data::GUID::Any'              => '0.004';
-requires 'RDF::Trine'                   => '1.019';
-requires 'URI::NamespaceMap'            => '0.06';
-requires 'URI::urn::uuid'               => '0.03';
 requires 'DateTime::Format::W3CDTF'     => '0.06';
 requires 'HTTP::Negotiate'              => '6.00';
-requires 'Convert::Color::HUSL'         => '1.000';
+requires 'RDF::Trine'                   => '1.019';
 requires 'Unicode::Collate'             => '1.19';
-requires 'CSS::Sass'                    => 'v3.6.3';
+requires 'URI::NamespaceMap'            => '0.06';
+requires 'URI::urn::uuid'               => '0.03';
 requires 'XML::LibXML';
 requires 'XML::LibXSLT';
 
