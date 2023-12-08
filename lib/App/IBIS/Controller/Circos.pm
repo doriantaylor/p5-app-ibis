@@ -1,4 +1,8 @@
 package App::IBIS::Controller::Circos;
+
+use strict;
+use warnings;
+
 use Moose;
 use namespace::autoclean;
 

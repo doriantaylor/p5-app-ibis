@@ -31,28 +31,6 @@ use List::MoreUtils qw(any);
 # negotiate yo
 use HTTP::Negotiate ();
 
-my $UUID_RE  = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
-my $UUID_URN = qr/^urn:uuid:([0-9a-f]{8}(?:-[0-9a-f]{4}){4}[0-9a-f]{8})$/i;
-
-my %FORMBP = (
-    -name            => 'form',
-    method           => 'POST',
-    action           => '',
-    'accept-charset' => 'utf-8',
-);
-
-my %FOOTER = (
-    -name => 'footer', -content => {
-        -name => 'nav', -content => {
-            -name => 'ul', -content => [
-                { -name => 'li', -content => { href => './',
-                                               -content => 'Overview' } },
-                { -name => 'li', -content => {
-                    href => 'we-have-issues',
-                    -content => 'What is this thing?' } },
-            ] } },
-);
-
 has _dispatch => (
     is => 'ro',
     isa => 'HashRef',
@@ -64,10 +42,10 @@ has _dispatch => (
         my $skos = $ns->skos;
         return {
             $ibis->Network->value       => '_get_concept_scheme',
-            $ibis->Issue->value         => 'ibis/get_ibis',
-            $ibis->Position->value      => 'ibis/get_ibis',
-            $ibis->Argument->value      => 'ibis/get_ibis',
-            $skos->Concept->value       => 'skos/get_concept',
+            $ibis->Issue->value         => '_get_generic', #'ibis/get_ibis',
+            $ibis->Position->value      => '_get_generic', # 'ibis/get_ibis',
+            $ibis->Argument->value      => '_get_generic', # 'ibis/get_ibis',
+            $skos->Concept->value       => '_get_generic', # 'skos/get_concept',
             $skos->Collection->value    => 'skos/get_collection',
             $skos->ConceptScheme->value => '_get_concept_scheme',
         };
@@ -152,7 +130,7 @@ sub index :Path :Args(0) {
                   #   -content => { -name => 'object',
                   #                 type => 'image/svg+xml',
                   #                 data => 'concepts?rotate=180' } },
-                  { %FORMBP, action => $new,
+                  { %{$self->FORMBP}, action => $new,
                     -content => { -name => 'fieldset', -content => [
                         { -name => 'legend',
                           -content => 'Start a new Concept' },
@@ -197,9 +175,10 @@ sub uuid :Private {
     my $method = $req->method;
     if ($method eq 'POST') {
         # check for input
+        my $newsub;
         eval {
             $c->log->debug('gonna post it lol');
-            $self->_post_uuid($c, $uuid, $req->body_parameters);
+            $newsub = $self->_post_uuid($c, $uuid, $req->body_parameters);
             $c->log->debug('welp posted it lol');
         };
         if ($@) {
@@ -390,7 +369,7 @@ sub bulk :Local {
             title => 'Load a (Turtle) data file',
             uri   => $req->uri,
             content => {
-                %FORMBP, enctype => 'multipart/form-data', -content => [
+                %{$self->FORMBP}, enctype => 'multipart/form-data', -content => [
                     { -name => 'input', type => 'file', name => 'data' },
                     { -name => 'button', -content => 'Upload' },
                 ] },
@@ -537,7 +516,7 @@ sub feed :Local {
 sub _to_urn {
     my $path = shift;
     #warn "lols $path";
-    if (my ($uuid) = ($path =~ $UUID_RE)) {
+    if (my ($uuid) = ($path =~ $App::IBIS::Role::Markup::UUID_RE)) {
         #warn $uuid;
         my $out = URI->new("urn:uuid:$uuid");
         return $out;
@@ -618,6 +597,8 @@ sub _post_uuid {
    );
 
     my $patch = $kv->process($content);
+
+    my $newsub = $kv->subject;
     #warn Data::Dumper::Dumper($patch);
 
     # $c->log->debug('got here 0');
@@ -691,7 +672,7 @@ Standard 404 error page
 sub default :Path :Does('+CatalystX::Action::Negotiate') {
     my ( $self, $c, @p) = @_;
 
-    if ($p[0] and $p[0] =~ $UUID_RE) {
+    if ($p[0] and $p[0] =~ $self->UUID_RE) {
         $c->forward(uuid => [lc $p[0]]);
         return;
     }
@@ -778,6 +759,12 @@ sub _do_index {
     wantarray ? @out : \@out;
 }
 
+sub _get_generic :Private {
+    my ($self, $c, $subject) = @_;
+    my $doc = $c->render_simple($subject);
+    $c->res->body($doc);
+}
+
 sub _do_404 {
     my ($self, $new) = @_;
     $new ||= $self->uuid4;
@@ -786,7 +773,7 @@ sub _do_404 {
     my @types = map +["ibis:$_" => $_ ], qw(Issue Position Argument);
     #push @types, ['skos:Concept' => 'Concept'];
 
-    return { %FORMBP, class => "new-ibis", action => $new,
+    return { %{$self->FORMBP}, class => "new-ibis", action => $new,
              -content => {
                  -name => 'fieldset', -content => [
                      { -name => 'legend', -content => [

@@ -1,4 +1,8 @@
 package App::IBIS::Controller::SKOS;
+
+use strict;
+use warnings;
+
 use Moose;
 use namespace::autoclean;
 
@@ -70,7 +74,7 @@ my @SKOS_SEQ = (
 sub do_concept_neighbours {
     my ($self, $c, $subject) = @_;
 
-    my ($resources) = $self->neighbour_structs($c, $subject);
+    my ($resources) = $c->neighbour_structs($subject);
 
     my $ns  = $self->ns;
 
@@ -152,7 +156,7 @@ sub do_concept_create_form {
                       class => 'new-value', name => 'skos:prefLabel' },
                     { -name => 'button', class => 'fa fa-plus',
                       -content => '' }
-                ] } ] } ]};
+                ] } ] } ] };
 }
 
 sub do_concept_connect_form {

@@ -1,4 +1,8 @@
 package App::IBIS::Controller::IBIS;
+
+use strict;
+use warnings;
+
 use Moose;
 use namespace::autoclean;
 
@@ -25,154 +29,22 @@ Catalyst Controller.
 
 =cut
 
-sub _naive_typeof {
-    my ($self, $c, @types) = @_;
-    my $m = $c->rdf_cache;
-    my %out;
-    for my $t (@types) {
-        my $v = $t->value;
-        $out{$v} ||= {};
-        for my $s ($m->subjects($self->ns->rdf->type, $t)) {
-            $out{$v}{$s->value} = 1;
-        }
-    }
-    \%out;
-}
-
-sub _menu {
-    my ($self, $c, $type, $flag) = @_;
-    my $ns  = $self->ns;
-
-    my @labels = qw(Issue Position Argument);
-    my @types  = map { $ns->ibis->uri($_) } @labels;
-
-    my @out;
-
-    my $map = $self->predicate_map;
-
-    # XXX TEMPORARY
-    my @rep = map { $ns->ibis->uri($_) } qw(replaces replaced-by);
-
-    my @cls;
-
-    for my $i (0..$#labels) {
-        my $v = $type->uri_value;
-
-        # my @radio;
-        # for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
-        #     # XXX TEMPORARY
-        #     next if grep { $_->equal($item->[0]) } @rep;
-
-        #     my $curie = $ns->abbreviate($item->[0]);
-
-        #     my $name = '$pred :';
-        #     $name = '! ' . $name if $flag;
-
-        #     push @radio, {
-        #         -name => 'li', about => $curie, -content => {
-        #             -name => 'label', -content => [
-        #                 { -name => 'input', type => 'radio',
-        #                   name => $name, value => $curie },
-        #                 ' ' . $item->[1] ] } };
-        # }
-
-        my @checkbox;
-        for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
-            # XXX TEMPORARY
-            next if grep { $_->equal($item->[0]) } @rep;
-
-            my $curie = $ns->abbreviate($item->[0]);
-            my $name  = $curie . ' : $';
-            $name = '! ' . $name if $flag;
-            push @checkbox, {
-                -name => 'li', about => $curie, -content => {
-                    -name => 'label', -content => [
-                        { -name => 'input', type => 'checkbox',
-                          name => $name, value => '$obj' },
-                        ' ' . $item->[1] ] } };
-        }
-
-        my $type = $ns->abbreviate($types[$i]);
-
-        my %attr = (
-            class => 'type-toggle',
-            type  => 'radio',
-            name  => $flag ? 'rdf:type :' : 'rdf-type',
-            #value => $flag ? $ns->abbreviate($types[$i]) : '',
-            value => $type,
-        );
-        $attr{checked}  = 'checked' if $i == 0;
-        #$attr{disabled} = 'disabled' unless @checkbox;
-
-        my $class = 'relation ' . lc $labels[$i];
-        $class .= ' selected' unless $i;
-
-        push @cls, { -name => 'label', -content => [
-            { -name => 'input', %attr }, " $labels[$i]" ] };
-
-        push @out, { -name => 'fieldset', about => $type,
-                     class => $class, -content => [ !!@checkbox ? {
-                         -name => 'ul', -content => \@checkbox } : () ] };
-    }
-
-    push @out, { -name => 'fieldset', class => 'types',
-                 -content => { -name => 'ul', -content => [
-                     map +( { -name => 'li', -content => $_}), @cls] } };
-    @out;
-}
-
-sub _select {
-    my ($self, $c, $subject) = @_;
-    my @labels = qw(Issue Position Argument);
-    my @types  = map { $self->ns->ibis->uri($_) } @labels;
-    my $map    = $self->_naive_typeof($c, @types);
-    my $model  = $c->rdf_cache;
-    my @opts;
-    for my $i (0..$#labels) {
-        my $l = $labels[$i];
-        my $t = $types[$i];
-        my $v = $t->value;
-
-        # XXX this will crash
-        my $coll = $c->collator;
-        my $rdfv = $self->ns->rdf->value;
-        my @pairs = sort {
-            $coll->cmp(($a->[1] ? $a->[1]->value : ''),
-                       ($b->[1] ? $b->[1]->value : ''))
-        } map {
-            my $s = iri($_); [$s, $model->objects($s, $rdfv)]
-        } keys %{$map->{$v} || {}};
-
-        my @o;
-        # XXX this might be a blank node but not on my watch
-        for my $pair (@pairs) {
-            my ($s, $val) = @$pair;
-            next if $subject->equal($s);
-
-            my $text = $val ? $val->value : $s->value;
-            my $ss   = $s->value;
-            push @o, { -name => 'option',
-                       about => $ss, value => $ss, -content => $text };
-        }
-
-        push @opts, { -name => 'optgroup', about => $v, label => $l,
-                      rev => 'rdf:type', -content => \@o } if @o;
-    }
-
-    return { -name => 'select', class => 'target',
-             name => '$ obj', -content => \@opts };
-}
-
 sub _do_connect_form {
     my ($self, $c, $subject, $type) = @_;
 
+    my $ns = $self->ns;
+
+    # XXX this should be part of the configuration
+    my @types = ($ns->ibis->Issue, $ns->ibis->Position,
+                 $ns->ibis->Argument, $ns->skos->Concept);
+
     return { %{$self->FORMBP}, id => 'connect-existing', -content => {
         -name => 'fieldset', class => 'edit-group', -content => [
-            $self->_menu($c, $type),
+            $self->edit_menu($c, $type, types => \@types),
             # XXX fieldset can't do flex
             { -name => 'div', class => 'interaction',
               -content => [
-                  $self->_select($c, $subject),
+                  $self->type_select($c, $subject, types => \@types),
                   { -name => 'button', class => 'fa fa-link', -content => '' }]
           } ] } };
 }
@@ -191,6 +63,9 @@ sub _do_create_form {
         }
     }
 
+    my @types = ($ns->ibis->Issue, $ns->ibis->Position,
+                 $ns->ibis->Argument, $ns->skos->Concept);
+
     my @has = $m->subjects($ns->skos->member, $s);
     @has = map +{ -name => 'input', type => 'hidden',
                   name => '! skos:member :', value => $_->value }, @has;
@@ -202,7 +77,7 @@ sub _do_create_form {
             @has,
             { -name => 'input', type => 'hidden',
               name => '$ obj', value => $subject },
-            $self->_menu($c, $type, 1),
+            $self->edit_menu($c, $type, types => \@types, flag => 1),
             # XXX fieldset can't do flex
             { -name => 'div', class => 'interaction', -content => [
                 { -name => 'input', class => 'new-value',
@@ -222,7 +97,7 @@ sub _do_content {
     my $labels  = $self->labels;
 
     # XXX PALLIATIVE SURGERY LOL
-    my ($resources, $literals) = $self->neighbour_structs($c, $subject);
+    my ($resources, $literals) = $c->neighbour_structs($subject);
     %res = %$resources;
     %lit = %$literals;
 

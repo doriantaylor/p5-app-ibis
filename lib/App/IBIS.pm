@@ -49,7 +49,8 @@ use CatalystX::RoleApplicator;
 use Convert::Color   ();
 use HTTP::Negotiate  ();
 use Unicode::Collate ();
-use RDF::Trine       ();
+use RDF::Trine qw(iri blank literal statement);
+use RDF::Trine::Namespace qw(RDF);
 
 our $VERSION = '0.13';
 
@@ -151,6 +152,114 @@ App::IBIS - Catalyst based application
 
 =head1 METHODS
 
+=head2 neighbour_structs $SUBJECT
+
+=cut
+
+sub graph_cache_bp {
+    my $c = shift;
+
+    my $m = $c->rdf_cache;
+    my @c = $m->get_contexts;
+    my $g = $c->graph if @c;
+
+    return ($m, $g);
+}
+
+sub neighbour_structs {
+    my ($c, $subject, %p) = @_;
+    my (%in, %res, %lit, $iter);
+
+    my $skip_types = exists $p{types} && !$p{types};
+
+    my ($m, $g) = $c->graph_cache_bp;
+    my $ns = $c->ns;
+
+    my $inverse = $c->inverse;
+
+    # $c->log->debug('wtf contexts are ' . join(' ', $c->model('RDF')->get_contexts));
+
+    # this flips around inverse relations
+
+    my @terms = (undef, undef, $subject);
+    push @terms, $g if $g;
+
+    $iter = $m->get_statements(@terms);
+    while (my $stmt = $iter->next) {
+        my $p = $stmt->predicate->value;
+        my $s = $stmt->subject;
+        if (my $inv = $inverse->{$p}) {
+            $p = $inv->[0]->value;
+            # resources
+            $res{$p} ||= {};
+            $res{$p}{$s->value} ||= $s;
+            #push @{$res{$p}}, $s;
+        }
+        else {
+            # inverses
+            $in{$p} ||= {};
+            $in{$p}{$s->value} ||= $s;
+            #push @{$in{$p}}, $s;
+        }
+    }
+
+    # this gathers forward relations
+
+    @terms = ($subject, undef, undef);
+    push @terms, $g if $g;
+
+    # $c->log->debug(Data::Dumper::Dumper(\@terms));
+
+    $iter = $m->get_statements(@terms);
+    while (my $stmt = $iter->next) {
+        my $p = $stmt->predicate;
+
+        # don't pollute the content with the type
+        next if $skip_types and $p->equal($ns->rdf->type);
+
+        # okay carry on
+        $p = $p->value;
+        my $o = $stmt->object;
+        # $c->log->debug("wtf $subject $p $o");
+        if ($o->is_literal) {
+            $lit{$p} ||= {};
+            $lit{$p}{$o->sse} = $o;
+        }
+        else {
+            $res{$p} ||= {};
+            $res{$p}{$o->value} ||= $o;
+        }
+    }
+
+    my @out = (\%res, \%lit, \%in);
+
+    wantarray ? @out : \@out;
+}
+
+=head2 types_for $SUBJECT [, %PARAMS]
+
+=cut
+
+sub types_for {
+    my ($c, $s, %p) = @_;
+    return unless $s->is_resource or $s->is_blank;
+
+    my $tcache = $p{types} ||= {};
+
+    my ($m, $g) = $c->graph_cache_bp;
+    my $ns = $c->ns;
+
+    my @terms = ($s, $ns->rdf->type);
+    push @terms, $g if $g;
+
+    my @types = @{
+        $tcache->{$s->uri_value} ||=
+            [sort { $a->uri_value cmp $b->uri_value }
+             $m->objects(@terms, type => 'resource')]};
+
+    wantarray ? @types : \@types;
+}
+
 =head2 label_for $SUBJECT
 
 Ghetto-rig a definitive label
@@ -158,23 +267,59 @@ Ghetto-rig a definitive label
 =cut
 
 sub label_for {
-    my ($c, $s, $alt) = @_;
+    my ($c, $s, $alt, @rest) = @_;
     return unless $s->is_resource or $s->is_blank;
 
-    my $m  = $c->model('RDF');
-    my $g  = $c->graph;
-    my $ns = $m->ns;
+    my %p;
 
-    # get the sequence of candidates
-    my @candidates = $alt ? (@ALT_LAB, @LABELS) : (@LABELS, @ALT_LAB);
+    if (@rest == 1 and ref $rest[0] eq 'HASH') {
+        %p = %{$rest[0]};
+        $alt = $p{alt} ||= $alt;
+    }
+    elsif (@rest % 2) {
+        %p = ($alt, @rest);
+        $alt = $p{alt};
+    }
+    elsif (ref $alt eq 'HASH') {
+        %p = %$alt;
+        $alt = $p{alt};
+    }
+    else {
+        %p = @rest;
+        $p{alt} ||= $alt;
+    }
 
-    # pull them all out
-    my %out;
-    for my $p (@candidates) {
-        my @coll = grep { $_->is_literal and $_->literal_value !~ /^\s*$/ }
-            $m->objects($s, $p, $g);
+    my $tcache = $p{types}  ||= {};
+    my $lcache = $p{labels} ||= {};
 
-        $out{$p->uri_value} = \@coll if @coll;
+    # if this is cached we can just return
+    if ($lcache->{$s->uri_value}) {
+        my ($o, $p) = @{$lcache->{$s->uri_value}};
+        return wantarray ? ($o, $p) : $o;
+    }
+
+    my ($m, $g) = $c->graph_cache_bp;
+    my $ns = $c->ns;
+
+    my @types = $c->types_for($s, types => $tcache);
+
+    my (@candidates, %out);
+
+    for my $type (@types) {
+        my @preds = $c->lprops($type, $alt);
+
+        for my $p (@preds) {
+            next if $out{$p->uri_value};
+            my @terms = ($s, $p);
+            push @terms, $g if $g;
+            my @coll = grep { $_->literal_value !~ /^\s*$/ }
+                $m->objects(@terms, type => 'literal');
+
+            if (@coll) {
+                push @candidates, $p;
+                $out{$p->uri_value} = \@coll;
+            }
+        }
     }
 
     # now do content negotiation to them
@@ -193,9 +338,13 @@ sub label_for {
     if (my @out = HTTP::Negotiate::choose(\@variants, $c->req->headers)) {
         my ($o, $p) = @{$out[0][0]};
 
+        $lcache->{$s->uri_value} = [$o, $p];
+
         return wantarray ? ($o, $p) : $o;
     }
     else {
+        $lcache->{$s->uri_value} = [$s, undef];
+
         return $s;
     }
 }
@@ -314,6 +463,7 @@ sub stub {
         { rel => 'alternate', type => 'text/turtle',
           href => $c->uri_for('dump') },
         { rel => 'contents index top', href => $c->uri_for('/') },
+        @{delete $p{link} || []},
     );
 
     if (my $me = $c->whoami) {
@@ -326,6 +476,7 @@ sub stub {
 
     my ($body, $doc) = $c->_XHTML(
         link  => \@link,
+        meta  => [@{delete $p{meta} || []}],
         head  => [
             map +{ -name => 'script', type => 'text/javascript',
                    src => $c->uri_for($_) },
@@ -338,6 +489,129 @@ sub stub {
 
     wantarray ? ($body, $doc) : $doc;
 }
+
+=head2 render_simple $C, $SUBJECT
+
+Renders a simple page representing the subject and its immediate neighbours.
+
+=cut
+
+sub render_simple {
+    my ($c, $subject, %p) = @_;
+
+    my ($m, $g) = $c->graph_cache_bp;
+
+    my $ns = $c->ns;
+
+    # resources and literals
+    my (%types, %labels, %terms);
+    my ($res, $lit, $in) = $c->neighbour_structs($subject, types => 0);
+
+    my ($lv, $lp) = $c->label_for($subject);
+
+    # collect all the adjacents and flip their predicates around
+    for my $pair ([$res, 0], [$in, 1], [$lit, 0]) {
+        my ($struct, $rev) = @$pair;
+        # $c->log->debug(Data::Dumper::Dumper($struct));
+        for my $p (keys %$struct) {
+            $p = iri($p); # recast hash key as resource
+
+            # $c->log->debug($struct->{$p->uri_value});
+
+            for my $o (values %{$struct->{$p->uri_value}}) {
+                if ($o->is_resource) {
+                    my $lab = $c->label_for(
+                        $o, types => \%types, labels => \%labels);
+                    my $terms = $terms{$lab->value} ||= {};
+                    my $y = $terms->{$o->sse} ||= [$o, [], []];
+                    push @{$y->[$rev ? 2 : 1]}, $p;
+                }
+                elsif ($o->is_literal) {
+                    my $terms = $terms{$o->literal_value} ||= {};
+                    my $y = $terms->{$o->sse} ||= [$o, [], []];
+                    push @{$y->[1]}, $p;
+                }
+            }
+        }
+    }
+
+    # $c->log->debug(Data::Dumper::Dumper(\%types, \%labels, \%terms));
+
+    # the job now is to pump out two lists in lexical order of label
+    my (@p, @links);
+    for my $x (map { [values %{$terms{$_}}] } sort { $a cmp $b } keys %terms) {
+        # term plus forward and reverse relations
+        for my $y (sort { RDF::Trine::Node::compare($a->[0], $b->[0]) } @$x) {
+            my $term = $y->[0];
+            my @fwd  = map { $ns->abbreviate($_) } @{$y->[1]};
+            my @rev  = map { $ns->abbreviate($_) } @{$y->[2]};
+
+            if (@fwd) {
+                # is either a link or a literal
+                my %p = (-name => 'p');
+                if ($term->is_literal) {
+                    $p{property} = \@fwd;
+                    $p{-content} = $term->literal_value;
+                    $p{datatype} = $ns->abbreviate($term->literal_datatype)
+                        if $term->has_datatype;
+                    $p{'xml:lang'} = $term->literal_value_language
+                        if $term->has_language;
+                }
+                else {
+                    # label content
+                    my ($lv, $lp) = @{$labels{$term->uri_value} || [$term]};
+                    my $c = $lv->value;
+                    if ($lp and $lv->is_literal) {
+                        my %c = (-content => $lv->literal_value,
+                                 property => $ns->abbreviate($lp));
+                        $c{datatype} = $ns->abbreviate($lv->literal_datatype)
+                            if $lv->has_datatype;
+                        $c{'xml:lang'} = $lv->literal_value_language
+                            if $lv->has_language;
+                        $c = \%c;
+                    }
+
+                    # types
+                    my @t = map {
+                        $ns->abbreviate($_) } @{$types{$term->uri_value}};
+
+                    my $uri = URI->new($term->uri_value);
+                    $uri = $uri->uuid if lc $uri->scheme eq 'urn';
+
+                    # the link itself
+                    my %a = (
+                        rel => \@fwd, href => $uri, -content => $c);
+                    $a{rev}      = \@rev if @rev;
+                    $a{typeof}   = \@t if @t;
+                    $p{-content} = \%a;
+                }
+                push @p, \%p;
+            }
+            else {
+                # is reverse link only
+                push @links, { rel => '', rev => \@rev, href => $term->value };
+            }
+        }
+    }
+
+    my $types = join ' ',
+        map { $ns->abbreviate($_) } $c->types_for($subject, types => \%types);
+    my $id = Data::UUID::NCName::to_ncname($subject->uri_value, version => 1);
+    my %attrs = (id => $id, typeof => $types, %{$p{attrs} || {}});
+
+    my @title = ($lv->value);
+    push @title, $ns->abbreviate($lp) if $lp;
+
+    $c->stub(
+        ns      => $c->uns,
+        uri     => $c->req->uri,
+        attr    => \%attrs,
+        link    => \@links,
+        title   => \@title,
+        content => \@p,
+    );
+}
+
 
 =head2 whoami
 

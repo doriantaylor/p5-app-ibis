@@ -6,10 +6,17 @@ use warnings FATAL => 'all';
 use Moose::Role;
 use namespace::autoclean;
 
+use Data::UUID::NCName ();
+
+use RDF::Trine qw(iri blank literal statement);
+use RDF::Trine::Namespace qw(RDF);
+use constant IBIS => RDF::Trine::Namespace->new
+    ('https://vocab.methodandstructure.com/ibis#');
+
 with qw(App::IBIS::Role::Schema Role::Markup::XML);
 
-my $UUID_RE  = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
-my $UUID_URN = qr/^urn:uuid:([0-9a-f]{8}(?:-[0-9a-f]{4}){4}[0-9a-f]{8})$/i;
+our $UUID_RE  = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
+our $UUID_URN = qr/^urn:uuid:([0-9a-f]{8}(?:-[0-9a-f]{4}){4}[0-9a-f]{8})$/i;
 
 my %FIGURE = (
     -name => 'figure',
@@ -76,54 +83,103 @@ has UUID_URN => (
     default => sub { $UUID_URN },
 );
 
-sub neighbour_structs {
-    my ($self, $c, $subject) = @_;
-    my (%in, %res, %lit, $iter);
+sub edit_menu {
+    my ($self, $c, $type, @rest) = @_;
 
-    my $m = $c->rdf_cache;
+    my (%p, $flag);
 
-    my $inverse = $self->inverse;
-
-    # this flips around inverse relations
-
-    $iter = $m->get_statements(undef, undef, $subject);
-    while (my $stmt = $iter->next) {
-        my $p = $stmt->predicate->value;
-        my $s = $stmt->subject;
-        if (my $inv = $inverse->{$p}) {
-            $p = $inv->[0]->value;
-            # resources
-            $res{$p} ||= {};
-            $res{$p}{$s->value} ||= $s;
-            #push @{$res{$p}}, $s;
-        }
-        else {
-            # inverses
-            $in{$p} ||= {};
-            $in{$p}{$s->value} ||= $s;
-            #push @{$in{$p}}, $s;
-        }
+    if (@rest && @rest % 2) {
+        $flag = $rest[0];
+    }
+    else {
+        %p = @rest;
+        $flag = $p{flag};
     }
 
-    # this gathers forward relations
+    my $ns  = $self->ns;
 
-    $iter = $m->get_statements($subject, undef, undef);
-    while (my $stmt = $iter->next) {
-        my $p = $stmt->predicate->value;
-        my $o = $stmt->object;
-        if ($o->is_literal) {
-            $lit{$p} ||= [];
-            push @{$lit{$p}}, $o;
-        }
-        else {
-            $res{$p} ||= {};
-            $res{$p}{$o->value} ||= $o;
-        }
+    my @labels = qw(Issue Position Argument);
+    my @types  = map { $ns->ibis->uri($_) } @labels;
+
+    # XXX
+    if (0) {
+        push @labels, 'Concept';
+        push @types, $ns->skos->Concept;
     }
 
-    my @out = (\%res, \%lit, \%in);
+    my @out;
 
-    wantarray ? @out : \@out;
+    my $map = $self->predicate_map;
+
+    # XXX TEMPORARY
+    my @rep = map { $ns->ibis->uri($_) } qw(replaces replaced-by);
+
+    my @cls;
+
+    for my $i (0..$#labels) {
+        my $v = $type->uri_value;
+
+        # my @radio;
+        # for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
+        #     # XXX TEMPORARY
+        #     next if grep { $_->equal($item->[0]) } @rep;
+
+        #     my $curie = $ns->abbreviate($item->[0]);
+
+        #     my $name = '$pred :';
+        #     $name = '! ' . $name if $flag;
+
+        #     push @radio, {
+        #         -name => 'li', about => $curie, -content => {
+        #             -name => 'label', -content => [
+        #                 { -name => 'input', type => 'radio',
+        #                   name => $name, value => $curie },
+        #                 ' ' . $item->[1] ] } };
+        # }
+
+        my @checkbox;
+        for my $item (@{$map->{$v}{$types[$i]->uri_value} || []}) {
+            # XXX TEMPORARY
+            next if grep { $_->equal($item->[0]) } @rep;
+
+            my $curie = $ns->abbreviate($item->[0]);
+            my $name  = $curie . ' : $';
+            $name = '! ' . $name if $flag;
+            push @checkbox, {
+                -name => 'li', about => $curie, -content => {
+                    -name => 'label', -content => [
+                        { -name => 'input', type => 'checkbox',
+                          name => $name, value => '$obj' },
+                        ' ' . $item->[1] ] } };
+        }
+
+        my $type = $ns->abbreviate($types[$i]);
+
+        my %attr = (
+            class => 'type-toggle',
+            type  => 'radio',
+            name  => $flag ? 'rdf:type :' : 'rdf-type',
+            #value => $flag ? $ns->abbreviate($types[$i]) : '',
+            value => $type,
+        );
+        $attr{checked}  = 'checked' if $i == 0;
+        #$attr{disabled} = 'disabled' unless @checkbox;
+
+        my $class = 'relation ' . lc $labels[$i];
+        $class .= ' selected' unless $i;
+
+        push @cls, { -name => 'label', -content => [
+            { -name => 'input', %attr }, " $labels[$i]" ] };
+
+        push @out, { -name => 'fieldset', about => $type,
+                     class => $class, -content => [ !!@checkbox ? {
+                         -name => 'ul', -content => \@checkbox } : () ] };
+    }
+
+    push @out, { -name => 'fieldset', class => 'types',
+                 -content => { -name => 'ul', -content => [
+                     map +( { -name => 'li', -content => $_}), @cls] } };
+    @out;
 }
 
 sub do_relations {
@@ -193,6 +249,69 @@ sub do_relations {
     }
 
     wantarray ? @asides : \@asides;
+}
+
+sub _naive_typeof {
+    my ($self, $c, @types) = @_;
+    my $m = $c->rdf_cache;
+    my %out;
+    for my $t (@types) {
+        my $v = $t->value;
+        $out{$v} ||= {};
+        for my $s ($m->subjects($self->ns->rdf->type, $t)) {
+            $out{$v}{$s->value} = 1;
+        }
+    }
+    \%out;
+}
+
+sub type_select {
+    my ($self, $c, $subject, %p) = @_;
+
+    my $ns = $self->ns;
+    my $m  = $c->rdf_cache;
+
+    my @types = @{$p{types} || []};
+    @types = grep { $_->is_resource } $m->objects($subject, $ns->rdf->type)
+        unless @types;
+
+    my @labels = map { $self->labels->{$_} } @types;
+
+    my $map = $self->_naive_typeof($c, @types);
+    my @opts;
+    for my $i (0..$#labels) {
+        my $l = $labels[$i];
+        my $t = $types[$i];
+        my $v = $t->value;
+
+        # XXX this will crash
+        my $coll = $c->collator;
+        my $rdfv = $self->ns->rdf->value;
+        my @pairs = sort {
+            $coll->cmp(($a->[1] ? $a->[1]->value : ''),
+                       ($b->[1] ? $b->[1]->value : ''))
+        } map {
+            my $s = iri($_); [$s, $m->objects($s, $rdfv)]
+        } keys %{$map->{$v} || {}};
+
+        my @o;
+        # XXX this might be a blank node but not on my watch
+        for my $pair (@pairs) {
+            my ($s, $val) = @$pair;
+            next if $subject->equal($s);
+
+            my $text = $val ? $val->value : $s->value;
+            my $ss   = $s->value;
+            push @o, { -name => 'option',
+                       about => $ss, value => $ss, -content => $text };
+        }
+
+        push @opts, { -name => 'optgroup', about => $v, label => $l,
+                      rev => 'rdf:type', -content => \@o } if @o;
+    }
+
+    return { -name => 'select', class => 'target',
+             name => '$ obj', -content => \@opts };
 }
 
 
@@ -340,6 +459,5 @@ sub do_link_form {
                  { -name => 'h3', class => 'label', -content => $lab },
                  { -name => 'ul', -content => \@li } ] };
 }
-
 
 1;

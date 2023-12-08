@@ -54,6 +54,9 @@ my %LABELS = map {
     my $x = _expand($_->[0]);
     $x->uri_value => [$x, $_->[1]] } (
         # IBIS
+        ['Issue',         'Issue'],
+        ['Position',      'Position'],
+        ['Argument',      'Argument'],
         ['concerns',      'Concerns'],
         ['concern-of',    'Concern of'],
         ['endorses',      'Endorses'],
@@ -73,6 +76,10 @@ my %LABELS = map {
         ['opposes',       'Opposes'],
         ['opposed-by',    'Opposed By'],
         # SKOS
+        ['skos:Concept',            'Concept'],
+        ['skos:ConceptScheme',      'Concept Scheme'],
+        ['skos:Collection',         'Collection'],
+        ['skos:OrderedCollection',  'Ordered Collection'],
         ['skos:related',            'Related to'],
         ['skos:narrower',           'Has Narrower'],
         ['skos:broader',            'Has Broader'],
@@ -82,7 +89,27 @@ my %LABELS = map {
         ['skos:broadMatch',         'Has Broader Match'],
         ['skos:closeMatch',         'Has Close Match'],
         ['skos:exactMatch',         'Has Exact Match'],
-        # ORG`
+        # FOAF
+        # ORG
+        # SIOC
+);
+
+my @DEFAULT_LABELS = qw(skos:prefLabel skos:altLabel rdfs:label dct:title);
+my @ALT_LABELS     = qw(skos:altLabel bibo:shortTitle dct:alternative);
+
+my %LPROPS = map {
+    my $x = _expand($_->[0]);
+    my @y = map { _expand($_) } @{$_->[1]};
+    my @z = map { _expand($_) } @{$_->[2]};
+    $x->uri_value => [\@y, \@z];
+} (
+    ['Issue',                   [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
+    ['Position',                [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
+    ['Argument',                [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
+    ['skos:Concept',           \@DEFAULT_LABELS, \@ALT_LABELS],
+    ['skos:ConceptScheme',     \@DEFAULT_LABELS, \@ALT_LABELS],
+    ['skos:Collection',        \@DEFAULT_LABELS, \@ALT_LABELS],
+    ['skos:OrderedCollection', \@DEFAULT_LABELS, \@ALT_LABELS],
 );
 
 my %INVERSE = map {
@@ -453,6 +480,17 @@ has labels => (
     lazy    => 1,
     default => sub { \%LABELS },
 );
+
+=head2 lprops
+
+=cut
+
+sub lprops {
+    my (undef, $type, $alt) = @_;
+    return unless my $pair = $LPROPS{$type->uri_value};
+    my @out = @{$pair->[$alt ? 1 : 0]};
+    wantarray ? @out : \@out;
+}
 
 =head2 inverse
 

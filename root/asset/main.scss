@@ -1,14 +1,15 @@
 // all this can come out of the app
 $CLASSES: ("ibis:Issue", "ibis:Position", "ibis:Argument", "skos:Concept");
 $PROPERTIES: (
-    "dct:references",
+    //"dct:references",
     "skos:broader", "skos:narrower", "skos:related",
     "ibis:generalizes", "ibis:specializes",
     "ibis:suggests", "ibis:suggested-by",
     "ibis:questions", "ibis:questioned-by",
     "ibis:response", "ibis:responds-to",
     "ibis:supports", "ibis:supported-by",
-    "ibis:opposes", "ibis:opposed-by"
+    "ibis:opposes", "ibis:opposed-by",
+    "ibis:concerns", "ibis:concern-of"
 );
 
 $BOUNDARIES: (
@@ -29,27 +30,6 @@ $PREFIXES: (
     ibis: "https://vocab.methodandstructure.com/ibis#",
     skos: "http://www.w3.org/2004/02/skos/core#"
 );
-
-// the palette can/should come out of the app too:
-// background foreground border link hover lozenge
-// $PALETTE: (
-//    "ibis:Issue":         (#41191a, #dac1c1, #703535, #d39e9e, #f4dddd, #4e2324),
-//    "ibis:Position":      (#192a19, #a6d2a5, #354c34, #84b883, #a7f5a5, #233523),
-//    "ibis:Argument":      (#21214c, #c5c5d8, #40407e, #a8a8ce, #e1e1f4, #2b2b59),
-//    "skos:Concept":       (#361d36, #d7bfd8, #361d36, #cb9bcd, #f2dbf3, #412742),
-//    "ibis:generalizes":   (#5f7fff, #00164d),
-//    "ibis:specializes":   (#0033ff, #bec1fe),
-//    "ibis:suggests":      (#ffcd40, #3d2e00),
-//    "ibis:suggested-by":  (#ffbc00, #402d00),
-//    "ibis:questions":     (#ff9a40, #4b2700),
-//    "ibis:questioned-by": (#ff7800, #522200),
-//    "ibis:response":      (#8a0041, #feb0c4),
-//    "ibis:responds-to":   (#d50065, #ffd8e1),
-//    "ibis:supports":      (#4dde00, #0d3800),
-//    "ibis:supported-by":  (#55a62a, #0b2002),
-//    "ibis:opposes":       (#ec0033, #400006),
-//    "ibis:opposed-by":    (#b12c49, #f9dbde)
-// );
 
 // S,L: 45,5; 45,15; 45,30; 45,40; 45,70; 60,90; 100,50; 100,90
 $PALETTE: (
@@ -111,8 +91,12 @@ $PALETTE: (
     "skos:related":       (#1f0a09, #3e1b19, #7f3f3b, #914944,
                            #d79c99, #f4dddc, #e32f00, #ffd9d8),
     // hue 105
-    "dct:references":     (#0e1209, #212718, #4b563a, #566243,
-                           #9db27d, #cbee8e, #628100, #bdf500)
+    "ibis:concerns":      (#0e1209, #212718, #4b563a, #566243,
+                           #9db27d, #cbee8e, #628100, #bdf500),
+    // hue 110
+    "ibis:concern-of":    (#0d1209, #202818, #3e4a31, #536343,
+                           #98b37d, #c2f08e, #598300, #acf800)
+
 );
 
 
@@ -816,6 +800,8 @@ button {
    $uri: map-get($PREFIXES, str-slice($prop, 1, $idx - 1));
    $pal: map-get($PALETTE, $prop);
 
+   //@debug $prop, $pal;
+
    *[about="#{$uri}#{$suf}"], *[about="#{$prop}"] {
       background-color: nth($pal, 8);
       color: nth($pal, 3);
@@ -857,7 +843,6 @@ button {
    }
 
    body[typeof~="#{$class}"] {
-       
 
       article {
          background-color: nth($pal, 3);
