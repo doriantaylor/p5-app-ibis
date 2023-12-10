@@ -484,6 +484,7 @@ sub stub {
                asset/complex asset/hierarchical asset/main.js) ],
         ns    => $c->uns,
         vocab => $c->uns->xhv->uri,
+        transform => $c->config->{transform},
         %p,
     );
 

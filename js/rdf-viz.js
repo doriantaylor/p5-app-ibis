@@ -198,19 +198,25 @@ export default class RDFViz {
     }
 
     installFetchOnLoad (url, target) {
-        if (window) window.addEventListener('load', e => {
+        if (window) {
+            // XXX this is dumb but due to https://bugzilla.mozilla.org/show_bug.cgi?id=325891
+            const event = e => {
             // console.log('wat', this);
             const fetcher = new RDF.Fetcher(this.graph);
-            // okay now load
-            fetcher.load(url, {
-                baseURI: window.location.href,
-                headers: { Accept: 'text/turtle;q=1' }
-            }).then(() => {
-                // console.log('lol', this);
-                this.init();
-                if (target) this.attach(target);
-            });
-        });
+                // okay now load
+                fetcher.load(url, {
+                    baseURI: window.location.href,
+                    headers: { Accept: 'text/turtle;q=1' }
+                }).then(() => {
+                    // console.log('lol', this);
+                    this.init();
+                    if (target) this.attach(target);
+                });
+            };
+            // console.log(document.readyState);
+            if (document.readyState === 'complete') event();
+            else window.addEventListener('load', event);
+        }
         else console.error('window not available yet');
     }
 

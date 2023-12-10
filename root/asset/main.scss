@@ -725,6 +725,50 @@ input[type="radio"], label, button {
    cursor: pointer;
 }
 
+$ICONS: (
+    "ibis:Issue": "\f071",
+    "ibis:Position": "\f0e3",
+    "ibis:Argument": "\f086",
+    "skos:Concept": "\1f5ed"
+);
+
+input[type="radio"] {
+    font-family: "Font Awesome 5 Free", sans-serif;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+    appearance: none;
+
+    border: 1px solid black;
+    border-radius: 0.25em;
+    margin: 0.25em;
+    padding: 0.25em;
+
+    @each $class, $icon in $ICONS {
+        $pal: map-get($PALETTE, $class);
+        &[value="#{$class}"] {
+            color: nth($pal, 2);
+            border-color: nth($pal, 3);
+            background-color: nth($pal, 4);
+            &:hover {
+                background-color: nth($pal, 5);
+            }
+            &::before {
+                content: "\f0c1\2009#{$icon}";
+            }
+            &:checked {
+                color: nth($pal, 3);
+                border-color: nth($pal, 3);
+                background-color: nth($pal, 1);
+            }
+        }
+    }
+}
+
 input.new-value {
    padding-left: 0.25em;
 }

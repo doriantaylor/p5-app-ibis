@@ -348,13 +348,17 @@ sub dump :Local {
     $type = 'text/plain' if $chosen eq 'turtle' and
         ($req->header('Accept') // '') !~ m!\btext/turtle\b!i;
 
-    # $c->log->debug('in: ' . ( $req->header('Accept') // ''));
-    # $c->log->debug('out: ' . $type);
+    $c->log->debug('in: ' . ( $req->header('Accept') // ''));
+    $c->log->debug('out: ' . $type);
+    $c->log->debug('chosen: ' . $chosen);
 
     $resp->status(200);
     $resp->content_type($type);
     my $s = RDF::Trine::Serializer->new($chosen, namespaces => $self->ns);
-    $resp->body($s->serialize_model_to_string($c->rdf_cache));
+    $c->stash->{skip_rewrite} = 1;
+    my $out = $s->serialize_model_to_string($c->rdf_cache);
+    $resp->body($out);
+    # $c->log->debug($resp->body);
 }
 
 sub bulk :Local {

@@ -193,7 +193,19 @@ sub process {
     my $host = $c->config->{host} || $uri->host;
 
     if (defined $body) {
-        $body  = \$body unless ref $body;
+        # require Devel::Peek;
+        # $c->log->debug(Devel::Peek::Dump($body));
+
+        # XXX something weird was happening here with output from
+        # `serialize_model_to_string`: it was reporting the output was
+        # not a reference but indirecting it made a REF reftype, not
+        # SCALAR, and it was crashing. we fix it by copying the
+        # putatively non-reference variable into a new variable and
+        # indirecting *that*.
+        unless (ref $body) {
+            my $tmp = $body;
+            $body = \$tmp;
+        }
 
         if (Scalar::Util::blessed($body) and $body->isa('XML::LibXML::Node')) {
             # noop

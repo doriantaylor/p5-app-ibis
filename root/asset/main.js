@@ -1,8 +1,13 @@
-var NS = {
+/*
+window.addEventListener('load', function () {
+    console.log('wtf lol');
+});*/
+
+const NS = {
     'ibis': 'https://vocab.methodandstructure.com/ibis#'
 };
 
-var OTHER = {
+const OTHER = {
     'rdf-type':   'rdf:type :',
     'rdf:type :': 'rdf-type'
 };
@@ -265,7 +270,8 @@ function toggleFullscreen () {
 // yo if we want to sponge the document for information about what to
 // do next, we have to wait for it to load
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('load-graph', function () {
+    console.log('zap lol');
     this.graph = RDF.graph();
     this.rdfa  = new RDF.RDFaProcessor(
         this.graph, { base: window.location.href });
@@ -323,4 +329,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     return true;
+});
+
+window.addEventListener('load', function () {
+    const ev = new Event('load-graph');
+    this.document.dispatchEvent(ev);
 });
