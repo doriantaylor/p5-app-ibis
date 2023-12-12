@@ -349,6 +349,30 @@ sub label_for {
     }
 }
 
+=head2 uri_for
+
+=cut
+
+# sub uri_for {
+#     my ($c, $uri, @rest) = @_;
+
+#     if (defined $uri and ref $uri and Scalar::Util::blessed($uri)) {
+#         # coerce
+#         $uri = URI->new($uri->uri_value) if
+#             $uri->isa('RDF::Trine::Node::Resource');
+
+#         # bail out if it's something else
+#         Carp::croak("not sure what to do with uri $uri")
+#               unless $uri->isa('URI');
+
+#         # reduce to uuid if this is a uuid
+#         $uri = $uri->uuid if
+#             (lc($uri->scheme // '') eq 'urn' and $uri->opaque =~ /^uuid:/i);
+#     }
+
+#     $c->SUPER::uri_for($uri, @rest);
+# }
+
 =head2 rdf_cache [ $RESET ]
 
 Retrieve an in-memory cache of everything in C<< $c->graph >>,
@@ -474,14 +498,17 @@ sub stub {
     #     $c->log->debug("no whoami :(");
     # }
 
+    my $script = $c->config->{script} ||
+        [qw(asset/jquery.js asset/rdf asset/d3 asset/rdf-viz
+               asset/complex asset/hierarchical asset/main.js)];
+    $script = [$script] unless ref $script;
+
     my ($body, $doc) = $c->_XHTML(
         link  => \@link,
         meta  => [@{delete $p{meta} || []}],
         head  => [
             map +{ -name => 'script', type => 'text/javascript',
-                   src => $c->uri_for($_) },
-            qw(asset/jquery.js asset/rdf asset/d3 asset/rdf-viz
-               asset/complex asset/hierarchical asset/main.js) ],
+                   src => $c->uri_for($_) }, @$script ],
         ns    => $c->uns,
         vocab => $c->uns->xhv->uri,
         transform => $c->config->{transform},

@@ -1,0 +1,466 @@
+@import "data";
+
+html {
+    width: 100%;
+    min-height: 100%;
+    //overflow: hidden;
+    font-family: "Roboto", "Helvetica Neue", "Helvetica", sans-serif;
+    background-color: #333;
+    color: #999;
+}
+
+@for $i from 5 through 0 {
+    h#{6 - $i} {
+        font-size: 100% + $i * 20;
+    }
+}
+
+@media screen {
+    $common: ();
+    @each $class in $CLASSES {
+        $common: append($common, "&[typeof~=\"#{$class}\"]", comma);
+    }
+
+    input, select, option, textarea, button {
+        background-color: transparent;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+    }
+
+    input[type="text"], input[type="submit"], input[type="reset"], select, option, button, textarea {
+        background-color: inherit;
+        color: inherit;
+        border-width: 1px;
+        border-style: solid;
+        border-color: currentColor;
+        border-radius: 0.25em;
+    }
+
+    input[type="submit"], input[type="reset"], input[type="checkbox"],
+    input[type="radio"], label, button {
+        cursor: pointer;
+        &:disabled {
+            cursor: not-allowed;
+        }
+    }
+
+    body {
+        border: 0;
+        margin: 0;
+        padding: 0;
+        // overflow: hidden;
+
+        #{$common} {
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: auto 2em;
+
+            > main {
+                grid-row: 1;
+                display: flex;
+                overflow: hidden;
+                > figure {
+                    margin: auto;
+                    display: flex;
+                    align-items: center;
+                    > svg {
+                        display: block;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: contain;
+                    }
+                }
+                > article {
+                    flex-basis: 30rem;
+                    margin: 0.5rem;
+                    padding: 0.5rem;
+                    @include vendor(border-radius, 1em);
+                    display: grid;
+                    grid-template-rows: 12rem auto;
+                    font-size: 75%;
+
+                    > section {
+                        margin: 0.5em;
+
+                        &.self {
+                            margin: 0.25rem;
+                            padding: 0.25rem;
+                            @include vendor(border-radius, 0.5rem);
+                            border-width: 0.125rem;
+                            border-style: solid;
+
+                            > h1 {
+                                height: 10rem;
+                                max-width: 100%;
+                                display: flex;
+                                justify-content: stretch;
+                                button {
+                                    border-width: 0.125rem;
+                                }
+                                > form.types {
+                                    display: flex;
+                                    flex-basis: 2rem;
+                                    flex-wrap: wrap;
+                                    gap: 0.25rem;
+                                    > button {
+                                        width: 100%;
+                                    }
+                                }
+                                > form.description {
+                                    display: flex;
+                                    flex-grow: 2;
+                                    > textarea, input[type="text"] {
+                                        flex-grow: 2;
+                                        margin: 0 0.25rem;
+                                        resize: none;
+                                        border: none;
+                                    }
+                                    > button {
+                                        flex-basis: 2.5rem;
+                                    }
+                                }
+                            }
+                            > span.date {
+                                display: block;
+                                text-align: right;
+                            }
+                        }
+
+                        &.relations {
+                            @include vendor(border-radius, 1em);
+                            overflow: auto;
+                            > section {
+                                margin: 0.5rem;
+                                padding: 0.25rem;
+                                @include vendor(border-radius, 1em);
+
+                                h1, h2, h3, h4, h5, h6 {
+                                    display: inline-block;
+                                    vertical-align: middle;
+                                    margin: 0.25rem;
+                                    padding: 0.25rem;
+                                    @include vendor(border-radius, 0.5rem);
+                                }
+                                > form {
+                                    display: inline-block;
+                                    vertical-align: middle;
+                                    &:focus-within {
+                                        margin: 0.25rem;
+                                        padding: 0.25rem;
+                                        display: flex;
+                                        input[type="text"] {
+                                            display: inline-block;
+                                            flex-grow: 2;
+                                        }
+                                    }
+                                    input[type="text"] {
+                                        display: none;
+                                    }
+                                }
+                                ul {
+                                    margin: 0.25rem;
+                                    padding-left: 0;
+                                }
+                            }
+                            > * {
+                            }
+                        }
+                        input[type="radio"] {
+                            appearance: none;
+                            line-height: 1;
+                            margin: 0;
+                            padding: 0.25rem;
+                            border-width: 0.125rem;
+                            border-style: solid;
+                            @include vendor(border-radius, 0.25rem);
+                        }
+                    }
+
+                    h1, h2, h3, h4, h5, h6 {
+                        line-height: 1;
+                        margin: 0;
+                    }
+                    li[typeof] {
+                        display: block;
+                        border-width: 0.0625rem;
+                        border-style: solid;
+                        @include vendor(border-radius, 0.25rem);
+                        margin: 0.125rem 0;
+                        button {
+                            display: inline-block;
+                            float: right;
+                            margin: 0.125rem;
+                        }
+                        a[href] {
+                            display: block;
+                            color: inherit;
+                            text-decoration: none;
+                            padding: 0.25rem;
+                        }
+                    }
+                }
+            }
+            > footer {
+                grid-row: 2;
+            }
+
+        }
+
+        @each $class in $CLASSES {
+            $pal: map-get($PALETTE, $class);
+
+            &[typeof~="#{$class}"] {
+                background-color: nth($pal, 1);
+
+                > main {
+                    background-color: nth($pal, 2);
+                    color: nth($pal, 5);
+                    border-color: nth($pal, 5);
+                    @include vendor(box-shadow, inset 0px 0px 40px nth($pal, 1));
+
+                    > article {
+                        background-color: nth($pal, 3);
+                        > section {
+                            &.self {
+                                color: nth($pal, 2);
+                                border-color: nth($pal, 2);
+                                background-color: nth($pal, 5);
+                                &:focus-within {
+                                    color: nth($pal, 3);
+                                    border-color: nth($pal, 3);
+                                    background-color: nth($pal, 6);
+                                }
+                            }
+                            &.relations {
+                                background-color: nth($pal, 2);
+                            }
+                        }
+                        button {
+                            color: nth($pal, 1);
+                            border-color: nth($pal, 1);
+                            background-color: nth($pal, 4);
+                            &:hover {
+                                color: nth($pal, 3);
+                                border-color: nth($pal, 3);
+                                background-color: nth($pal, 6);
+                            }
+                            &:disabled {
+                                color: nth($pal, 2);
+                                border-color: nth($pal, 2);
+                                background-color: nth($pal, 5);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        @each $prop in $PROPERTIES {
+            $idx: str-index($prop, ":");
+            $pfx: str-slice($prop, 1, $idx - 1);
+            $suf: str-slice($prop, $idx + 1);
+            $ns:  map-get($PREFIXES, $pfx);
+            $uri: "#{$ns}#{$suf}";
+            $pal: map-get($PALETTE, $prop);
+
+            section {
+                &[about="#{$prop}"], &[about="#{$uri}"], &[rel~="#{$prop}"], &[resource="#{$uri}"] {
+                    color: nth($pal, 3);
+                    background-color: nth($pal, 7);
+
+                    h1, h2, h3, h4, h5, h6 {
+                        background-color: nth($pal, 8);
+                    }
+                }
+            }
+        }
+
+        main > article > section {
+
+        @each $class in $CLASSES {
+            $pal: map-get($PALETTE, $class);
+
+            li[typeof~="#{$class}"] {
+                color: nth($pal, 2);
+                border-color: nth($pal, 2);
+                background-color: nth($pal, 5);
+
+                &:hover, &:active {
+                    color: nth($pal, 3);
+                    border-color: nth($pal, 3);
+                    background-color: nth($pal, 6);
+                }
+
+                button {
+                    color: nth($pal, 1);
+                    border-color: nth($pal, 1);
+                    background-color: nth($pal, 4);
+                    &:hover {
+                        color: nth($pal, 3);
+                        border-color: nth($pal, 3);
+                        background-color: nth($pal, 6);
+                    }
+                    &:disabled {
+                        color: nth($pal, 2);
+                        border-color: nth($pal, 2);
+                        background-color: nth($pal, 5);
+                    }
+                }
+            }
+        }
+        }
+
+        article {
+            @each $class, $icon in $ICONS {
+                $pal: map-get($PALETTE, $class);
+
+                input[type="radio"][value="#{$class}"] {
+                    color: nth($pal, 2);
+                    border-color: nth($pal, 2);
+                    background-color: nth($pal, 5);
+                    &:hover {
+                        color: nth($pal, 3);
+                        border-color: nth($pal, 3);
+                        background-color: nth($pal, 6);
+                    }
+                    &::before {
+                        content: "\f0c1\2009#{$icon}";
+                    }
+                    &:checked {
+                        color: nth($pal, 1);
+                        border-color: nth($pal, 1);
+                        background-color: nth($pal, 4);
+                    }
+                }
+
+                button.set-type[value="#{$class}"] {
+                    color: nth($pal, 1);
+                    border-color: nth($pal, 1);
+                    background-color: nth($pal, 4);
+                    &:hover {
+                        color: nth($pal, 3);
+                        border-color: nth($pal, 3);
+                        background-color: nth($pal, 6);
+                    }
+                    &:disabled {
+                        color: nth($pal, 2);
+                        border-color: nth($pal, 2);
+                        background-color: nth($pal, 5);
+                    }
+                }
+            }
+        }
+    }
+
+    // vertical orientation
+    @media (max-aspect-ratio: 0.8) {
+        html {
+            font-size: 1vh;
+        }
+        main {
+            flex-direction: column-reverse;
+            flex-wrap: wrap;
+            > article {
+                flex-shrink: 2;
+            }
+            > figure {
+                flex-shrink: 2;
+            }
+        }
+    }
+}
+
+// D3 SVG STUFF
+
+@each $class in $CLASSES {
+    $pal: map-get($PALETTE, $class);
+    a[typeof~="#{$class}"] {
+        > circle {
+            fill: nth($pal, 5);
+            &.target {
+                fill: transparent;
+            }
+        }
+        &:hover, &.subject {
+            > circle {
+                fill: nth($pal, 6);
+                &.target {
+                    fill: transparent;
+                }
+            }
+        }
+    }
+}
+
+@each $prop in $PROPERTIES {
+    $i: str-index($prop, ":");
+    $prop-id: "#{str-slice($prop, 1, $i - 1)}.#{str-slice($prop, $i + 1)}";
+    $pal: map-get($PALETTE, $prop);
+
+    line[rel~="#{$prop}"], path[rel~="#{$prop}"] {
+        fill: none;
+        stroke: nth($pal, 7);
+        color: nth($pal, 7);
+        //marker-end: url(#arrowhead);
+        marker-start: url(##{$prop-id}) !important;
+        &.subject {
+            stroke: nth($pal, 8);
+            color: nth($pal, 8);
+            marker-start: url(##{$prop-id}.subject) !important;
+        }
+        &.neighbour {
+            //stroke-width: 3;
+        }
+    }
+
+    polygon[about~="#{$prop}"] {
+        opacity: 1 !important;
+        fill: nth($pal, 7);
+        //fill: currentColor;
+        //stroke: none;
+        &.subject {
+            fill: nth($pal, 8);
+        }
+    }
+}
+
+// XXX THIS IS NOT THE BEST BUT IT WILL WORK FOR NOW LOL
+@each $class, $pair in $FADE {
+    $classes: nth($pair, 1);
+    $props: nth($pair, 2);
+
+    body[typeof~="#{$class}"] {
+        svg {
+            g.edge {
+                @each $p in $props {
+                    line, path {
+                        &[rel~="#{$p}"], &[rev~="#{$p}"] {
+                            opacity: 0.5;
+                        }
+                    }
+                }
+            }
+            g.node {
+                @each $c in $classes {
+                    a[typeof~="#{$c}"] circle {
+                        opacity: 0.5;
+                    }
+                }
+            }
+        }
+    }
+}
+
+circle#backdrop {
+    fill: black;
+    opacity: 0.05;
+}
+
+marker polygon {
+    fill: currentColor;
+    stroke: none;
+    opacity: 1;
+}
+

@@ -189,8 +189,9 @@ sub uuid :Private {
             # $resp->body(sprintf 'wat %s', $@ // '');
         }
         else {
-            $c->log->debug("see other: $uuid");
-            $resp->redirect($path, 303);
+            my $newuri = _from_urn($newsub, $req->base);
+            $c->log->debug("see other: $newuri");
+            $resp->redirect($newuri, 303);
         }
         return;
     }
@@ -532,6 +533,7 @@ sub _from_urn {
     my ($uuid, $base) = @_;
     $uuid = URI->new($uuid) unless ref $uuid;
     $uuid = URI->new($uuid->uri_value) if $uuid->isa('RDF::Trine::Node');
+    Carp::croak("wtf $uuid, @{[join ' ', caller]}") unless $uuid->isa('URI');
     URI->new_abs($uuid->uuid, $base);
 }
 
@@ -594,7 +596,7 @@ sub _post_uuid {
 
     my $kv = RDF::KV->new(
         #subject    => 'http://deuce:5000/' . $uuid->uuid,
-        subject    => $c->req->base . $uuid->uuid,
+        subject    => _from_urn($uuid, $c->req->base),
         namespaces => $ns,
         graph      => $g->value,
         callback   => \&_to_urn,
@@ -603,7 +605,8 @@ sub _post_uuid {
     my $patch = $kv->process($content);
 
     my $newsub = $kv->subject;
-    #warn Data::Dumper::Dumper($patch);
+    $c->log->debug("new(?) subject: $newsub");
+    #$c->log->debug(Data::Dumper::Dumper($patch));
 
     # $c->log->debug('got here 0');
 
@@ -638,7 +641,7 @@ sub _post_uuid {
 
             my $ag = $pair->[0];         # affected graph
             for my $as (@{$pair->[1]}) { # affected subjects
-                $c->log->debug("$ag $as");
+                $c->log->debug("trying to add riders to $ag / $as");
                 # get the type for the subject
                 my @t = $m->objects($as, $rns->rdf->type, $ag);
                 my @r = map { @{$RIDER{$rns->abbreviate($_)} || []} } @t;
@@ -664,7 +667,7 @@ sub _post_uuid {
     }
     $c->log->debug("New size: " . $m->size);
 
-    $m->size;
+    $newsub;
 }
 
 =head2 default
