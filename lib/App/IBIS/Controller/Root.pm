@@ -67,6 +67,33 @@ App::IBIS::Controller::Root - Root Controller for App::IBIS
 
 =head1 METHODS
 
+=head2 begin
+
+=cut
+
+sub begin :Private {
+    my ($self, $c) = @_;
+
+    # we use the main guy rather than the cache for this
+    my $m  = $c->model('RDF');
+    my $g  = $c->graph;
+    my $ns = $c->ns;
+
+    # test for the existence of the cgto:Space
+
+    my @spaces = $m->subjects($ns->rdf->type, $ns->cgto->Space);
+
+    # there should be exactly one space; if there isn't, complain (409)
+
+    # if there is a space then there should be a focus (again 409 if not)
+
+    # if there is no focus then we should demand to set one (this can
+    # be done client-side)
+
+    # if there are no candidates (skos:ConceptScheme or ibis:Network)
+    # then we should demand to mint one (again, client-side)
+}
+
 =head2 index
 
 The root page (/)
@@ -189,6 +216,8 @@ sub uuid :Private {
             # $resp->body(sprintf 'wat %s', $@ // '');
         }
         else {
+            # XXX this may be an XSS vuln since it comes from user
+            # input; TODO constrain
             my $newuri = _from_urn($newsub, $req->base);
             $c->log->debug("see other: $newuri");
             $resp->redirect($newuri, 303);
@@ -534,6 +563,7 @@ sub _from_urn {
     $uuid = URI->new($uuid) unless ref $uuid;
     $uuid = URI->new($uuid->uri_value) if $uuid->isa('RDF::Trine::Node');
     Carp::croak("wtf $uuid, @{[join ' ', caller]}") unless $uuid->isa('URI');
+    return $uuid unless $uuid->isa('URI::urn::uuid');
     URI->new_abs($uuid->uuid, $base);
 }
 
@@ -590,7 +620,7 @@ sub _post_uuid {
         xsd  => 'http://www.w3.org/2001/XMLSchema#',
     });
 
-    my $rns = $self->ns;
+    my $rns = $c->ns;
     my $m = $c->model('RDF'); # this actually needs the writable one
     my $g = $c->graph;
 
@@ -604,9 +634,17 @@ sub _post_uuid {
 
     my $patch = $kv->process($content);
 
-    my $newsub = $kv->subject;
+    # dereference the new subject here
+    my $newsub = _from_urn($kv->subject, $c->req->base);
+
     $c->log->debug("new(?) subject: $newsub");
     #$c->log->debug(Data::Dumper::Dumper($patch));
+
+    unless (lc $newsub->authority eq lc $c->req->base->authority) {
+        $c->res->status(409);
+        $c->res->body("Neutralized attempt to redirect offsite: $newsub");
+        return;
+    }
 
     # $c->log->debug('got here 0');
 
@@ -768,8 +806,26 @@ sub _do_index {
 
 sub _get_generic :Private {
     my ($self, $c, $subject) = @_;
+
     my $doc = $c->render_simple($subject);
+
     $c->res->body($doc);
+}
+
+sub _get_concept_scheme :Private {
+    my ($self, $c, $subject) = @_;
+
+    my $ns  = $c->ns;
+    my $doc = $c->render_simple(
+        $subject, rev => [$ns->skos->inScheme, $ns->skos->topConceptOf]);
+
+    $c->res->body($doc);
+}
+
+sub generic_error :Private {
+    my ($self, $c, $status) = @_;
+
+    
 }
 
 sub _do_404 {
@@ -794,6 +850,228 @@ sub _do_404 {
                      { -name => 'button', -content => 'Go' } ] } };
 }
 
+=head2 all_classes
+
+=cut
+
+sub all_classes :Path('all-classes') {
+    my ($self, $c) = @_;
+
+    # XXX deal with IMS header and global mtime for all of these
+
+    my $m  = $c->model('RDF');
+    my $g  = $c->graph;
+    my $ns = $c->ns;
+
+    my @types = $m->objects(undef, $ns->rdf->type, $g, type => 'resource');
+
+    my %tr;
+    for my $type (@types) {
+        next unless my $curie = $ns->abbreviate($type);
+        $tr{$curie} = { -name => 'tr', -content => [
+            { -name => 'th', -content => {
+                href => $type->value, -content => $curie } },
+            { -name => 'td', -content => {
+                href => $c->uri_for('has-type', $curie),
+                -content => 'Inventory' } } ] };
+    }
+
+    my @tr = @tr{sort { $a cmp $b } keys %tr};
+
+    my $doc = $c->stub(
+        content => { -name => 'table', -content => [
+            { -name => 'thead', -content => {
+                -name => 'tr', -content => [
+                    { -name => 'th', -content => 'Class' },
+                    { -name => 'th', -content => 'Subjects' },
+                ] } },
+            { -name => 'tbody', -content => \@tr } ] }
+    );
+
+    $c->res->body($doc);
+}
+
+=head2 all_properties
+
+=cut
+
+sub all_properties :Path('all-properties') {
+    my ($self, $c) = @_;
+
+    my $m  = $c->model('RDF');
+    my $g  = $c->graph;
+    my $ns = $c->ns;
+
+    my @props = $m->predicates(undef, undef, $g);
+
+    my %tr;
+    for my $prop (@props) {
+        next unless my $curie = $ns->abbreviate($prop);
+        $tr{$curie} = { -name => 'tr', -content => [
+            { -name => 'th', -content => {
+                href => $prop->value, -content => $curie } },
+            { -name => 'td', -content => {
+                href => $c->uri_for('subjects-of', $curie),
+                -content => 'Inventory' } },
+            { -name => 'td', -content => {
+                href => $c->uri_for('objects-of', $curie),
+                -content => 'Inventory' } },
+        ] };
+    }
+
+    my @tr = @tr{sort { $a cmp $b } keys %tr};
+
+    my $doc = $c->stub(
+        content => { -name => 'table', -content => [
+            { -name => 'thead', -content => {
+                -name => 'tr', -content => [
+                    { -name => 'th', -content => 'Property' },
+                    { -name => 'th', -content => 'Subjects of' },
+                    { -name => 'th', -content => 'Objects of' },
+                ] } },
+            { -name => 'tbody', -content => \@tr } ] }
+    );
+
+    $c->res->body($doc);
+}
+
+=head2 has_type
+
+=cut
+
+sub has_type :Path('has-type') {
+    my ($self, $c, $type) = @_;
+
+    # redirect to /all-classes unless type is defined
+    unless (defined $type and $type ne '') {
+        $c->res->redirect('/all-classes', 303);
+        return;
+    }
+
+    my $ns = $c->ns;
+
+    # blow up if we can't resolve the type
+    my $term = $ns->uri($type);
+    unless ($term) {
+        $c->res->status(409);
+        $c->res->body("Can't resolve CURIE: $type");
+        return;
+    }
+
+    my $base = $c->req->base;
+
+    my $m = $c->rdf_cache;
+
+    my @nodes = grep { $_->is_resource } $m->subjects($ns->rdf->type, $term);
+
+    my (@li);
+    for my $s (@nodes) {
+        my ($lo, $lp) = $c->label_for($s);
+        my $uri = _from_urn($s, $base);
+        my $c = $lp ? { property => $lp->uri_value, -content => $lo->value } :
+            $lo->value;
+        push @li, { -name => 'li', -content => {
+            href => $uri, typeof => $type, -content => $c } };
+    }
+
+    # $c->log->debug(Data::Dumper::Dumper(\@li));
+
+    @li = sort {
+        $a->{-content}{-content} cmp $b->{-content}{-content} } @li;
+
+    my $doc = $c->stub(content => { -name => 'ul', -content => \@li });
+
+    $c->res->body($doc);
+}
+
+=head2 subjects_of
+
+=cut
+
+sub subjects_of :Path('subjects-of') {
+    my ($self, $c, $property) = @_;
+
+    # redirect to /all-properties unless property is defined
+    unless (defined $property and $property ne '') {
+        $c->res->redirect('/all-properties', 303);
+        return;
+    }
+
+    my $ns = $c->ns;
+
+    # blow up if we can't resolve the property
+    my $term = $ns->uri($property);
+    unless ($term) {
+        $c->res->status(409);
+        $c->res->body("Can't resolve CURIE: $type");
+        return;
+    }
+
+    my $m = $c->rdf_cache;
+
+    my @nodes = map { $_->is_resource } $m->subjects($property, undef);
+
+    my @li;
+    for my $s (@nodes) {
+        my ($lo, $lp) = $c->label_for($s);
+        my $uri = _from_urn($s, $base);
+        my $c = $lp ? { property => $lp->uri_value, -content => $lo->value } :
+            $lo->value;
+        push @li, { -name => 'li', -content => {
+            href => $uri, typeof => $type, -content => $c } };
+    }
+
+    @li = sort {
+        $a->{-content}{-content} cmp $b->{-content}{-content} } @li;
+
+    my $doc = $c->stub(content => { -name => 'ul', -content => \@li });
+
+    $c->res->body($doc);
+}
+
+=head2 objects_of
+
+=cut
+
+sub objects_of :Path('objects-of') {
+    my ($self, $c, $property) = @_;
+
+    # redirect to /all-properties unless property is defined
+    unless (defined $property and $property ne '') {
+        $c->res->redirect('/all-properties', 303);
+        return;
+    }
+
+    my $ns = $c->ns;
+
+    # blow up if we can't resolve the property
+    my $term = $ns->uri($property);
+    unless ($term) {
+        $c->res->status(409);
+        $c->res->body("Can't resolve CURIE: $type");
+        return;
+    }
+
+    my @nodes = $m->objects(undef, $property, undef, type => 'resource');
+
+    my @li;
+    for my $s (@nodes) {
+        my ($lo, $lp) = $c->label_for($s);
+        my $uri = _from_urn($s, $base);
+        my $c = $lp ? { property => $lp->uri_value, -content => $lo->value } :
+            $lo->value;
+        push @li, { -name => 'li', -content => {
+            href => $uri, typeof => $type, -content => $c } };
+    }
+
+    @li = sort {
+        $a->{-content}{-content} cmp $b->{-content}{-content} } @li;
+
+    my $doc = $c->stub(content => { -name => 'ul', -content => \@li });
+
+    $c->res->body($doc);
+}
+
 =head2 config
 
 =cut
@@ -815,9 +1093,8 @@ sub conf :Local {
 sub palette :Local {
     my ($self, $c) = @_;
 
-    # 
-
-}
+    # ??? what precisely was i planning to do here
+ }
 
 =head2 end
 

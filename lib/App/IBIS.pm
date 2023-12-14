@@ -531,6 +531,10 @@ sub render_simple {
 
     my $ns = $c->ns;
 
+    # these are the purely reverse relations we want to show up in the
+    # main body rather than the head links
+    my %revp = map { $_->value => $_ } @{$p{rev} || []};
+
     # resources and literals
     my (%types, %labels, %terms);
     my ($res, $lit, $in) = $c->neighbour_structs($subject, types => 0);
@@ -574,21 +578,36 @@ sub render_simple {
             my @fwd  = map { $ns->abbreviate($_) } @{$y->[1]};
             my @rev  = map { $ns->abbreviate($_) } @{$y->[2]};
 
-            if (@fwd) {
-                # is either a link or a literal
-                my %p = (-name => 'p');
-                if ($term->is_literal) {
-                    $p{property} = \@fwd;
-                    $p{-content} = $term->literal_value;
-                    $p{datatype} = $ns->abbreviate($term->literal_datatype)
-                        if $term->has_datatype;
-                    $p{'xml:lang'} = $term->literal_value_language
-                        if $term->has_language;
-                }
-                else {
-                    # label content
-                    my ($lv, $lp) = @{$labels{$term->uri_value} || [$term]};
-                    my $c = $lv->value;
+            my %p = (-name => 'p');
+
+            if ($term->is_literal) {
+                $p{property} = \@fwd;
+                $p{-content} = $term->literal_value;
+                $p{datatype} = $ns->abbreviate($term->literal_datatype)
+                    if $term->has_datatype;
+                $p{'xml:lang'} = $term->literal_value_language
+                    if $term->has_language;
+                push @p, \%p;
+            }
+            else {
+                my $uri = URI->new($term->uri_value);
+                $uri = $uri->uuid if lc $uri->scheme eq 'urn';
+
+                # label content
+                my ($lv, $lp) = @{$labels{$term->uri_value} || [$term]};
+                my $c = $lv->value;
+
+                # types
+                my @t = map {
+                    $ns->abbreviate($_) } @{$types{$term->uri_value}};
+
+                # the link itself
+                my %a = (href => $uri);
+                $a{rel}      = \@fwd if @fwd;
+                $a{rev}      = \@rev if @rev;
+                $a{typeof}   = \@t if @t;
+
+                if (@fwd or grep { $revp{$_->value} } @{$y->[2]}) {
                     if ($lp and $lv->is_literal) {
                         my %c = (-content => $lv->literal_value,
                                  property => $ns->abbreviate($lp));
@@ -599,25 +618,20 @@ sub render_simple {
                         $c = \%c;
                     }
 
-                    # types
-                    my @t = map {
-                        $ns->abbreviate($_) } @{$types{$term->uri_value}};
-
-                    my $uri = URI->new($term->uri_value);
-                    $uri = $uri->uuid if lc $uri->scheme eq 'urn';
-
-                    # the link itself
-                    my %a = (
-                        rel => \@fwd, href => $uri, -content => $c);
-                    $a{rev}      = \@rev if @rev;
-                    $a{typeof}   = \@t if @t;
+                    # set the content for both link and paragraph
+                    $a{-content} = $c;
                     $p{-content} = \%a;
+
+                    push @p, \%p;
                 }
-                push @p, \%p;
-            }
-            else {
-                # is reverse link only
-                push @links, { rel => '', rev => \@rev, href => $term->value };
+                else {
+                    # a purely reverse <link> in the <head>
+                    $a{-name} = 'link';    # rename the link
+                    $a{rel}   = '';        # empty rel to be valid (booo)
+                    $a{title} = $c if $lp; # only add if it's a literal
+
+                    push @links, \%a;
+                }
             }
         }
     }

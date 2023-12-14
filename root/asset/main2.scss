@@ -5,8 +5,6 @@ html {
     min-height: 100%;
     //overflow: hidden;
     font-family: "Roboto", "Helvetica Neue", "Helvetica", sans-serif;
-    background-color: #333;
-    color: #999;
 }
 
 @for $i from 5 through 0 {
@@ -19,6 +17,12 @@ html {
     $common: ();
     @each $class in $CLASSES {
         $common: append($common, "&[typeof~=\"#{$class}\"]", comma);
+    }
+
+    html {
+        background-color: #252525;
+        color: #ababab;
+        border-color: #ababab;
     }
 
     input, select, option, textarea, button {
@@ -45,11 +49,30 @@ html {
         }
     }
 
+    a[href] {
+        text-decoration: none;
+        &, &:link {
+            color: #9eacbc;
+        }
+        &:visited {
+            color: #afa7bc;
+        }
+        &:hover {
+            color: #d8e3f0;
+            text-decoration: underline;
+        }
+        &:active {
+            color: #c0a4a9;
+            text-decoration: underline;
+        }
+    }
+
     body {
         border: 0;
         margin: 0;
         padding: 0;
         // overflow: hidden;
+
 
         #{$common} {
             width: 100vw;

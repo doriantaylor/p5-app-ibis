@@ -133,6 +133,8 @@ my %INVERSE = map {
         [qw(skos:narrowMatch skos:broadMatch)],
         [qw(skos:closeMatch skos:closeMatch)],
         [qw(skos:exactMatch skos:exactMatch)],
+        [qw(skos:relatedMatch skos:relatedMatch)],
+        [qw(skos:hasTopConcept skos:topConceptOf)],
         # ORG
         [qw(org:memberOf org:hasMember)],
         [qw(org:hasSubOrganization org:isSubOrganizationOf)],
