@@ -46,7 +46,7 @@ has _dispatch => (
             $ibis->Position->value      => '_get_generic', # 'ibis/get_ibis',
             $ibis->Argument->value      => '_get_generic', # 'ibis/get_ibis',
             $skos->Concept->value       => '_get_generic', # 'skos/get_concept',
-            $skos->Collection->value    => 'skos/get_collection',
+            $skos->Collection->value    => '_get_generic',
             $skos->ConceptScheme->value => '_get_concept_scheme',
         };
     },
@@ -825,7 +825,6 @@ sub _get_concept_scheme :Private {
 sub generic_error :Private {
     my ($self, $c, $status) = @_;
 
-    
 }
 
 sub _do_404 {
@@ -857,38 +856,81 @@ sub _do_404 {
 sub all_classes :Path('all-classes') {
     my ($self, $c) = @_;
 
-    # XXX deal with IMS header and global mtime for all of these
+    my $req  = $c->req;
+    my $resp = $c->res;
 
-    my $m  = $c->model('RDF');
-    my $g  = $c->graph;
+    my $mtime = $c->global_mtime;
+    if (my $ims = $req->headers->if_modified_since) {
+        $ims = DateTime->from_epoch(epoch => $ims);
+        if ($ims >= $mtime) {
+            $resp->status(304);
+            return;
+        }
+    }
+
+    $resp->headers->last_modified($mtime->epoch);
+
+    my $m  = $c->rdf_cache;
     my $ns = $c->ns;
 
-    my @types = $m->objects(undef, $ns->rdf->type, $g, type => 'resource');
+    my @types = $m->objects(undef, $ns->rdf->type, undef, type => 'resource');
 
+    # note the single quotes
     my %tr;
     for my $type (@types) {
         next unless my $curie = $ns->abbreviate($type);
-        $tr{$curie} = { -name => 'tr', -content => [
-            { -name => 'th', -content => {
+
+        my $cs = $m->count_statements(undef, $ns->rdf->type, $type);
+
+        $tr{$curie} = {
+            -name => 'tr', id => 'o.$o', about => '#o.$o',
+            typeof => 'qb:Observation', -content => [
+                { -name => 'th', -content => { rel => 'cgto:class',
                 href => $type->value, -content => $curie } },
             { -name => 'td', -content => {
-                href => $c->uri_for('has-type', $curie),
-                -content => 'Inventory' } } ] };
+                rel => 'cgto:subjects', href => $c->uri_for('has-type', $curie),
+                -content => {
+                    about => '#o.$o', property => 'cgto:subject-count',
+                    datatype => 'xsd:nonNegativeInteger', -content => $cs }
+            } } ] };
+
     }
 
     my @tr = @tr{sort { $a cmp $b } keys %tr};
+    # lol we do this because the sort messes it up
+    for my $i (1..@tr) {
+        my $tr = $tr[$i-1];
+        $tr->{about} =~ s/(?<=\.)\$o\b/$i/g;
+        $tr->{id} =~ s/(?<=\.)\$o\b/$i/g;
+        $tr->{-content}[-1]{-content}{-content}{about} =~ s/(?<=\.)\$o\b/$i/g;
+    }
 
     my $doc = $c->stub(
+        title => ['Resources by Class', 'dct:title'],
+        attrs => { typeof => 'cgto:Summary' },
         content => { -name => 'table', -content => [
-            { -name => 'thead', -content => {
-                -name => 'tr', -content => [
-                    { -name => 'th', -content => 'Class' },
-                    { -name => 'th', -content => 'Subjects' },
-                ] } },
-            { -name => 'tbody', -content => \@tr } ] }
+            { -name => 'caption', about => 'cgto:resources-by-class',
+              property => 'rdfs:comment',
+              -content => 'This structure describes a data set that ' .
+              ' tabulates subject resources of a certain rdf:type.' },
+            { -name => 'thead', rel => 'qb:structure',
+              resource => 'cgto:resources-by-class',
+              typeof => 'qb:DataStructureDefinition', -content => {
+                -name => 'tr', rel => 'qb:component', -content => [
+                    { -name => 'th', about => '_:c1', rel => 'qb:dimension',
+                      typeof => 'qb:ComponentSpecification',
+                      resource => 'cgto:class', -content => 'Class' },
+                    { -name => 'th', -content => [
+                        { about => '_:c2', typeof => 'qb:ComponentSpecification',
+                          rel => 'qb:attribute', resource => 'cgto:subjects',
+                          -content => 'Subjects' },
+                        { about => '_:c3', typeof => 'qb:ComponentSpecification',
+                          rel => 'qb:measure', resource => 'cgto:subject-count' }
+                    ] } ] } },
+            { -name => 'tbody', rev => 'qb:dataSet', -content => \@tr } ] }
     );
 
-    $c->res->body($doc);
+    $resp->body($doc);
 }
 
 =head2 all_properties
@@ -898,41 +940,110 @@ sub all_classes :Path('all-classes') {
 sub all_properties :Path('all-properties') {
     my ($self, $c) = @_;
 
-    my $m  = $c->model('RDF');
-    my $g  = $c->graph;
+    my $req  = $c->req;
+    my $resp = $c->res;
+
+    my $mtime = $c->global_mtime;
+    if (my $ims = $req->headers->if_modified_since) {
+        $ims = DateTime->from_epoch(epoch => $ims);
+        if ($ims >= $mtime) {
+            $resp->status(304);
+            return;
+        }
+    }
+
+    $resp->headers->last_modified($mtime->epoch);
+
+    my $m  = $c->rdf_cache;
     my $ns = $c->ns;
 
-    my @props = $m->predicates(undef, undef, $g);
+    my @props = $m->predicates(undef, undef);
 
     my %tr;
     for my $prop (@props) {
         next unless my $curie = $ns->abbreviate($prop);
-        $tr{$curie} = { -name => 'tr', -content => [
-            { -name => 'th', -content => {
-                href => $prop->value, -content => $curie } },
-            { -name => 'td', -content => {
-                href => $c->uri_for('subjects-of', $curie),
-                -content => 'Inventory' } },
-            { -name => 'td', -content => {
-                href => $c->uri_for('objects-of', $curie),
-                -content => 'Inventory' } },
+
+        # collect nodes on either end
+        my (%s, %o);
+        my $iter = $m->get_statements(undef, $prop, undef);
+        while (my $stmt = $iter->next) {
+            my ($s, $o) = ($stmt->subject, $stmt->object);
+            $s{$s->uri_value} = $s if $s->is_resource;
+            $o{$o->uri_value} = $o if $o->is_resource;
+        }
+
+        # this will give us counts
+        my $cs = keys %s;
+        my $co = keys %o;
+
+        $tr{$curie} = {
+            -name => 'tr', id => 'o.$o', about => '#o.$o',
+            typeof => 'qb:Observation', -content => [
+                { -name => 'th', -content => {
+                    rel => 'cgto:property', href => $prop->value,
+                    -content => $curie } },
+                { -name => 'td', -content => {
+                    rel => 'cgto:subjects',
+                    href => $c->uri_for('subjects-of', $curie),
+                    -content => {
+                        about => '#o.$o', property => 'cgto:subject-count',
+                        datatype => 'xsd:nonNegativeInteger', -content => $cs }
+                } },
+                { -name => 'td', -content => {
+                    rel => 'cgto:objects',
+                    href => $c->uri_for('objects-of', $curie),
+                    -content => {
+                        about => '#o.$o', property => 'cgto:object-count',
+                        datatype => 'xsd:nonNegativeInteger', -content => $co }
+                } },
         ] };
     }
 
     my @tr = @tr{sort { $a cmp $b } keys %tr};
+    for my $i (1..@tr) {
+        my $tr = $tr[$i-1];
+        $tr->{about} =~ s/(?<=\.)\$o\b/$i/g;
+        $tr->{id} =~ s/(?<=\.)\$o\b/$i/g;
+        $tr->{-content}[-1]{-content}{-content}{about} =~ s/(?<=\.)\$o\b/$i/g;
+        $tr->{-content}[-2]{-content}{-content}{about} =~ s/(?<=\.)\$o\b/$i/g;
+    }
 
     my $doc = $c->stub(
+        title => ['Resources by Property', 'dct:title'],
+        attrs => { typeof => 'cgto:Summary' },
         content => { -name => 'table', -content => [
-            { -name => 'thead', -content => {
-                -name => 'tr', -content => [
-                    { -name => 'th', -content => 'Property' },
-                    { -name => 'th', -content => 'Subjects of' },
-                    { -name => 'th', -content => 'Objects of' },
-                ] } },
-            { -name => 'tbody', -content => \@tr } ] }
+            { -name => 'caption', about => 'cgto:resources-by-property',
+              property => 'rdfs:comment',
+              -content => 'This structure describes a data set that tabulates' .
+              ' both subject and object resources by property (predicate).' },
+            { -name => 'thead', rel => 'qb:structure',
+              resource => 'cgto:resources-by-property',
+              typeof => 'qb:DataStructureDefinition', -content => {
+                  -name => 'tr', rel => 'qb:component', -content => [
+                      { -name => 'th', about => '_:c1', rel => 'qb:dimension',
+                        typeof => 'cgto:ComponentSpecification',
+                        resource => 'cgto:property', -content => 'Property' },
+                      { -name => 'th', -content => [
+                          { about => '_:c2', rel => 'qb:attribute',
+                            resource => 'qb:subjects', -content => 'Subjects',
+                            typeof => 'qb:ComponentSpecification' },
+                          { about => '_:c3', rel => 'qb:measure',
+                            resource => 'qb:subject-count',
+                            typeof => 'qb:ComponentSpecification' },
+                      ] },
+                      { -name => 'th', -content => [
+                          { about => '_:c4', rel => 'qb:attribute',
+                            resource => 'qb:objects', -content => 'Objects',
+                            typeof => 'qb:ComponentSpecification' },
+                          { about => '_:c5', rel => 'qb:measure',
+                            resource => 'qb:object-count',
+                            typeof => 'qb:ComponentSpecification' },
+                      ] },
+                  ] } },
+            { -name => 'tbody', rev => 'qb:dataSet', -content => \@tr } ] }
     );
 
-    $c->res->body($doc);
+    $resp->body($doc);
 }
 
 =head2 has_type
@@ -942,46 +1053,62 @@ sub all_properties :Path('all-properties') {
 sub has_type :Path('has-type') {
     my ($self, $c, $type) = @_;
 
+    my $req  = $c->req;
+    my $resp = $c->res;
+
     # redirect to /all-classes unless type is defined
     unless (defined $type and $type ne '') {
-        $c->res->redirect('/all-classes', 303);
+        $resp->redirect('/all-classes', 303);
         return;
     }
+
+    my $mtime = $c->global_mtime;
+    if (my $ims = $req->headers->if_modified_since) {
+        $ims = DateTime->from_epoch(epoch => $ims);
+        if ($ims >= $mtime) {
+            $resp->status(304);
+            return;
+        }
+    }
+
+    $resp->headers->last_modified($mtime->epoch);
 
     my $ns = $c->ns;
 
     # blow up if we can't resolve the type
     my $term = $ns->uri($type);
     unless ($term) {
-        $c->res->status(409);
-        $c->res->body("Can't resolve CURIE: $type");
+        $resp->status(409);
+        $resp->body("Can't resolve CURIE: $type");
         return;
     }
 
-    my $base = $c->req->base;
+    my $base = $req->base;
 
     my $m = $c->rdf_cache;
 
     my @nodes = grep { $_->is_resource } $m->subjects($ns->rdf->type, $term);
 
-    my (@li);
+    my @li;
     for my $s (@nodes) {
         my ($lo, $lp) = $c->label_for($s);
         my $uri = _from_urn($s, $base);
         my $c = $lp ? { property => $lp->uri_value, -content => $lo->value } :
             $lo->value;
-        push @li, { -name => 'li', -content => {
-            href => $uri, typeof => $type, -content => $c } };
+        push @li, [$lo->value, { -name => 'li', -content => {
+            href => $uri, typeof => $type, -content => $c } }];
     }
 
     # $c->log->debug(Data::Dumper::Dumper(\@li));
 
-    @li = sort {
-        $a->{-content}{-content} cmp $b->{-content}{-content} } @li;
+    @li = map { $_->[1] } sort { $a->[0] cmp $b->[0] } @li;
 
-    my $doc = $c->stub(content => { -name => 'ul', -content => \@li });
+    my $doc = $c->stub(
+        title => ["Subjects of $type", 'dct:title'],
+        attrs => { typeof => 'cgto:Inventory' },
+        content => { -name => 'ul', rel => 'dct:hasPart', -content => \@li });
 
-    $c->res->body($doc);
+    $resp->body($doc);
 }
 
 =head2 subjects_of
@@ -991,11 +1118,25 @@ sub has_type :Path('has-type') {
 sub subjects_of :Path('subjects-of') {
     my ($self, $c, $property) = @_;
 
+    my $req  = $c->req;
+    my $resp = $c->res;
+
     # redirect to /all-properties unless property is defined
     unless (defined $property and $property ne '') {
-        $c->res->redirect('/all-properties', 303);
+        $resp->redirect('/all-properties', 303);
         return;
     }
+
+    my $mtime = $c->global_mtime;
+    if (my $ims = $req->headers->if_modified_since) {
+        $ims = DateTime->from_epoch(epoch => $ims);
+        if ($ims >= $mtime) {
+            $resp->status(304);
+            return;
+        }
+    }
+
+    $resp->headers->last_modified($mtime->epoch);
 
     my $ns = $c->ns;
 
@@ -1003,30 +1144,37 @@ sub subjects_of :Path('subjects-of') {
     my $term = $ns->uri($property);
     unless ($term) {
         $c->res->status(409);
-        $c->res->body("Can't resolve CURIE: $type");
+        $c->res->body("Can't resolve CURIE: $property");
         return;
     }
 
     my $m = $c->rdf_cache;
 
-    my @nodes = map { $_->is_resource } $m->subjects($property, undef);
+    my @nodes = grep { $_->is_resource } $m->subjects($term, undef);
+
+    my $base = $req->base;
+
+    # $c->log->debug(Data::Dumper::Dumper(\@nodes));
 
     my @li;
     for my $s (@nodes) {
         my ($lo, $lp) = $c->label_for($s);
         my $uri = _from_urn($s, $base);
-        my $c = $lp ? { property => $lp->uri_value, -content => $lo->value } :
+        my $ct = $lp ? { property => $lp->uri_value, -content => $lo->value } :
             $lo->value;
-        push @li, { -name => 'li', -content => {
-            href => $uri, typeof => $type, -content => $c } };
+        my @types = sort map { $ns->abbreviate($_) } $c->types_for($s);
+        push @li, [ $lo->value, { -name => 'li', -content => {
+            href => $uri, typeof => \@types, -content => $ct } } ];
     }
 
-    @li = sort {
-        $a->{-content}{-content} cmp $b->{-content}{-content} } @li;
+    @li = map { $_->[1] } sort { $a->[0] cmp $b->[0] } @li;
 
-    my $doc = $c->stub(content => { -name => 'ul', -content => \@li });
+    my $doc = $c->stub(
+        title => ["Subjects of $property", 'dct:title'],
+        attrs => { typeof => 'cgto:Inventory' },
+        content => { -name => 'ul', rel => 'dct:hasPart', -content => \@li });
 
-    $c->res->body($doc);
+    $resp->body($doc);
 }
 
 =head2 objects_of
@@ -1036,9 +1184,12 @@ sub subjects_of :Path('subjects-of') {
 sub objects_of :Path('objects-of') {
     my ($self, $c, $property) = @_;
 
+    my $req  = $c->req;
+    my $resp = $c->res;
+
     # redirect to /all-properties unless property is defined
     unless (defined $property and $property ne '') {
-        $c->res->redirect('/all-properties', 303);
+        $resp->redirect('/all-properties', 303);
         return;
     }
 
@@ -1048,28 +1199,36 @@ sub objects_of :Path('objects-of') {
     my $term = $ns->uri($property);
     unless ($term) {
         $c->res->status(409);
-        $c->res->body("Can't resolve CURIE: $type");
+        $c->res->body("Can't resolve CURIE: $property");
         return;
     }
 
-    my @nodes = $m->objects(undef, $property, undef, type => 'resource');
+    my $m = $c->rdf_cache;
+
+    my @nodes = $m->objects(undef, $term, undef, type => 'resource');
+
+    my $base = $req->base;
 
     my @li;
     for my $s (@nodes) {
+        $c->log->debug(Data::Dumper::Dumper($s));
         my ($lo, $lp) = $c->label_for($s);
         my $uri = _from_urn($s, $base);
-        my $c = $lp ? { property => $lp->uri_value, -content => $lo->value } :
+        my $ct = $lp ? { property => $lp->uri_value, -content => $lo->value } :
             $lo->value;
-        push @li, { -name => 'li', -content => {
-            href => $uri, typeof => $type, -content => $c } };
+        my @types = sort map { $ns->abbreviate($_) } $c->types_for($s);
+        push @li, [$lo->value, { -name => 'li', -content => {
+            href => $uri, typeof => \@types, -content => $ct } } ];
     }
 
-    @li = sort {
-        $a->{-content}{-content} cmp $b->{-content}{-content} } @li;
+    @li = map { $_->[1]  }sort { $a->[0] cmp $b->[0] } @li;
 
-    my $doc = $c->stub(content => { -name => 'ul', -content => \@li });
+    my $doc = $c->stub(
+        title => ["Objects of $property", 'dct:title'],
+        attrs => { typeof => 'cgto:Inventory' },
+        content => { -name => 'ul', rel => 'dct:hasPart', -content => \@li });
 
-    $c->res->body($doc);
+    $resp->body($doc);
 }
 
 =head2 config

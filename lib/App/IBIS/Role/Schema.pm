@@ -31,6 +31,7 @@ my %XMLNS = (
     pav   => 'http://purl.org/pav/',
     pm    => 'https://vocab.methodandstructure.com/process-model#',
     prov  => 'http://www.w3.org/ns/prov#',
+    qb    => 'http://purl.org/linked-data/cube#',
     sioc  => 'http://rdfs.org/sioc/ns#',
     sioct => 'http://rdfs.org/sioc/types#',
     skos  => 'http://www.w3.org/2004/02/skos/core#',

@@ -401,8 +401,8 @@ sub rdf_cache {
     # run this for side effects
     $c->global_mtime;
 
-    $model->add_iterator
-        ($c->model('RDF')->get_statements(undef, undef, undef, $g));
+    $model->add_iterator(
+        $c->model('RDF')->get_statements(undef, undef, undef, $g));
 
     $model;
 }
