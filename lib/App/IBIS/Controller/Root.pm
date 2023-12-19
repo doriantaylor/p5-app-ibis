@@ -26,7 +26,6 @@ use DateTime;
 use DateTime::Format::W3CDTF;
 
 use Scalar::Util ();
-use List::MoreUtils qw(any);
 
 # negotiate yo
 use HTTP::Negotiate ();
@@ -119,11 +118,12 @@ my @EXEMPT = qw(default all_classes all_properties dump bulk);
 sub maybe_bootstrap :Private {
     my ($self, $c) = @_;
 
-    $c->log->debug(join ', ', @{$c->req->args});
+    my $arg = $c->req->args->[0] // '';
+
+    # $c->log->debug('does arg match? ' . $arg =~ $self->UUID_RE);
 
     # XXX note the operand order; string overload in play here
-    if (grep { $_ eq $c->action } @EXEMPT
-        or ($c->req->args->[0] // '') =~ $self->UUID_RE) {
+    if ($arg !~ $self->UUID_RE && grep { $_ eq $c->action } @EXEMPT) {
         $c->log->debug('Skipping action from bootstrap screen: ' . $c->action);
     }
     else {
@@ -245,31 +245,7 @@ sub uuid :Private { # :Regex('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{
 
     # check request method
     my $method = $req->method;
-    if ($method eq 'POST') {
-        # check for input
-        my $newsub;
-        eval {
-            $c->log->debug('gonna post it lol');
-            $newsub = $self->_post_uuid($c, $uuid, $req->body_parameters);
-            $c->log->debug('welp posted it lol');
-        };
-        if ($@) {
-            $c->log->debug($@);
-            $resp->status(409);
-            $resp->content_type('text/plain');
-            $resp->body('wtf');
-            # $resp->body(sprintf 'wat %s', $@ // '');
-        }
-        else {
-            # XXX this may be an XSS vuln since it comes from user
-            # input; TODO constrain
-            my $newuri = _from_urn($newsub, $req->base);
-            $c->log->debug("see other: $newuri");
-            $resp->redirect($newuri, 303);
-        }
-        return;
-    }
-    elsif ($method eq 'GET' or $method eq 'HEAD') {
+    if ($method eq 'GET' or $method eq 'HEAD') {
         # do this for now until we can handle html properly
         $resp->content_type('application/xhtml+xml');
         # check model for subject
@@ -306,7 +282,7 @@ sub uuid :Private { # :Regex('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{
         }
     }
     elsif ($method eq 'DELETE') {
-        $c->forward('_delete_uuid', [$uuid]);
+        $c->forward('delete_uuid', [$uuid]);
     }
     else {
         $resp->status('405');
@@ -316,13 +292,13 @@ sub uuid :Private { # :Regex('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{
     }
 }
 
-=head2 _delete_uuid
+=head2 delete_uuid
 
 Handle DELETE on UUIDs.
 
 =cut
 
-sub _delete_uuid :Private {
+sub delete_uuid :Private {
     my ($self, $c, $uuid) = @_;
     my $m = $c->model('RDF');
     my $g = $c->graph;
@@ -336,6 +312,7 @@ sub _delete_uuid :Private {
     $m->remove_statements(undef, undef, $uuid, $g);
     $m->end_bulk_ops;
 
+    # reset the graph cache
     $c->rdf_cache(1);
 
     $c->log->debug(sprintf 'New size: %d', $m->size);
@@ -629,31 +606,6 @@ Handle POST requests that conform to the RDF-KV protocol.
 
 =cut
 
-sub rdf_kv_post :Path('/') :POST {
-    my ($self, $c, @args) = @_;
-    $c->log->debug('wtf even');
-}
-
-sub _to_urn {
-    my $path = shift;
-    #warn "lols $path";
-    if (my ($uuid) = ($path =~ $App::IBIS::Role::Markup::UUID_RE)) {
-        #warn $uuid;
-        my $out = URI->new("urn:uuid:$uuid");
-        return $out;
-    }
-    return $path;
-}
-
-sub _from_urn {
-    my ($uuid, $base) = @_;
-    $uuid = URI->new($uuid) unless ref $uuid;
-    $uuid = URI->new($uuid->uri_value) if $uuid->isa('RDF::Trine::Node');
-    Carp::croak("wtf $uuid, @{[join ' ', caller]}") unless $uuid->isa('URI');
-    return $uuid unless $uuid->isa('URI::urn::uuid');
-    URI->new_abs($uuid->uuid, $base);
-}
-
 # POST RIDERS SHOULD BE IDEMPOTENT IN CASE THEY GET RUN MORE THAN ONCE
 
 my @DEFAULT_RIDER = (
@@ -694,75 +646,74 @@ my %RIDER = (
     'skos:Collection'    => [@DEFAULT_RIDER],
 );
 
-sub _post_uuid {
-    my ($self, $c, $subject, $content) = @_;
-    my $uuid = URI->new($subject->uri_value);
+sub rdf_kv_post :Path('/') :POST {
+    my ($self, $c, @args) = @_;
 
-    # XXX lame; i forgot why i'm doing this again
-    my $ns = URI::NamespaceMap->new({
-        rdf  => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-        ibis => 'https://vocab.methodandstructure.com/ibis#',
-        skos => 'http://www.w3.org/2004/02/skos/core#',
-        dct  => 'http://purl.org/dc/terms/',
-        xsd  => 'http://www.w3.org/2001/XMLSchema#',
-    });
+    my $req  = $c->req;
+    my $resp = $c->res;
 
-    my $rns = $c->ns;
-    my $m = $c->model('RDF'); # this actually needs the writable one
+    my $m = $c->model('RDF');
     my $g = $c->graph;
 
     my $kv = RDF::KV->new(
-        #subject    => 'http://deuce:5000/' . $uuid->uuid,
-        subject    => _from_urn($uuid, $c->req->base),
-        namespaces => $rns,
+        subject    => $req->uri->canonical,
+        namespaces => $c->uns,
         graph      => $g->value,
         callback   => \&_to_urn,
-   );
+    );
 
-    my $patch = $kv->process($content);
-
-    # dereference the new subject here
-    my $newsub = _from_urn($kv->subject, $c->req->base);
-
-    $c->log->debug("new(?) subject: $newsub");
-    #$c->log->debug(Data::Dumper::Dumper($patch));
-
-    unless (lc $newsub->authority eq lc $c->req->base->authority) {
-        $c->res->status(409);
-        $c->res->body("Neutralized attempt to redirect offsite: $newsub");
+    my $patch = eval { $kv->process($req->body_parameters) };
+    if ($@) {
+        $resp->status(409);
+        $resp->body($@);
         return;
     }
 
-    # $c->log->debug('got here 0');
+    my $newsub = _from_urn($kv->subject, $req->base);
+
+    $c->log->debug("RDF-KV: new(?) subject $newsub");
+
+    unless (lc $newsub->authority eq lc $c->req->base->authority) {
+        $resp->status(409);
+        $resp->body("RDF-KV: Neutralized attempt to redirect offsite: $newsub");
+        return;
+    }
 
     my @bad = grep { !$g->equal($_) } $patch->affected_graphs;
     if (@bad) {
-        $c->log->error(sprintf 'Modification of graph(s) %s not allowed (%s)',
-                       join(', ', map { $_ // '' } @bad), $g);
+        my $bad = join(', ', map { $_ // '' } @bad);
+        my $err = sprintf
+            'RDF-KV: Modification of graph(s) %s not allowed (%s)', $bad, $g;
+
+        $c->log->error($err);
+        $resp->status(409);
+        $resp->body($err);
+
         return;
     }
 
-    # $c->log->debug('got here 1');
-
-    # ensure that all the statements in the patch match the graph
-    # grep { $_->graph->value } map { $patch->$_ } qw(to_add to_remove);
-
-    $c->log->debug("Initial size: " . $m->size);
-
-    # apply the patch
+    $c->log->debug("RDF-KV: Initial size: " . $m->size);
 
     $m->begin_bulk_ops;
     eval { $patch->apply($m) };
     if ($@) {
-        $c->log->error("cannot apply patch: $@");
+        # XXX WOULD LOVE A ROLLBACK HERE
+
+        my $err = "RDF-KV: Can't apply patch: $@";
+        $c->log->error($err);
+        $resp->status(409);
+        $resp->body($err);
+
         return;
     }
-    # $c->log->debug('got here 2');
 
+    # gotta love having two incompatible classes for namespace maps
+    my $rns = $c->ns;
+
+    $c->log->debug('RDF-KV: Running post-POST riders');
     eval {
         # now we add a rider
         for my $pair ($patch->affected_subjects(1)) {
-            # $c->log->debug('got here 3');
 
             my $ag = $pair->[0];         # affected graph
             for my $as (@{$pair->[1]}) { # affected subjects
@@ -780,19 +731,43 @@ sub _post_uuid {
         }
     };
     if ($@) {
-        $c->log->debug($@);
+        # XXX ROLLBACK HERE TOO LOL
+
+        my $err = "RDF-KV: rider function failed: $@";
+        $c->log->error($err);
+        $resp->status(409);
+        $c->
         return;
     };
 
+    # uhh commit transactions? lol
     $m->end_bulk_ops;
     # clear the cache
-    eval { $c->rdf_cache(1) };
-    if ($@) {
-        $c->log->error("wtf cache: $@");
-    }
-    $c->log->debug("New size: " . $m->size);
+    $c->rdf_cache(1);
 
-    $newsub;
+    $c->log->debug('RDF-KV: New size: ' . $m->size);
+
+    $resp->redirect($newsub, 303);
+}
+
+sub _to_urn {
+    my $path = shift;
+    #warn "lols $path";
+    if (my ($uuid) = ($path =~ $App::IBIS::Role::Markup::UUID_RE)) {
+        #warn $uuid;
+        my $out = URI->new("urn:uuid:$uuid");
+        return $out;
+    }
+    return $path;
+}
+
+sub _from_urn {
+    my ($uuid, $base) = @_;
+    $uuid = URI->new($uuid) unless ref $uuid;
+    $uuid = URI->new($uuid->uri_value) if $uuid->isa('RDF::Trine::Node');
+    Carp::croak("wtf $uuid, @{[join ' ', caller]}") unless $uuid->isa('URI');
+    return $uuid unless $uuid->isa('URI::urn::uuid');
+    URI->new_abs($uuid->uuid, $base);
 }
 
 =head2 default
