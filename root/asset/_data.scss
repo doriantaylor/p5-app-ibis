@@ -1,5 +1,6 @@
 // all this can come out of the app
-$CLASSES: ("ibis:Issue", "ibis:Position", "ibis:Argument", "skos:Concept");
+$IBIS: ("ibis:Issue", "ibis:Position", "ibis:Argument");
+$CLASSES: append($IBIS, "skos:Concept");
 $PROPERTIES: (
     //"dct:references",
     "skos:broader", "skos:narrower", "skos:related",

@@ -14,11 +14,6 @@ html {
 }
 
 @media screen {
-    $common: ();
-    @each $class in $CLASSES {
-        $common: append($common, "&[typeof~=\"#{$class}\"]", comma);
-    }
-
     html {
         background-color: #252525;
         color: #ababab;
@@ -30,12 +25,13 @@ html {
         font-family: inherit;
         font-size: inherit;
         font-weight: inherit;
+        margin: 0;
     }
 
     input[type="text"], input[type="submit"], input[type="reset"], select, option, button, textarea {
         background-color: inherit;
         color: inherit;
-        border-width: 1px;
+        border-width: 0.125rem;
         border-style: solid;
         border-color: currentColor;
         border-radius: 0.25em;
@@ -73,7 +69,13 @@ html {
         padding: 0;
         // overflow: hidden;
 
+        // *all* entities
+        $common: ();
+        @each $class in $CLASSES {
+            $common: append($common, "&[typeof~=\"#{$class}\"]", comma);
+        }
 
+        // common for *all* classes
         #{$common} {
             width: 100vw;
             height: 100vh;
@@ -104,52 +106,42 @@ html {
                     grid-template-rows: 12rem auto;
                     font-size: 75%;
 
-                    > section {
-                        margin: 0.5em;
+                    > hgroup {
+                        margin: 0.25rem;
+                        padding: 0.25rem;
+                        @include vendor(border-radius, 0.5rem);
+                        border-width: 0.125rem;
+                        border-style: solid;
 
-                        &.self {
-                            margin: 0.25rem;
-                            padding: 0.25rem;
-                            @include vendor(border-radius, 0.5rem);
-                            border-width: 0.125rem;
-                            border-style: solid;
+                        textarea {
+                            resize: none;
+                        }
 
-                            > h1 {
-                                height: 10rem;
-                                max-width: 100%;
+                        > h1 {
+                            max-width: 100%;
+                            display: flex;
+                            align-items: stretch;
+                            flex-basis: 100%;
+                            > form {
                                 display: flex;
-                                justify-content: stretch;
-                                button {
-                                    border-width: 0.125rem;
-                                }
-                                > form.types {
-                                    display: flex;
-                                    flex-basis: 2rem;
-                                    flex-wrap: wrap;
-                                    gap: 0.25rem;
-                                    > button {
-                                        width: 100%;
-                                    }
-                                }
-                                > form.description {
-                                    display: flex;
-                                    flex-grow: 2;
-                                    > textarea, input[type="text"] {
-                                        flex-grow: 2;
-                                        margin: 0 0.25rem;
-                                        resize: none;
-                                        border: none;
-                                    }
-                                    > button {
-                                        flex-basis: 2.5rem;
-                                    }
-                                }
+                                flex-basis: 100%;
+                                flex-grow: 2;
                             }
-                            > span.date {
-                                display: block;
-                                text-align: right;
+                            input[type="text"] {
+                                flex-grow: 2;
+                            }
+                            button {
+                                border-width: 0.125rem;
                             }
                         }
+                        > span.date {
+                            display: block;
+                            text-align: right;
+                        }
+                    }
+
+                    > section {
+                        margin: 0.5em;
 
                         &.relations {
                             @include vendor(border-radius, 1em);
@@ -170,10 +162,16 @@ html {
                                     display: inline-block;
                                     vertical-align: middle;
                                     &:focus-within {
+                                        @include vendor(border-radius, 0.25rem);
+                                        border-width: 0.125rem;
+                                        border-style: solid;
                                         margin: 0.25rem;
                                         padding: 0.25rem;
                                         display: flex;
+                                        gap: 0.125rem;
                                         input[type="text"] {
+                                            border-width: 0.125rem;
+                                            border-style: solid;
                                             display: inline-block;
                                             flex-grow: 2;
                                         }
@@ -207,7 +205,7 @@ html {
                     }
                     li[typeof] {
                         display: block;
-                        border-width: 0.0625rem;
+                        border-width: 0.125rem;
                         border-style: solid;
                         @include vendor(border-radius, 0.25rem);
                         margin: 0.125rem 0;
@@ -231,6 +229,119 @@ html {
 
         }
 
+        // ibis-only selectors
+        $ibis: ();
+        @each $class in $IBIS {
+            $ibis: append($ibis, "&[typeof~=\"#{$class}\"]", comma);
+        }
+        #{$ibis} {
+            > main > article > hgroup {
+                > h1 {
+                    height: 10rem;
+                    > form.types {
+                        display: flex;
+                        flex-basis: 2rem;
+                        flex-wrap: wrap;
+                        gap: 0.25rem;
+                        > button {
+                            width: 100%;
+                        }
+                    }
+                    > form.description {
+                        display: flex;
+                        flex-grow: 2;
+                        > textarea, input[type="text"] {
+                            flex-grow: 2;
+                            margin: 0 0.25rem;
+                            resize: none;
+                            border: none;
+                        }
+                        > button {
+                            flex-basis: 2.5rem;
+                        }
+                    }
+                }
+            }
+        }
+
+        // skos-only selectors
+        &[typeof~="skos:Concept"] {
+            > main > article {
+                grid-template-rows: 16rem auto;
+
+                > hgroup {
+                    display: grid;
+                    grid-template-areas: "label label" "description description" "altLabel hiddenLabel";
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 3rem 4rem auto;
+                    gap: 0.25rem;
+
+                    > h1 {
+                        grid-area: label;
+                        height: 2em;
+
+                        > form {
+                            display: flex;
+                            flex-basis: 100%;
+                            gap: 0.25rem;
+                        }
+                    }
+                    > form {
+                        grid-area: description;
+                        display: flex;
+                        gap: 0.25rem;
+                        // flex-basis: 1fr;
+                        > textarea {
+                            // flex-basis: 1fr;
+                            flex-grow: 2;
+                            //height: 4rem;
+                        }
+                    }
+                    > aside {
+                        &:first-of-type {
+                            grid-area: altLabel;
+                        }
+                        grid-area: hiddenLabel;
+                        // flex-basis: 2fr;
+                        padding: 0.25rem;
+                    }
+                    ul {
+                        height: 5rem;
+                        overflow: auto;
+                        padding: 0 1em 0 0;
+                        li {
+                            display: flex;
+                            line-height: 1.4em;
+                            height: 2em;
+                            margin: 0.125rem 0;
+                            > form {
+                                display: flex;
+                                float: initial;
+                                flex-basis: 100%;
+                                gap: 0.25rem;
+                                > span {
+                                    display: block;
+                                    flex-basis: 100%;
+                                    flex-grow: 2;
+                                }
+                                > input {
+                                    display: block;
+                                    flex-grow: 2;
+                                }
+                                > button {
+                                    display: block;
+                                    flex-basis: 2em;
+                                    width: 2em;
+                                    height: 100%;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // class-specific (mainly palette) stuff
         @each $class in $CLASSES {
             $pal: map-get($PALETTE, $class);
 
@@ -245,17 +356,17 @@ html {
 
                     > article {
                         background-color: nth($pal, 3);
-                        > section {
-                            &.self {
-                                color: nth($pal, 2);
-                                border-color: nth($pal, 2);
-                                background-color: nth($pal, 5);
-                                &:focus-within {
-                                    color: nth($pal, 3);
-                                    border-color: nth($pal, 3);
-                                    background-color: nth($pal, 6);
-                                }
+                        > hgroup {
+                            color: nth($pal, 2);
+                            border-color: nth($pal, 2);
+                            background-color: nth($pal, 5);
+                            &:focus-within {
+                                color: nth($pal, 3);
+                                border-color: nth($pal, 3);
+                                background-color: nth($pal, 6);
                             }
+                        }
+                        > section {
                             &.relations {
                                 background-color: nth($pal, 2);
                             }
@@ -302,37 +413,48 @@ html {
 
         main > article > section {
 
-        @each $class in $CLASSES {
-            $pal: map-get($PALETTE, $class);
+            @each $class in $CLASSES {
+                $pal: map-get($PALETTE, $class);
 
-            li[typeof~="#{$class}"] {
-                color: nth($pal, 2);
-                border-color: nth($pal, 2);
-                background-color: nth($pal, 5);
+                li[typeof~="#{$class}"] {
+                    color: nth($pal, 2);
+                    border-color: nth($pal, 2);
+                    background-color: nth($pal, 5);
 
-                &:hover, &:active {
-                    color: nth($pal, 3);
-                    border-color: nth($pal, 3);
-                    background-color: nth($pal, 6);
-                }
-
-                button {
-                    color: nth($pal, 1);
-                    border-color: nth($pal, 1);
-                    background-color: nth($pal, 4);
-                    &:hover {
+                    &:hover, &:active {
                         color: nth($pal, 3);
                         border-color: nth($pal, 3);
                         background-color: nth($pal, 6);
                     }
-                    &:disabled {
+
+                    button {
+                        color: nth($pal, 1);
+                        border-color: nth($pal, 1);
+                        background-color: nth($pal, 4);
+                        &:hover {
+                            color: nth($pal, 3);
+                            border-color: nth($pal, 3);
+                            background-color: nth($pal, 6);
+                        }
+                        &:disabled {
+                            color: nth($pal, 2);
+                            border-color: nth($pal, 2);
+                            background-color: nth($pal, 5);
+                        }
+                    }
+                }
+
+                form[about="#{$class}"] {
+                    color: nth($pal, 2);
+                    border-color: nth($pal, 2);
+                    background-color: nth($pal, 5);
+                    input[type="text"] {
                         color: nth($pal, 2);
                         border-color: nth($pal, 2);
                         background-color: nth($pal, 5);
                     }
                 }
             }
-        }
         }
 
         article {

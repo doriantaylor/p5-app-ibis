@@ -73,42 +73,145 @@ window.addEventListener('load', function () {
         (i) => `https://vocab.methodandstructure.com/ibis#${i}`
     ).concat(['http://www.w3.org/2004/02/skos/core#Concept']);
 
-    const selector = 'section.relations > section > form';
-
-    const forms = this.document.querySelectorAll(selector);
-
     const focus = e => {
         console.log(e);
+
+        const form = e.target.form;
+        const text = form['$ label'];
+        const list = text.list;
+
+        if (list) {
+            console.log(list);
+            const options = list.querySelectorAll('option');
+            // and then what
+        }
     };
 
     const blur = e => {
         // uncheck
+        console.log(e);
 
         const form = e.currentTarget;
-        let radios = form['= rdf:type :'];
+        let radios = form['$ type'];
 
-        if (radios instanceof RadioNodeList) radios = Array.from(radios);
-        else radios = [radios];
+        if (!e.relatedTarget || e.relatedTarget.form !== form) {
+            if (radios instanceof RadioNodeList) radios = Array.from(radios);
+            else radios = [radios];
 
-        // radios.forEach(r => r.checked = false);
+            radios.forEach(r => r.checked = false);
 
-        console.log(radios);
+            form.removeAttribute('about');
+
+            console.log(radios);
+        }
     };
 
     const escape = e => {
         if (e.key === 'Escape') {
+            console.log(e);
+            e.target.blur();
             e.currentTarget.blur();
         }
         return true;
     };
 
+    const handleAutoFill = e => {
+        if (!e.isTrusted) return;
+
+        const input = e.target;
+        const form  = input.form;
+        const list  = input.list;
+
+        // console.log('lol', e);
+
+        const complies = e instanceof InputEvent;
+        let value  = null;
+        let option = null;
+
+        const newInputs = Array.from(form.querySelectorAll('input.new'));
+        const existing  = Array.from(form.querySelectorAll('input.existing'));
+
+        if (!complies || e.inputType === 'insertReplacementText') {
+            value  = input.value;
+            option = list.querySelector(`option[value="${value}"]`);
+
+            console.log('option', option);
+
+            if (option) {
+                input.value = option.label;
+                existing[0].disabled = false;
+                existing[0].value = value;
+                newInputs.forEach(i => i.disabled = true);
+            }
+        }
+        else {
+            console.log('putting back to "new"');
+            // put it back
+            existing[0].value = null;
+            existing[0].disabled = true;
+            const type = form.getAttribute('about');
+            newInputs.forEach(i => {
+                i.disabled = false;
+                if (i.classList.contains('label') &&
+                    i.getAttribute('about') !== type) i.disabled = true;
+            });
+        }
+    };
+
+    const clickRadio = e => {
+        console.log(e);
+
+        //e.preventDefault();
+        e.stopPropagation();
+
+        //const input = new InputEvent('input');
+
+        //e.target.dispatchEvent(input);
+
+        e.target.click();
+        // return true;
+    };
+
+    const typeSelect = e => {
+        console.log(e);
+        const input = e.target;
+        const form  = input.form;
+        const text  = form['$ label'];
+        const list  = text.list;
+
+        form.setAttribute('about', input.value);
+
+        if (list) {
+            Array.from(list.querySelectorAll('option')).forEach(o => {
+                const type = o.getAttribute('typeof');
+
+                if (type !== input.value) o.disabled = true;
+                else o.disabled = false;
+            });
+        }
+    };
+
+    const selector = 'section.relations > section > form';
+    const forms    = this.document.querySelectorAll(selector);
 
     Array.from(forms).forEach(form => {
 
         // console.log(form);
-        form.addEventListener('focus', focus, true);
-        form.addEventListener('blur', blur, true);
-        form.addEventListener('keydown', escape, false);
+        form.addEventListener('focusin',  focus,  false);
+        form.addEventListener('focusout', blur,   false);
+        form.addEventListener('keydown',  escape, true);
+
+        const radios = Array.from(form.querySelectorAll('input[type="radio"]'));
+
+        radios.forEach(r => {
+            r.addEventListener('mousedown', clickRadio);
+            // r.addEventListener('input', typeSelect);
+            r.addEventListener('change', typeSelect);
+        });
+
+        // form['= rdf:value'].addEventListener('change', change, false);
+        // form['= rdf:value'].addEventListener('select', change, false);
+        form['$ label'].addEventListener('input', handleAutoFill, false);
 
     });
 

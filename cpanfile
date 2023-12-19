@@ -58,4 +58,4 @@ requires 'XML::LibXSLT';
 requires 'Role::Markup::XML'            => '0.03';
 requires 'RDF::KV'                      => '0.14';
 requires 'Data::UUID::NCName'           => '0.07';
-requires 'CatalystX::Action::Negotiate' => '0.04';
+requires 'CatalystX::Action::Negotiate' => '0.05';

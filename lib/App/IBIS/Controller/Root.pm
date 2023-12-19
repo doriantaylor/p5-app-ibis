@@ -69,6 +69,8 @@ App::IBIS::Controller::Root - Root Controller for App::IBIS
 
 =head2 begin
 
+Runs every time this controller gets run.
+
 =cut
 
 sub begin :Private {
@@ -83,6 +85,18 @@ sub begin :Private {
 
     my @spaces = $m->subjects($ns->rdf->type, $ns->cgto->Space);
 
+    my $req = $c->req;
+
+    my $get = $req->method =~ /^(?:GET|HEAD)$/;
+    if (!@spaces and $get) {
+        $c->forward('maybe_bootstrap');
+        return;
+    }
+
+    if ($c->req->method eq 'POST') {
+        # i don't remember lol
+    }
+
     # there should be exactly one space; if there isn't, complain (409)
 
     # if there is a space then there should be a focus (again 409 if not)
@@ -94,13 +108,39 @@ sub begin :Private {
     # then we should demand to mint one (again, client-side)
 }
 
+=head2 maybe_bootstrap
+
+Initializes the cgto:Space bootstrapping process.
+
+=cut
+
+my @EXEMPT = qw(default all_classes all_properties dump bulk);
+
+sub maybe_bootstrap :Private {
+    my ($self, $c) = @_;
+
+    $c->log->debug(join ', ', @{$c->req->args});
+
+    # XXX note the operand order; string overload in play here
+    if (grep { $_ eq $c->action } @EXEMPT
+        or ($c->req->args->[0] // '') =~ $self->UUID_RE) {
+        $c->log->debug('Skipping action from bootstrap screen: ' . $c->action);
+    }
+    else {
+        $c->log->debug('Trapping action for bootstrap: ' . $c->action);
+        $c->forward('generic_error', [409]);
+    }
+
+    return;
+}
+
 =head2 index
 
 The root page (/)
 
 =cut
 
-sub index :Path :Args(0) {
+sub index :Path :Args(0) :HEAD :GET {
     my ( $self, $c ) = @_;
 
     my $req  = $c->req;
@@ -188,8 +228,13 @@ sub index :Path :Args(0) {
     $resp->body($doc);
 }
 
+=head2 uuid
 
-sub uuid :Private {
+Handle UUID-denominated graph entities.
+
+=cut
+
+sub uuid :Private { # :Regex('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})$') {
     my ($self, $c, $uuid) = @_;
 
     my $req  = $c->req;
@@ -271,6 +316,12 @@ sub uuid :Private {
     }
 }
 
+=head2 _delete_uuid
+
+Handle DELETE on UUIDs.
+
+=cut
+
 sub _delete_uuid :Private {
     my ($self, $c, $uuid) = @_;
     my $m = $c->model('RDF');
@@ -285,6 +336,8 @@ sub _delete_uuid :Private {
     $m->remove_statements(undef, undef, $uuid, $g);
     $m->end_bulk_ops;
 
+    $c->rdf_cache(1);
+
     $c->log->debug(sprintf 'New size: %d', $m->size);
 
     my $resp = $c->response;
@@ -294,7 +347,13 @@ sub _delete_uuid :Private {
     return;
 }
 
-sub truncate :Private {
+=head2 truncate
+
+Run DELETE on the root, which empties out the whole graph.
+
+=cut
+
+sub truncate :Path('/') :DELETE {
     my ($self, $c) = @_;
 
     my $m = $c->model('RDF');
@@ -314,6 +373,12 @@ sub truncate :Private {
     $resp->body('');
     return;
 }
+
+=head2 dump
+
+Dump the whole graph to a serialized representation.
+
+=cut
 
 my %DUMP = (
     turtle   => 'text/turtle',
@@ -391,6 +456,12 @@ sub dump :Local {
     # $c->log->debug($resp->body);
 }
 
+=head2 bulk
+
+Bulk-upload serialized graph data.
+
+=cut
+
 sub bulk :Local {
     my ($self, $c) = @_;
 
@@ -426,8 +497,8 @@ sub bulk :Local {
 
         $p->parse(undef, $up->decoded_slurp(':utf8'),
                   sub { $m->add_statement(shift, $g) });
-
-        $c->res->redirect($c->req->base);
+        $c->rdf_cache(1);
+        $c->res->redirect($c->req->base, 303);
         return;
     }
     else {
@@ -435,6 +506,12 @@ sub bulk :Local {
         $c->res->body('Method not allowed');
     }
 }
+
+=head2 feed
+
+Get IBIS entities as an Atom feed.
+
+=cut
 
 sub _date_seq {
     my @literals = grep { $_->is_literal && $_->has_datatype
@@ -546,6 +623,16 @@ sub feed :Local {
     }
 }
 
+=head2 rdf_kv_post
+
+Handle POST requests that conform to the RDF-KV protocol.
+
+=cut
+
+sub rdf_kv_post :Path('/') :POST {
+    my ($self, $c, @args) = @_;
+    $c->log->debug('wtf even');
+}
 
 sub _to_urn {
     my $path = shift;
@@ -627,7 +714,7 @@ sub _post_uuid {
     my $kv = RDF::KV->new(
         #subject    => 'http://deuce:5000/' . $uuid->uuid,
         subject    => _from_urn($uuid, $c->req->base),
-        namespaces => $ns,
+        namespaces => $rns,
         graph      => $g->value,
         callback   => \&_to_urn,
    );
@@ -714,8 +801,10 @@ Standard 404 error page
 
 =cut
 
-sub default :Path :Does('+CatalystX::Action::Negotiate') {
+sub default :Path :Does('+CatalystX::ActionRole::Negotiate') :GET :HEAD {
     my ( $self, $c, @p) = @_;
+
+    $c->log->debug('Default: ' . join '/', @p);
 
     if ($p[0] and $p[0] =~ $self->UUID_RE) {
         $c->forward(uuid => [lc $p[0]]);
@@ -804,6 +893,13 @@ sub _do_index {
     wantarray ? @out : \@out;
 }
 
+=head2 _get_generic
+
+Retrieve a generic representation (this was grafted on after
+jettisoning the type-specific renderers).
+
+=cut
+
 sub _get_generic :Private {
     my ($self, $c, $subject) = @_;
 
@@ -811,6 +907,12 @@ sub _get_generic :Private {
 
     $c->res->body($doc);
 }
+
+=head2 _get_concept_scheme
+
+Variant of above for concept schemes.
+
+=cut
 
 sub _get_concept_scheme :Private {
     my ($self, $c, $subject) = @_;
@@ -822,9 +924,34 @@ sub _get_concept_scheme :Private {
     $c->res->body($doc);
 }
 
-sub generic_error :Private {
-    my ($self, $c, $status) = @_;
+=head2 generic_error
 
+This is the "error" associated with a graph missing its C<cgto:Space>.
+
+=cut
+
+sub generic_error :Private {
+    my ($self, $c, $status, $path) = @_;
+
+    my $resp = $c->res;
+
+    my $uri = $c->uri_for($path || $c->config->{error} || 'generic-error');
+    my (undef, @path) = split m!/+!, $uri->path;
+    #$c->req->path($uri->path);
+    $c->stash->{status_override} = $status || 404;
+    $c->action('default');
+
+    $c->stash->{negotiate_use_args} = 1;
+
+    $c->forward('default', \@path);
+    # $c->forward('_wtf', [$status]);
+    # $c->detach;
+}
+
+sub _wtf :Does('+CatalystX::ActionRole::Negotiate') {
+    my ($self, $c, $status) = @_;
+    $c->res->status($status || 404);
+    $c->log->debug("wtf: " . $c->req->uri);
 }
 
 sub _do_404 {
@@ -849,11 +976,16 @@ sub _do_404 {
                      { -name => 'button', -content => 'Go' } ] } };
 }
 
+### XXX much of these next several things can probably get smushed
+### into considerably less code
+
 =head2 all_classes
+
+Summary representation for all RDF classes.
 
 =cut
 
-sub all_classes :Path('all-classes') {
+sub all_classes :Path('all-classes') :Args(0) {
     my ($self, $c) = @_;
 
     my $req  = $c->req;
@@ -867,7 +999,6 @@ sub all_classes :Path('all-classes') {
             return;
         }
     }
-
     $resp->headers->last_modified($mtime->epoch);
 
     my $m  = $c->rdf_cache;
@@ -907,7 +1038,7 @@ sub all_classes :Path('all-classes') {
 
     my $doc = $c->stub(
         title => ['Resources by Class', 'dct:title'],
-        attrs => { typeof => 'cgto:Summary' },
+        attr  => { typeof => 'cgto:Summary' },
         content => { -name => 'table', -content => [
             { -name => 'caption', about => 'cgto:resources-by-class',
               property => 'rdfs:comment',
@@ -935,9 +1066,11 @@ sub all_classes :Path('all-classes') {
 
 =head2 all_properties
 
+Summary representation for all RDF properties.
+
 =cut
 
-sub all_properties :Path('all-properties') {
+sub all_properties :Path('all-properties') :Args(0) {
     my ($self, $c) = @_;
 
     my $req  = $c->req;
@@ -999,6 +1132,7 @@ sub all_properties :Path('all-properties') {
         ] };
     }
 
+    # same business here rewriting the fragments
     my @tr = @tr{sort { $a cmp $b } keys %tr};
     for my $i (1..@tr) {
         my $tr = $tr[$i-1];
@@ -1008,9 +1142,10 @@ sub all_properties :Path('all-properties') {
         $tr->{-content}[-2]{-content}{-content}{about} =~ s/(?<=\.)\$o\b/$i/g;
     }
 
+    # note this is almost completely static save for the tbody rows
     my $doc = $c->stub(
         title => ['Resources by Property', 'dct:title'],
-        attrs => { typeof => 'cgto:Summary' },
+        attr  => { typeof => 'cgto:Summary' },
         content => { -name => 'table', -content => [
             { -name => 'caption', about => 'cgto:resources-by-property',
               property => 'rdfs:comment',
@@ -1020,22 +1155,22 @@ sub all_properties :Path('all-properties') {
               resource => 'cgto:resources-by-property',
               typeof => 'qb:DataStructureDefinition', -content => {
                   -name => 'tr', rel => 'qb:component', -content => [
-                      { -name => 'th', about => '_:c1', rel => 'qb:dimension',
+                      { -name => 'th', about => '_:p1', rel => 'qb:dimension',
                         typeof => 'cgto:ComponentSpecification',
                         resource => 'cgto:property', -content => 'Property' },
                       { -name => 'th', -content => [
-                          { about => '_:c2', rel => 'qb:attribute',
+                          { about => '_:p2', rel => 'qb:attribute',
                             resource => 'qb:subjects', -content => 'Subjects',
                             typeof => 'qb:ComponentSpecification' },
-                          { about => '_:c3', rel => 'qb:measure',
+                          { about => '_:p3', rel => 'qb:measure',
                             resource => 'qb:subject-count',
                             typeof => 'qb:ComponentSpecification' },
                       ] },
                       { -name => 'th', -content => [
-                          { about => '_:c4', rel => 'qb:attribute',
+                          { about => '_:p4', rel => 'qb:attribute',
                             resource => 'qb:objects', -content => 'Objects',
                             typeof => 'qb:ComponentSpecification' },
-                          { about => '_:c5', rel => 'qb:measure',
+                          { about => '_:p5', rel => 'qb:measure',
                             resource => 'qb:object-count',
                             typeof => 'qb:ComponentSpecification' },
                       ] },
@@ -1048,9 +1183,11 @@ sub all_properties :Path('all-properties') {
 
 =head2 has_type
 
+List of subjects that have asserted a certain C<rdf:type>.
+
 =cut
 
-sub has_type :Path('has-type') {
+sub has_type :Path('has-type') :Args(1) {
     my ($self, $c, $type) = @_;
 
     my $req  = $c->req;
@@ -1105,7 +1242,7 @@ sub has_type :Path('has-type') {
 
     my $doc = $c->stub(
         title => ["Subjects of $type", 'dct:title'],
-        attrs => { typeof => 'cgto:Inventory' },
+        attr  => { typeof => 'cgto:Inventory' },
         content => { -name => 'ul', rel => 'dct:hasPart', -content => \@li });
 
     $resp->body($doc);
@@ -1113,9 +1250,11 @@ sub has_type :Path('has-type') {
 
 =head2 subjects_of
 
+List of subject resources of a certain RDF predicate.
+
 =cut
 
-sub subjects_of :Path('subjects-of') {
+sub subjects_of :Path('subjects-of') :Args(1) {
     my ($self, $c, $property) = @_;
 
     my $req  = $c->req;
@@ -1171,7 +1310,7 @@ sub subjects_of :Path('subjects-of') {
 
     my $doc = $c->stub(
         title => ["Subjects of $property", 'dct:title'],
-        attrs => { typeof => 'cgto:Inventory' },
+        attr  => { typeof => 'cgto:Inventory' },
         content => { -name => 'ul', rel => 'dct:hasPart', -content => \@li });
 
     $resp->body($doc);
@@ -1179,9 +1318,11 @@ sub subjects_of :Path('subjects-of') {
 
 =head2 objects_of
 
+List of object resources of a certain RDF predicate.
+
 =cut
 
-sub objects_of :Path('objects-of') {
+sub objects_of :Path('objects-of') :Args(1) {
     my ($self, $c, $property) = @_;
 
     my $req  = $c->req;
@@ -1225,13 +1366,15 @@ sub objects_of :Path('objects-of') {
 
     my $doc = $c->stub(
         title => ["Objects of $property", 'dct:title'],
-        attrs => { typeof => 'cgto:Inventory' },
+        attr  => { typeof => 'cgto:Inventory' },
         content => { -name => 'ul', rel => 'dct:hasPart', -content => \@li });
 
     $resp->body($doc);
 }
 
 =head2 config
+
+Dump the configuration file (XXX MIGHT WANNA ACL THIS).
 
 =cut
 
@@ -1246,6 +1389,8 @@ sub conf :Local {
 }
 
 =head2 palette
+
+One day this will spit out a configurable palette.
 
 =cut
 
@@ -1273,7 +1418,11 @@ sub end : ActionClass('RenderView') {
     my $resp = $c->res;
     my $body = $resp->body;
 
-    if ($resp->status == 404) {
+    # $c->log->debug(Data::Dumper::Dumper($resp->status));
+    if ($c->stash->{status_override}) {
+        $resp->status($c->stash->{status_override});
+    }
+    elsif ($resp->status == 404) {
         my $doc = $c->stub(
         title => 'Nothing here. Make something?',
         uri => $c->req->base, content => $self->_do_404);
@@ -1286,6 +1435,9 @@ sub end : ActionClass('RenderView') {
     # XXX we should really turn this into a standalone view
 
     if ($type =~ m!/(?:[^/]*(?:ht|x)ml)$!i or _is_xml_node($c->res->body)) {
+        # lol this does not work
+        # $c->stash->{current_view} = 'XML::Finish';
+        # $c->log->debug($c->view);
         $c->forward('View::XML::Finish');
     }
 

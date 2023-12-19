@@ -25,7 +25,7 @@ use Catalyst::Runtime 5.80;
 # THE SEQUENCE IT SHOWS UP IN THE CODE. DO NOT FUCK AROUND WITH IT.
 BEGIN {
     # this should always go first otherwise it loads up blank
-    my @INIT_ARGS = qw/ConfigLoader/;
+    my @INIT_ARGS = qw/ConfigLoader SubRequest/;
 
     # and now the debug modules
     if ($ENV{CATALYST_DEBUG}) {
@@ -385,7 +385,7 @@ sub rdf_cache {
 
     my $g = $c->graph;
 
-    my $cache = $c->stash->{graph} ||= {};
+    my $cache = $c->model('Cache')->key('graph');
     my $model = $cache->{$g->value};
 
     if ($model) {
@@ -399,7 +399,7 @@ sub rdf_cache {
         (RDF::Trine::Store::Hexastore->new);
 
     # run this for side effects
-    $c->global_mtime;
+    $c->global_mtime(1);
 
     $model->add_iterator(
         $c->model('RDF')->get_statements(undef, undef, undef, $g));
@@ -414,13 +414,14 @@ this will of course be a per-process mtime of the rdf cache but better than noth
 =cut
 
 sub global_mtime {
-    my $c = shift;
+    my ($c, $reset) = @_;
 
     my $g = $c->graph;
+    my $mtimes = $c->model('Cache')->key('mtime');
 
-    my $mtimes = $c->stash->{mtime} ||= {};
+    my $now = DateTime->now;
 
-    $mtimes->{$g->value} ||= DateTime->now;
+    $reset ? $mtimes->{$g->value} = $now : $mtimes->{$g->value} ||= $now;
 }
 
 =head2 graph
@@ -481,12 +482,13 @@ sub stub {
     } @$css;
 
     my @link = (
-        @css,
+        # @css,
         { rel => 'alternate', type => 'application/atom+xml',
           href => $c->uri_for('feed') },
         { rel => 'alternate', type => 'text/turtle',
           href => $c->uri_for('dump') },
         { rel => 'contents index top', href => $c->uri_for('/') },
+        { rel => 'meta', href => $c->uri_for('/meta') },
         @{delete $p{link} || []},
     );
 
@@ -498,17 +500,17 @@ sub stub {
     #     $c->log->debug("no whoami :(");
     # }
 
-    my $script = $c->config->{script} ||
-        [qw(asset/jquery.js asset/rdf asset/d3 asset/rdf-viz
-               asset/complex asset/hierarchical asset/main.js)];
-    $script = [$script] unless ref $script;
+    # my $script = $c->config->{script} ||
+    #     [qw(asset/jquery.js asset/rdf asset/d3 asset/rdf-viz
+    #            asset/complex asset/hierarchical asset/main.js)];
+    # $script = [$script] unless ref $script;
 
     my ($body, $doc) = $c->_XHTML(
         link  => \@link,
-        meta  => [@{delete $p{meta} || []}],
-        head  => [
-            map +{ -name => 'script', type => 'text/javascript',
-                   src => $c->uri_for($_) }, @$script ],
+        # meta  => [@{delete $p{meta} || []}],
+        # head  => [
+        #     map +{ -name => 'script', type => 'text/javascript',
+        #            src => $c->uri_for($_) }, @$script ],
         ns    => $c->uns,
         vocab => $c->uns->xhv->uri,
         transform => $c->config->{transform},
