@@ -95,22 +95,24 @@ my %LABELS = map {
         # SIOC
 );
 
-my @DEFAULT_LABELS = qw(skos:prefLabel skos:altLabel rdfs:label dct:title);
-my @ALT_LABELS     = qw(skos:altLabel bibo:shortTitle dct:alternative);
+my @DEFAULT_LABELS = map {
+    _expand($_) } qw(skos:prefLabel skos:altLabel rdfs:label dct:title);
+my @ALT_LABELS     = map {
+    _expand($_) } qw(skos:altLabel bibo:shortTitle dct:alternative);
 
 my %LPROPS = map {
     my $x = _expand($_->[0]);
-    my @y = map { _expand($_) } @{$_->[1]};
-    my @z = map { _expand($_) } @{$_->[2]};
+    my @y = @{$_->[1]};
+    my @z = @{$_->[2]};
     $x->uri_value => [\@y, \@z];
 } (
     ['Issue',                   [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
     ['Position',                [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
     ['Argument',                [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
-    ['skos:Concept',           \@DEFAULT_LABELS, \@ALT_LABELS],
-    ['skos:ConceptScheme',     \@DEFAULT_LABELS, \@ALT_LABELS],
-    ['skos:Collection',        \@DEFAULT_LABELS, \@ALT_LABELS],
-    ['skos:OrderedCollection', \@DEFAULT_LABELS, \@ALT_LABELS],
+#    ['skos:Concept',           \@DEFAULT_LABELS, \@ALT_LABELS],
+#    ['skos:ConceptScheme',     \@DEFAULT_LABELS, \@ALT_LABELS],
+#    ['skos:Collection',        \@DEFAULT_LABELS, \@ALT_LABELS],
+#    ['skos:OrderedCollection', \@DEFAULT_LABELS, \@ALT_LABELS],
 );
 
 my %INVERSE = map {
@@ -490,7 +492,7 @@ has labels => (
 
 sub lprops {
     my (undef, $type, $alt) = @_;
-    return unless my $pair = $LPROPS{$type->uri_value};
+    my $pair = $LPROPS{$type->uri_value} || [\@DEFAULT_LABELS, \@ALT_LABELS];
     my @out = @{$pair->[$alt ? 1 : 0]};
     wantarray ? @out : \@out;
 }

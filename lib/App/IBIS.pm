@@ -461,6 +461,43 @@ sub graph {
     $c->stash->{context_graph} = RDF::Trine::iri("$g");
 }
 
+=head2 spaces
+
+Locate the (hopefully one but potentially zero or more than one)
+C<cgto:Space> entities in the graph.
+
+=cut
+
+sub spaces {
+    my $c = shift;
+
+    my $m   = $c->rdf_cache;
+    my $g   = $c->graph;
+    my $ns  = $c->ns;
+    my $req = $c->req;
+
+    # only continue to process if there's something there
+    my @spaces = $m->subjects($ns->rdf->type, $ns->cgto->Space) or return;
+
+    # exactly one
+    return $spaces[0] if @spaces == 1;
+
+    # ambiguous
+    if (@spaces > 1) {
+        my %candidates;
+        for my $subject (@spaces) {
+            $candidates{$subject->value} = $subject
+                if $m->count_statements($subject, $ns->ci->canonical, $g);
+        }
+
+        # maybe not ambiguous
+        return (values %candidates)[0] if keys %candidates == 1;
+
+        # okay actually ambiguous
+        return @spaces;
+    }
+}
+
 =head2 stub %PARAMS
 
 Generate a stub document with all the trimmings.
@@ -487,8 +524,8 @@ sub stub {
           href => $c->uri_for('feed') },
         { rel => 'alternate', type => 'text/turtle',
           href => $c->uri_for('dump') },
-        { rel => 'contents index top', href => $c->uri_for('/') },
-        { rel => 'meta', href => $c->uri_for('/meta') },
+        { rel => 'contents top', href => $c->uri_for('/') },
+        { rel => 'meta', href => $c->uri_for('/meta') }, # XXX CONFIGURE??
         @{delete $p{link} || []},
     );
 

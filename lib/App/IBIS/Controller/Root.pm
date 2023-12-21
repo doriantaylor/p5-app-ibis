@@ -39,6 +39,7 @@ has _dispatch => (
         my $ns = $self->ns;
         my $ibis = $ns->ibis;
         my $skos = $ns->skos;
+        my $cgto = $ns->cgto;
         return {
             $ibis->Network->value       => '_get_concept_scheme',
             $ibis->Issue->value         => '_get_generic', #'ibis/get_ibis',
@@ -47,6 +48,9 @@ has _dispatch => (
             $skos->Concept->value       => '_get_generic', # 'skos/get_concept',
             $skos->Collection->value    => '_get_generic',
             $skos->ConceptScheme->value => '_get_concept_scheme',
+            $cgto->Space->value         => '_get_generic',
+            $cgto->View->value          => '_get_generic',
+            $cgto->Error->value         => '_get_generic',
         };
     },
 );
@@ -82,12 +86,12 @@ sub begin :Private {
 
     # test for the existence of the cgto:Space
 
-    my @spaces = $m->subjects($ns->rdf->type, $ns->cgto->Space);
+    my @spaces = $c->spaces;
 
     my $req = $c->req;
 
     my $get = $req->method =~ /^(?:GET|HEAD)$/;
-    if (!@spaces and $get) {
+    if ($get and (not @spaces or @spaces > 1)) {
         $c->forward('maybe_bootstrap');
         return;
     }
@@ -140,92 +144,30 @@ The root page (/)
 
 =cut
 
+
 sub index :Path :Args(0) :HEAD :GET {
     my ( $self, $c ) = @_;
 
     my $req  = $c->req;
     my $resp = $c->res;
 
-    if ($req->method eq 'DELETE') {
-        $c->forward('truncate');
-        return;
-    }
-
     my $ns = $self->ns;
     my $m  = $c->rdf_cache;
 
-    my %concepts;
-    for my $s ($m->subjects($ns->rdf->type, $ns->skos->Concept)) {
-        next unless $s->is_resource;
-        next unless $s->uri_value =~ /^urn:uuid:/i;
-        my $uri     = URI->new($s->uri_value);
-        my ($label) = $m->objects($s, $ns->skos->prefLabel);
-        next unless $label && $label->is_literal;
-        my $x = $concepts{$label->literal_value} ||= {};
-        $x->{$uri} = $uri;
+    my @spaces = $c->spaces;
+
+    unless (@spaces == 1) {
+        $resp->status(500);
+        my $err = @spaces ?
+            'Multiple spaces selected: ' . join(', ', @spaces) :
+                'No spaces; this should have been intercepted.';
+        $c->log->error($err);
+        $c->req->body($err);
+
+        return;
     }
 
-    my @li;
-    for my $c ($c->collator->sort(keys %concepts)) {
-        for my $uuid (sort values %{$concepts{$c}}) {
-            push @li, { -name => 'li',
-                        -content => { href => $uuid->uuid, -content => $c } };
-        }
-    }
-
-    my $new ||= $self->uuid4;
-
-    my $doc = $c->stub(
-        uri => $req->base,
-        title => 'Welcome to App::IBIS: We Have Issues.',
-        attr => { typeof => 'ibis:Network' },
-        content => [
-            { -name => 'main', -content => [
-                { -name => 'figure', id => 'force' },
-            { -name => 'section', class => 'index ibis',
-              -content => [
-                  { -name => 'h1', -content => 'Issue Network' },
-                  # { -name => 'figure',
-                  #   -content => { -name => 'object',
-                  #                 type => 'image/svg+xml', data => 'ci2' } },
-                  $self->_do_404($new), # not really a 404 but whatev
-              ] },
-            { -name => 'section', class => 'index skos',
-              -content => [
-                  { -name => 'h1', -content => 'Concept Scheme' },
-                  # { -name => 'figure',
-                  #   -content => { -name => 'object',
-                  #                 type => 'image/svg+xml',
-                  #                 data => 'concepts?rotate=180' } },
-                  { %{$self->FORMBP}, action => $new,
-                    -content => { -name => 'fieldset', -content => [
-                        { -name => 'legend',
-                          -content => 'Start a new Concept' },
-                        { -name => 'input', type => 'text',
-                          name => '= skos:prefLabel' },
-                        { -name => 'button', name => '= rdf:type :',
-                          value => 'skos:Concept', -content => 'Go' } ] } },
-              ] },
-            { -name => 'section', class => 'index list',
-              -content => [$self->_do_index($c),
-                           { -name => 'section', -content => [
-                               { -name => 'h2', -content => 'Concepts' },
-                               { -name => 'ul', -content => \@li } ] },
-                       ] },
-        ]},
-            { -name => 'footer', -content => {
-                -name => 'nav', -content => {
-                    -name => 'ul', -content => [
-                        { -name => 'li', -content => {
-                            # XXX WTF \xa0 MAKES THIS TURN TO LATIN1 ???? WTFFF
-                            href => './', -content => "\x{200b}" } }, # empty overview
-                        { -name => 'li', -content => {
-                            href => 'we-have-issues',
-                            -content => 'What is this thing?' } },
-                    ] } } }
-        ]);
-
-    $resp->body($doc);
+    $c->forward(uuid => [$spaces[0]]);
 }
 
 =head2 uuid
@@ -234,14 +176,27 @@ Handle UUID-denominated graph entities.
 
 =cut
 
-sub uuid :Private { # :Regex('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})$') {
+sub uuid :Private {
     my ($self, $c, $uuid) = @_;
 
     my $req  = $c->req;
     my $resp = $c->res;
 
-    my $path = lc $uuid;
-    $uuid = RDF::Trine::Node::Resource->new('urn:uuid:' . lc $uuid);
+
+    unless (ref $uuid and Scalar::Util::blessed($uuid)
+            and $uuid->isa('RDF::Trine::Node::Resource')) {
+        my ($tmp) = ("$uuid" =~ $self->UUID_RE);
+
+        unless ($tmp) {
+            $resp->status(500);
+            my $err = "$uuid is not a UUID";
+            $c->log->error($err);
+            $resp->body($err);
+            return;
+        }
+
+        $uuid = RDF::Trine::Node::Resource->new('urn:uuid:' . lc $tmp);
+    }
 
     # check request method
     my $method = $req->method;
@@ -252,7 +207,7 @@ sub uuid :Private { # :Regex('^([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{
         # my $m = $c->model('RDF');
         # my $g = $c->graph;
         my $m = $c->rdf_cache;
-        if (my @o = $m->objects($uuid, $self->ns->rdf->type)) {
+        if (my @o = $m->objects($uuid, $c->ns->rdf->type)) {
             # GHETTO FRESNEL
             my $d = $self->_dispatch;
             if (my ($handler) = map { $d->{$_->value} }
@@ -303,9 +258,7 @@ sub delete_uuid :Private {
     my $m = $c->model('RDF');
     my $g = $c->graph;
 
-    $c->log->debug($g);
-
-    $c->log->debug(sprintf 'Model size: %d', $m->size);
+    $c->log->debug(sprintf 'Graph %s; Model size: %d', $g->value, $m->size);
 
     $m->begin_bulk_ops;
     $m->remove_statements($uuid, undef, undef, $g);
