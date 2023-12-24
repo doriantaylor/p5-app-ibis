@@ -99,6 +99,7 @@ my @DEFAULT_LABELS = map {
     _expand($_) } qw(skos:prefLabel skos:altLabel rdfs:label dct:title);
 my @ALT_LABELS     = map {
     _expand($_) } qw(skos:altLabel bibo:shortTitle dct:alternative);
+my $RDFV = $NS->rdf->value;
 
 my %LPROPS = map {
     my $x = _expand($_->[0]);
@@ -106,9 +107,9 @@ my %LPROPS = map {
     my @z = @{$_->[2]};
     $x->uri_value => [\@y, \@z];
 } (
-    ['Issue',                   [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
-    ['Position',                [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
-    ['Argument',                [qw(rdf:value), @DEFAULT_LABELS], \@ALT_LABELS],
+    ['Issue',                   [$RDFV, @DEFAULT_LABELS], \@ALT_LABELS],
+    ['Position',                [$RDFV, @DEFAULT_LABELS], \@ALT_LABELS],
+    ['Argument',                [$RDFV, @DEFAULT_LABELS], \@ALT_LABELS],
 #    ['skos:Concept',           \@DEFAULT_LABELS, \@ALT_LABELS],
 #    ['skos:ConceptScheme',     \@DEFAULT_LABELS, \@ALT_LABELS],
 #    ['skos:Collection',        \@DEFAULT_LABELS, \@ALT_LABELS],

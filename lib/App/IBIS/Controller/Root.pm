@@ -97,7 +97,7 @@ sub begin :Private {
     }
 
     if ($c->req->method eq 'POST') {
-        # i don't remember lol
+        # i don't remember what i was going to do here lol
     }
 
     # there should be exactly one space; if there isn't, complain (409)
@@ -162,7 +162,7 @@ sub index :Path :Args(0) :HEAD :GET {
             'Multiple spaces selected: ' . join(', ', @spaces) :
                 'No spaces; this should have been intercepted.';
         $c->log->error($err);
-        $c->req->body($err);
+        $resp->body($err);
 
         return;
     }
@@ -296,6 +296,9 @@ sub truncate :Path('/') :DELETE {
     $m->end_bulk_ops;
 
     $c->log->debug(sprintf 'New size: %d', $m->size);
+
+    # blow away the cache
+    $c->rdf_cache(1);
 
     my $resp = $c->response;
     $resp->status('204');
