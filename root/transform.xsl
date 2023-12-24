@@ -35,8 +35,11 @@
     omit-xml-declaration="no"
     encoding="utf-8" doctype-public=""/>
 
+<!-- note the namespace:: axis does not work in firefox or we could just use that -->
 <xsl:variable name="IBIS" select="'https://vocab.methodandstructure.com/ibis#'"/>
 <xsl:variable name="CGTO" select="'https://vocab.methodandstructure.com/graph-tool#'"/>
+<xsl:variable name="BIBO" select="'http://purl.org/ontology/bibo/'"/>
+<xsl:variable name="DCT"  select="'http://purl.org/dc/terms/'"/>
 <xsl:variable name="QB"   select="'http://purl.org/linked-data/cube#'"/>
 <xsl:variable name="SKOS" select="'http://www.w3.org/2004/02/skos/core#'"/>
 <xsl:variable name="XHV"  select="'http://www.w3.org/1999/xhtml/vocab#'"/>
@@ -905,13 +908,9 @@
   <xsl:param name="state" select="''"/>
 
   <xsl:variable name="first">
-    <xsl:variable name="_" select="normalize-space($subjects)"/>
-    <xsl:choose>
-      <xsl:when test="contains($_, ' ')">
-        <xsl:value-of select="substring-before($_, ' ')"/>
-      </xsl:when>
-      <xsl:otherwise><xsl:value-of select="$_"/></xsl:otherwise>
-    </xsl:choose>
+    <xsl:call-template name="str:safe-first-token">
+      <xsl:with-param name="token" select="$subjects"/>
+    </xsl:call-template>
   </xsl:variable>
 
   <xsl:choose>
@@ -954,18 +953,23 @@
 
 <xsl:template match="html:*" mode="rdfa:find-indices">
   <xsl:param name="base" select="normalize-space((ancestor-or-self::html:html[html:head/html:base[@href]][1]/html:head/html:base[@href])[1]/@href)"/>
-  <xsl:param name="subject">
-    <xsl:apply-templates select="." mode="rdfa:get-subject">
-      <xsl:with-param name="base" select="$base"/>
-      <xsl:with-param name="debug" select="false()"/>
-    </xsl:apply-templates>
-  </xsl:param>
-  <xsl:param name="top">
-    <xsl:apply-templates select="." mode="rdfa:object-resources">
-      <xsl:with-param name="subject" select="$subject"/>
-      <xsl:with-param name="base" select="$base"/>
-      <xsl:with-param name="predicate" select="concat($XHV, 'top')"/>
-    </xsl:apply-templates>
+  <xsl:param name="origins">
+    <xsl:variable name="subject">
+      <xsl:apply-templates select="." mode="rdfa:get-subject">
+        <xsl:with-param name="base" select="$base"/>
+        <xsl:with-param name="debug" select="false()"/>
+      </xsl:apply-templates>
+    </xsl:variable>
+    <xsl:variable name="top">
+      <xsl:apply-templates select="." mode="rdfa:object-resources">
+        <xsl:with-param name="subject" select="$subject"/>
+        <xsl:with-param name="base" select="$base"/>
+        <xsl:with-param name="predicate" select="concat($XHV, 'top')"/>
+      </xsl:apply-templates>
+    </xsl:variable>
+    <xsl:call-template name="str:unique-tokens">
+      <xsl:with-param name="string" select="concat($subject, ' ', $top)"/>
+    </xsl:call-template>
   </xsl:param>
   <xsl:param name="relations">
     <xsl:message terminate="yes">`relations` parameter required</xsl:message>
@@ -974,7 +978,7 @@
 
   <xsl:variable name="metas">
     <xsl:apply-templates select="." mode="rdfa:find-relations">
-      <xsl:with-param name="resources" select="concat($subject, ' ', $top)"/>
+      <xsl:with-param name="resources" select="$origins"/>
       <xsl:with-param name="predicate" select="concat($XHV, 'meta')"/>
     </xsl:apply-templates>
   </xsl:variable>
@@ -987,7 +991,11 @@
     <xsl:apply-templates select="." mode="rdfa:filter-by-type">
       <xsl:with-param name="subjects">
         <xsl:apply-templates select="." mode="rdfa:find-relations">
-          <xsl:with-param name="resources" select="concat($subject, ' ', $top, ' ', $metas)"/>
+          <xsl:with-param name="resources">
+            <xsl:call-template name="str:unique-tokens">
+              <xsl:with-param name="string" select="concat($origins, ' ', $metas)"/>
+            </xsl:call-template>
+          </xsl:with-param>
           <xsl:with-param name="predicate" select="concat($XHV, 'index')"/>
         </xsl:apply-templates>
       </xsl:with-param>
@@ -1013,10 +1021,64 @@
 <!-- extremely specific i know but we use this more than once -->
 
 <xsl:template match="html:*" mode="rdfa:find-inventories-by-class">
-<xsl:param name="summaries">
-  <xsl:apply-templates select="." mode="rdfa:find-indices">
-  </xsl:apply-templates>
-</xsl:param>
+  <xsl:param name="base" select="normalize-space((ancestor-or-self::html:html[html:head/html:base[@href]][1]/html:head/html:base[@href])[1]/@href)"/>
+  <xsl:param name="subject">
+    <xsl:apply-templates select="." mode="rdfa:get-subject">
+      <xsl:with-param name="base" select="$base"/>
+      <xsl:with-param name="debug" select="false()"/>
+    </xsl:apply-templates>
+  </xsl:param>
+  <xsl:param name="origins">
+    <xsl:variable name="top">
+      <xsl:apply-templates select="." mode="rdfa:object-resources">
+        <xsl:with-param name="subject" select="$subject"/>
+        <xsl:with-param name="base" select="$base"/>
+        <xsl:with-param name="predicate" select="concat($XHV, 'top')"/>
+      </xsl:apply-templates>
+    </xsl:variable>
+    <xsl:call-template name="str:unique-tokens">
+      <xsl:with-param name="string" select="concat($subject, ' ', $top)"/>
+    </xsl:call-template>
+  </xsl:param>
+  <xsl:param name="summaries">
+    <xsl:apply-templates select="." mode="rdfa:find-indices">
+      <xsl:with-param name="base" select="$base"/>
+      <xsl:with-param name="origins" select="$origins"/>
+      <xsl:with-param name="relations" select="concat($CGTO, 'by-class')"/>
+    </xsl:apply-templates>
+  </xsl:param>
+  <xsl:param name="classes">
+    <xsl:message terminate="yes">`classes` parameter required</xsl:message>
+  </xsl:param>
+
+  <xsl:if test="string-length(normalize-space($summaries)">
+    <xsl:variable name="observations">
+      <xsl:variable name="_">
+        <xsl:apply-templates select="." mode="rdfa:find-relations">
+          <xsl:with-param name="resources" select="$summaries"/>
+          <xsl:with-param name="predicate" select="concat($QB, 'dataSet')"/>
+            <xsl:with-param name="reverse" select="true()"/>
+        </xsl:apply-templates>
+      </xsl:variable>
+
+      <xsl:choose>
+        <xsl:when test="string-length(normalize-space($classes))">
+          <xsl:apply-templates select="." mode="rdfa:filter-by-predicate-object">
+            <xsl:with-param name="subjects" select="$_"/>
+            <xsl:with-param name="predicate" select="concat($CGTO, 'class')"/>
+            <xsl:with-param name="object" select="$classes"/>
+          </xsl:apply-templates>
+        </xsl:when>
+        <xsl:otherwise><xsl:value-of select="$_"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+
+    <xsl:apply-templates select="." mode="rdfa:find-relations">
+      <xsl:with-param name="resources" select="$observations"/>
+      <xsl:with-param name="predicate" select="concat($CGTO, 'subjects')"/>
+    </xsl:apply-templates>
+
+  </xsl:if>
 
 </xsl:template>
 
@@ -1032,6 +1094,7 @@
       <xsl:with-param name="debug" select="false()"/>
     </xsl:apply-templates>
   </xsl:param>
+
   <xsl:param name="type">
     <xsl:apply-templates select="." mode="rdfa:object-resources">
       <xsl:with-param name="subject" select="$subject"/>
@@ -1051,46 +1114,29 @@
   <xsl:variable name="class-lists">
     <xsl:apply-templates select="." mode="rdfa:find-indices">
       <xsl:with-param name="base" select="$base"/>
-      <xsl:with-param name="subject" select="$subject"/>
-      <xsl:with-param name="top" select="$top"/>
+      <xsl:with-param name="origins" select="concat($subject, ' ', $top)"/>
       <xsl:with-param name="relations" select="concat($CGTO, 'by-class')"/>
     </xsl:apply-templates>
   </xsl:variable>
 
+  <xsl:variable name="inventories">
+    <xsl:apply-templates select="." mode="rdfa:find-inventories-by-class">
+      <xsl:with-param name="base" select="$base"/>
+      <xsl:with-param name="origins" select="concat($subject, ' ', $top)"/>
+      <xsl:with-param name="classes">
+        <xsl:value-of select="concat($IBIS, 'Issue')"/>
+        <xsl:text> </xsl:text>
+        <xsl:value-of select="concat($IBIS, 'Position')"/>
+        <xsl:text> </xsl:text>
+        <xsl:value-of select="concat($IBIS, 'Argument')"/>
+        <xsl:text> </xsl:text>
+        <xsl:value-of select="concat($SKOS, 'Concept')"/>
+      </xsl:with-param>
+    </xsl:apply-templates>
+  </xsl:variable>
+
   <datalist id="big-friggin-list">
-    <xsl:if test="string-length(normalize-space($class-lists))">
-      <xsl:variable name="observations">
-        <xsl:variable name="_">
-          <xsl:apply-templates select="." mode="rdfa:find-relations">
-            <xsl:with-param name="resources" select="$class-lists"/>
-            <xsl:with-param name="predicate" select="concat($QB, 'dataSet')"/>
-            <xsl:with-param name="reverse" select="true()"/>
-          </xsl:apply-templates>
-        </xsl:variable>
-
-        <xsl:apply-templates select="." mode="rdfa:filter-by-predicate-object">
-          <xsl:with-param name="subjects" select="$_"/>
-          <xsl:with-param name="predicate" select="concat($CGTO, 'class')"/>
-          <xsl:with-param name="object">
-            <xsl:value-of select="concat($IBIS, 'Issue')"/>
-            <xsl:text> </xsl:text>
-            <xsl:value-of select="concat($IBIS, 'Position')"/>
-            <xsl:text> </xsl:text>
-            <xsl:value-of select="concat($IBIS, 'Argument')"/>
-            <xsl:text> </xsl:text>
-            <xsl:value-of select="concat($SKOS, 'Concept')"/>
-          </xsl:with-param>
-          <!--<xsl:with-param name="debug" select="true()"/>-->
-        </xsl:apply-templates>
-      </xsl:variable>
-
-      <xsl:variable name="inventories">
-        <xsl:apply-templates select="." mode="rdfa:find-relations">
-          <xsl:with-param name="resources" select="$observations"/>
-          <xsl:with-param name="predicate" select="concat($CGTO, 'subjects')"/>
-        </xsl:apply-templates>
-      </xsl:variable>
-
+    <xsl:if test="string-length(normalize-space($inventories)">
       <xsl:apply-templates select="." mode="ibis:datalist-options">
         <xsl:with-param name="inventories" select="$inventories"/>
       </xsl:apply-templates>
@@ -1104,13 +1150,9 @@
   </xsl:param>
 
   <xsl:variable name="first">
-    <xsl:variable name="_" select="normalize-space($inventories)"/>
-    <xsl:choose>
-      <xsl:when test="contains($_, ' ')">
-        <xsl:value-of select="substring-before($_, ' ')"/>
-      </xsl:when>
-      <xsl:otherwise><xsl:value-of select="normalize-space($_)"/></xsl:otherwise>
-    </xsl:choose>
+    <xsl:call-template name="str:safe-first-token">
+      <xsl:with-param name="token" select="$inventories"/>
+    </xsl:call-template>
   </xsl:variable>
 
   <xsl:if test="string-length($first)">
@@ -1140,7 +1182,6 @@
       <xsl:with-param name="resources" select="$resources"/>
     </xsl:apply-templates>
 
-
     <xsl:variable name="rest" select="normalize-space(substring-after(normalize-space($inventories), ' '))"/>
     <xsl:if test="string-length($rest)">
       <xsl:apply-templates select="." mode="ibis:datalist-options">
@@ -1159,13 +1200,9 @@
   </xsl:param>
 
   <xsl:variable name="first">
-    <xsl:variable name="_" select="normalize-space($resources)"/>
-    <xsl:choose>
-      <xsl:when test="contains($_, ' ')">
-        <xsl:value-of select="substring-before($_, ' ')"/>
-      </xsl:when>
-      <xsl:otherwise><xsl:value-of select="normalize-space($_)"/></xsl:otherwise>
-    </xsl:choose>
+    <xsl:call-template name="str:safe-first-token">
+      <xsl:with-param name="token" select="$resources"/>
+    </xsl:call-template>
   </xsl:variable>
 
   <xsl:if test="string-length($first)">
@@ -1327,30 +1364,6 @@
     </section>
   </xsl:for-each>
 
-  <!-- okay do it again -->
-
-  <!--
-  <xsl:for-each select="$sequence/x:class[@uri = $type]/x:prop">
-    <xsl:variable name="targets">
-      <xsl:apply-templates select="$current" mode="rdfa:object-resources">
-        <xsl:with-param name="subject" select="$subject"/>
-        <xsl:with-param name="base" select="$base"/>
-        <xsl:with-param name="predicate" select="@uri"/>
-      </xsl:apply-templates>
-    </xsl:variable>
-
-    <xsl:if test="not(normalize-space($targets))">
-      <section class="empty" about="{@uri}">
-        <h4 property="rdfs:label"><xsl:value-of select="x:label"/></h4>
-        <xsl:apply-templates select="." mode="add-relation">
-          <xsl:with-param name="current" select="$current"/>
-        </xsl:apply-templates>
-      </section>
-    </xsl:if>
-
-  </xsl:for-each>
-  -->
-
 </xsl:template>
 
 <xsl:template match="x:prop" mode="add-relation">
@@ -1424,12 +1437,9 @@
 
   <xsl:if test="$s">
     <xsl:variable name="first">
-      <xsl:choose>
-        <xsl:when test="contains($s, ' ')">
-          <xsl:value-of select="substring-before($s, ' ')"/>
-        </xsl:when>
-        <xsl:otherwise><xsl:value-of select="$s"/></xsl:otherwise>
-      </xsl:choose>
+      <xsl:call-template name="str:safe-first-token">
+        <xsl:with-param name="token" select="$s"/>
+      </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="rest" select="substring-after($s, ' ')"/>
 
@@ -1858,8 +1868,8 @@
   </xsl:param>
   <xsl:param name="focus">
     <xsl:apply-templates select="." mode="rdfa:object-resources">
-      <xsl:with-param name="subject" select="$subject"/>
       <xsl:with-param name="base" select="$base"/>
+      <xsl:with-param name="subject" select="$subject"/>
       <xsl:with-param name="predicate" select="concat($CGTO, 'focus')"/>
     </xsl:apply-templates>
   </xsl:param>
@@ -1867,25 +1877,58 @@
   <xsl:if test="string-length($focus)">
     <section>
       <p>Resolve the conflict of multiple foci by specifying <em>exactly</em> one focus from those that have been erroneously selected:</p>
+      <ul>
+        <xsl:apply-templates select="." mode="cgto:focus-item">
+          <xsl:with-param name="items" select="$inventory"/>
+        </xsl:apply-templates>
+      </ul>
     </section>
     <hr/>
  </xsl:if>
 
+  <!-- if it doesn't have a focus, we try to give it one (or make one) -->
+
   <xsl:variable name="inventory">
     <xsl:variable name="_">
+      <xsl:apply-templates select="." mode="rdfa:find-inventories-by-class">
+        <xsl:with-param name="subject" select="$subject"/>
+        <xsl:with-param name="classes">
+          <xsl:value-of select="concat($IBIS, 'Network')"/>
+          <xsl:text> </xsl:text>
+          <xsl:value-of select="concat($SKOS, 'ConceptScheme')"/>
+        </xsl:with-param>
+      </xsl:apply-templates>
     </xsl:variable>
+
+    <!-- subtract existing foci from the inventory -->
+    <xsl:call-template name="str:minus-tokens">
+      <xsl:with-param name="tokens">
+        <!-- just grab the raw inventory here; we don't use it elsewhere -->
+        <xsl:apply-templates select="." mode="rdfa:find-relations">
+          <xsl:with-param name="resources" select="$_"/>
+          <xsl:with-param name="predicate" select="concat($DCT, 'hasPart')"/>
+        </xsl:apply-templates>
+      </xsl:with-param>
+      <xsl:with-param name="minus" select="$focus"/>
+    </xsl:call-template>
   </xsl:variable>
 
   <xsl:if test="string-length($inventory)">
-
+    <!-- if there *are* candidates for a focus, offer them for selection -->
     <section>
       <p>Pick a focus from other candidates found in the graph:</p>
+      <ul>
+        <xsl:apply-templates select="." mode="cgto:focus-item">
+          <xsl:with-param name="items" select="$inventory"/>
+        </xsl:apply-templates>
+      </ul>
     </section>
 
     <!-- or -->
     <hr/>
   </xsl:if>
 
+  <!-- if there are no candidates for a focus, try to make one -->
   <section>
     <p>Create a new focus:</p>
     <form>
@@ -1897,12 +1940,6 @@
       <button></button>
     </form>
   </section>
-
-  <!-- if it doesn't have a focus, we try to give it one (or make one) -->
-
-  <!-- if there are no candidates for a focus, try to make one -->
-
-  <!-- if there *are* candidates for a focus, offer them for selection -->
 
 </xsl:template>
 
