@@ -139,10 +139,21 @@ my %INVERSE = map {
         [qw(skos:exactMatch skos:exactMatch)],
         [qw(skos:relatedMatch skos:relatedMatch)],
         [qw(skos:hasTopConcept skos:topConceptOf)],
+        # DCT
+        [qw(dct:hasFormat  dct:isFormatOf)],
+        [qw(dct:hasPart    dct:isPartOf)],
+        [qw(dct:hasVersion dct:isVersionOf)],
+        [qw(dct:references dct:isReferencedBy)],
+        [qw(dct:replaces   dct:isReplacedBy)],
+        [qw(dct:requires   dct:isRequiredBy)],
         # ORG
         [qw(org:memberOf org:hasMember)],
         [qw(org:hasSubOrganization org:isSubOrganizationOf)],
         [qw(org:hasUnit org:isUnitOf)],
+        # SIOC
+        [qw(sioc:space_of sioc:has_space)],
+        [qw(sioc:container_of sioc:has_container)],
+        [qw(sioc:parent_of sioc:has_parent)],
 );
 
 my %MAP = (
@@ -421,6 +432,19 @@ my @SEQ = map { $NS->ibis->uri($_) }
 #     }
 #     @SEQ = sort { $seq{$a} <=> $seq{$b} } keys %seq;
 # };
+
+our $UUID_RE  = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
+our $UUID_URN = qr/^urn:uuid:([0-9a-f]{8}(?:-[0-9a-f]{4}){4}[0-9a-f]{8})$/i;
+
+has UUID_RE => (
+    is      => 'ro',
+    default => sub { $UUID_RE },
+);
+
+has UUID_URN => (
+    is      => 'ro',
+    default => sub { $UUID_URN },
+);
 
 
 # this is our equivalent of class data

@@ -15,9 +15,6 @@ use constant IBIS => RDF::Trine::Namespace->new
 
 with qw(App::IBIS::Role::Schema Role::Markup::XML);
 
-our $UUID_RE  = qr/([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){4}[0-9A-Fa-f]{8})/;
-our $UUID_URN = qr/^urn:uuid:([0-9a-f]{8}(?:-[0-9a-f]{4}){4}[0-9a-f]{8})$/i;
-
 my %FIGURE = (
     -name => 'figure',
     id    => 'force',
@@ -71,16 +68,6 @@ has FOOTER => (
 has TOGGLE => (
     is      => 'ro',
     default => sub { wantarray ? %TOGGLE : {%TOGGLE} },
-);
-
-has UUID_RE => (
-    is      => 'ro',
-    default => sub { $UUID_RE },
-);
-
-has UUID_URN => (
-    is      => 'ro',
-    default => sub { $UUID_URN },
 );
 
 sub edit_menu {

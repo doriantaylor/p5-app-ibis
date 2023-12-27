@@ -52,7 +52,7 @@ use Unicode::Collate ();
 use RDF::Trine qw(iri blank literal statement);
 use RDF::Trine::Namespace qw(RDF);
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 extends 'Catalyst';
 
@@ -353,25 +353,62 @@ sub label_for {
 
 =cut
 
-# sub uri_for {
-#     my ($c, $uri, @rest) = @_;
+sub uri_for {
+    my ($c, $uri, @rest) = @_;
 
-#     if (defined $uri and ref $uri and Scalar::Util::blessed($uri)) {
-#         # coerce
-#         $uri = URI->new($uri->uri_value) if
-#             $uri->isa('RDF::Trine::Node::Resource');
+    if (defined $uri and ref $uri and Scalar::Util::blessed($uri)) {
+        # coerce
+        $uri = URI->new($uri->uri_value) if
+            $uri->isa('RDF::Trine::Node::Resource');
 
-#         # bail out if it's something else
-#         Carp::croak("not sure what to do with uri $uri")
-#               unless $uri->isa('URI');
+        # bail out if it's something else
+        Carp::croak("not sure what to do with uri $uri")
+              unless $uri->isa('URI');
 
-#         # reduce to uuid if this is a uuid
-#         $uri = $uri->uuid if
-#             (lc($uri->scheme // '') eq 'urn' and $uri->opaque =~ /^uuid:/i);
-#     }
+        $uri = $c->req->base->canonical
+            if $uri->eq(URI->new($c->graph->uri_value));
 
-#     $c->SUPER::uri_for($uri, @rest);
-# }
+        # reduce to uuid if this is a uuid
+        $uri = URI->new_abs($uri->uuid, $c->req->base) if
+            (lc($uri->scheme // '') eq 'urn' and $uri->opaque =~ /^uuid:/i);
+
+        my $rel = $uri->rel($c->req->base);
+        return $uri if $rel->eq($uri);
+
+        $uri = $rel->as_string;
+    }
+
+    $c->SUPER::uri_for($uri, @rest);
+}
+
+=head2 internal_uri_for
+
+Turn UUID paths to UUID URNs and the root (if different from the graph
+URI) into the graph URI. Otherwise just coerces L<URI> objects into
+L<RDF::Trine::Node::Resource> objects.
+
+=cut
+
+sub internal_uri_for {
+    my ($c, $uri, %p) = @_;
+
+    $uri = iri($uri) unless ref $uri and Scalar::Util::blessed($uri)
+        and $uri->isa('RDF::Trine::Node');
+
+    my $base = iri($c->req->base->canonical->as_string);
+
+    if (my ($uuid) = ($uri->value =~ $c->UUID_RE)) {
+        $uri = iri('urn:uuid:' . lc $uuid);
+    }
+    elsif ($uri->equal($base) and !$uri->equal($c->graph)) {
+        # graph should be equal to base unless overridden
+        $uri = $c->graph;
+    }
+
+    return URI->new($uri->value) if lc($p{as} // '') eq 'uri';
+
+    $uri;
+}
 
 =head2 rdf_cache [ $RESET ]
 
@@ -477,25 +514,24 @@ sub spaces {
     my $req = $c->req;
 
     # only continue to process if there's something there
-    my @spaces = $m->subjects($ns->rdf->type, $ns->cgto->Space) or return;
+    my @spaces = $m->subjects($ns->rdf->type, $ns->cgto->Space)
+        or return wantarray ? () : 0;
 
     # exactly one
-    return $spaces[0] if @spaces == 1;
+    return wantarray ? @spaces : 1 if @spaces == 1;
 
     # ambiguous
-    if (@spaces > 1) {
-        my %candidates;
-        for my $subject (@spaces) {
-            $candidates{$subject->value} = $subject
-                if $m->count_statements($subject, $ns->ci->canonical, $g);
-        }
-
-        # maybe not ambiguous
-        return (values %candidates)[0] if keys %candidates == 1;
-
-        # okay actually ambiguous
-        return @spaces;
+    my %candidates;
+    for my $subject (@spaces) {
+        $candidates{$subject->value} = $subject
+            if $m->count_statements($subject, $ns->ci->canonical, $g);
     }
+
+    # maybe not ambiguous
+    return wantarray ? values %candidates : 1 if keys %candidates == 1;
+
+    # okay actually ambiguous
+    wantarray ? @spaces : scalar @spaces;
 }
 
 =head2 stub %PARAMS
@@ -629,36 +665,37 @@ sub render_simple {
                 push @p, \%p;
             }
             else {
-                my $uri = URI->new($term->uri_value);
-                $uri = $uri->uuid if lc $uri->scheme eq 'urn';
+                my $uri = $c->uri_for($term);
+                # my $uri = URI->new($term->uri_value);
+                # $uri = $uri->uuid if lc $uri->scheme eq 'urn';
 
                 # label content
                 my ($lv, $lp) = @{$labels{$term->uri_value} || [$term]};
-                my $c = $lv->value;
+                my $v = $lv->value;
 
                 # types
                 my @t = map {
                     $ns->abbreviate($_) } @{$types{$term->uri_value}};
 
                 # the link itself
-                my %a = (href => $uri);
+                my %a = (href => $uri->rel($c->req->base));
                 $a{rel}      = \@fwd if @fwd;
                 $a{rev}      = \@rev if @rev;
                 $a{typeof}   = \@t if @t;
 
                 if (@fwd or grep { $revp{$_->value} } @{$y->[2]}) {
                     if ($lp and $lv->is_literal) {
-                        my %c = (-content => $lv->literal_value,
+                        my %v = (-content => $lv->literal_value,
                                  property => $ns->abbreviate($lp));
-                        $c{datatype} = $ns->abbreviate($lv->literal_datatype)
+                        $v{datatype} = $ns->abbreviate($lv->literal_datatype)
                             if $lv->has_datatype;
-                        $c{'xml:lang'} = $lv->literal_value_language
+                        $v{'xml:lang'} = $lv->literal_value_language
                             if $lv->has_language;
-                        $c = \%c;
+                        $v = \%v;
                     }
 
                     # set the content for both link and paragraph
-                    $a{-content} = $c;
+                    $a{-content} = $v;
                     $p{-content} = \%a;
 
                     push @p, \%p;
@@ -667,7 +704,7 @@ sub render_simple {
                     # a purely reverse <link> in the <head>
                     $a{-name} = 'link';    # rename the link
                     $a{rel}   = '';        # empty rel to be valid (booo)
-                    $a{title} = $c if $lp; # only add if it's a literal
+                    $a{title} = $v if $lp; # only add if it's a literal
 
                     push @links, \%a;
                 }

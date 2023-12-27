@@ -591,15 +591,16 @@ my @DEFAULT_RIDER = (
     },
 );
 
-# XXX we repeat because we can't do inferences in perl
+# XXX we repeat because we can't do inferences in RDF::Trine
 my %RIDER = (
-    'ibis:Issue'         => [@DEFAULT_RIDER],
-    'ibis:Position'      => [@DEFAULT_RIDER],
-    'ibis:Argument'      => [@DEFAULT_RIDER],
-    'ibis:Network'       => [@DEFAULT_RIDER],
-    'skos:Concept'       => [@DEFAULT_RIDER],
-    'skos:ConceptScheme' => [@DEFAULT_RIDER],
-    'skos:Collection'    => [@DEFAULT_RIDER],
+    'ibis:Issue'         => [],
+    'ibis:Position'      => [],
+    'ibis:Argument'      => [],
+    'ibis:Network'       => [],
+    'skos:Concept'       => [],
+    'skos:ConceptScheme' => [],
+    'skos:Collection'    => [],
+    'cgto:Space'         => [],
 );
 
 sub rdf_kv_post :Path('/') :POST {
@@ -615,7 +616,7 @@ sub rdf_kv_post :Path('/') :POST {
         subject    => $req->uri->canonical,
         namespaces => $c->uns,
         graph      => $g->value,
-        callback   => \&_to_urn,
+        callback   => sub { $c->internal_uri_for(shift) },
     );
 
     my $patch = eval { $kv->process($req->body_parameters) };
@@ -625,7 +626,8 @@ sub rdf_kv_post :Path('/') :POST {
         return;
     }
 
-    my $newsub = _from_urn($kv->subject, $req->base);
+    # my $newsub = _from_urn($kv->subject, $req->base);
+    my $newsub = $c->uri_for($kv->subject);
 
     $c->log->debug("RDF-KV: new(?) subject $newsub");
 
@@ -650,8 +652,42 @@ sub rdf_kv_post :Path('/') :POST {
 
     $c->log->debug("RDF-KV: Initial size: " . $m->size);
 
+    # XXX this might actually not completely work
+    my $space = ($c->spaces)[0] if 1 == $c->spaces;
+
     $m->begin_bulk_ops;
-    eval { $patch->apply($m) };
+    eval {
+        # we have to override the patch application stuff to rewrite
+        # the graph identifier if there is one to rewrite
+        $patch->apply(
+            sub { # remove
+                # we do this little rigmarole for RDF::Trine's quad semantics
+                my @n = @_[0..3];
+                pop @n unless defined $n[3];
+
+                if ($space) {
+                    $n[0] = $space if $n[0]->equal($c->graph);
+                    $n[2] = $space if $n[2] and $n[2]->equal($c->graph)
+                        and !$n[1]->equal($c->ns->ci->canonical);
+                }
+
+                $m->remove_statements(@n);
+            },
+            sub { # add
+                my $stmt = defined $_[3] ?
+                    RDF::Trine::Statement::Quad->new(@_)
+                      : RDF::Trine::Statement->new(@_[0..2]);
+
+                if ($space) {
+                    $stmt->subject($space) if $stmt->subject->equal($c->graph);
+
+                    $stmt->object($space) if $stmt->object->equal($c->graph)
+                        and !$c->predicate->equal($c->ns->ci->canonical);
+                }
+
+                $m->add_statement($stmt);
+            },
+        ) };
     if ($@) {
         # XXX WOULD LOVE A ROLLBACK HERE
 
@@ -676,7 +712,8 @@ sub rdf_kv_post :Path('/') :POST {
                 $c->log->debug("trying to add riders to $ag / $as");
                 # get the type for the subject
                 my @t = $m->objects($as, $rns->rdf->type, $ag);
-                my @r = map { @{$RIDER{$rns->abbreviate($_)} || []} } @t;
+                my @r = (@DEFAULT_RIDER,
+                         map { @{$RIDER{$rns->abbreviate($_)} || []} } @t);
                 # run each of the riders
                 for my $rider (@r) {
                     my %p = (model => $m, graph => $ag,
