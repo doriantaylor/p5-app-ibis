@@ -356,27 +356,33 @@ sub label_for {
 sub uri_for {
     my ($c, $uri, @rest) = @_;
 
-    if (defined $uri and ref $uri and Scalar::Util::blessed($uri)) {
-        # coerce
-        $uri = URI->new($uri->uri_value) if
-            $uri->isa('RDF::Trine::Node::Resource');
-
-        # bail out if it's something else
-        Carp::croak("not sure what to do with uri $uri")
-              unless $uri->isa('URI');
-
-        $uri = $c->req->base->canonical
-            if $uri->eq(URI->new($c->graph->uri_value));
-
-        # reduce to uuid if this is a uuid
-        $uri = URI->new_abs($uri->uuid, $c->req->base) if
-            (lc($uri->scheme // '') eq 'urn' and $uri->opaque =~ /^uuid:/i);
-
-        my $rel = $uri->rel($c->req->base);
-        return $uri if $rel->eq($uri);
-
-        $uri = $rel->as_string;
+    if (ref $uri) {
+        if (Scalar::Util::blessed($uri)) {
+            if ($uri->isa('RDF::Trine::Node::Resource')) {
+                $uri = URI->new($uri->uri_value);
+            }
+            elsif ($uri->isa('URI')) {
+                # nothing
+            }
+            else {
+                Carp::croak("Don't know what to do with " . ref $uri);
+            }
+        }
     }
+    else {
+        $uri = URI->new_abs($uri // '', $c->req->base);
+    }
+
+    $uri = $c->req->base->canonical
+        if $uri->eq(URI->new($c->graph->uri_value));
+
+    # reduce to uuid if this is a uuid
+    $uri = URI->new_abs(lc $uri->uuid, $c->req->base) if $uri->can('uuid');
+
+    my $rel = $uri->rel($c->req->base);
+    return $uri if $rel->eq($uri);
+
+    $uri = $rel->as_string;
 
     $c->SUPER::uri_for($uri, @rest);
 }
