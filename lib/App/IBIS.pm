@@ -652,9 +652,11 @@ sub render_simple {
 
     # the job now is to pump out two lists in lexical order of label
     my (@p, @links);
-    for my $x (map { [values %{$terms{$_}}] } sort { $a cmp $b } keys %terms) {
+    for my $x (map { [values %{$terms{$_}}] }
+               sort { $c->collator->cmp($a, $b) } keys %terms) {
         # term plus forward and reverse relations
-        for my $y (sort { RDF::Trine::Node::compare($a->[0], $b->[0]) } @$x) {
+        # for my $y (sort { RDF::Trine::Node::compare($a->[0], $b->[0]) } @$x) {
+        for my $y (sort { $c->collator->cmp($a->value, $b->value) } @$x) {
             my $term = $y->[0];
             my @fwd  = map { $ns->abbreviate($_) } @{$y->[1]};
             my @rev  = map { $ns->abbreviate($_) } @{$y->[2]};

@@ -54,8 +54,9 @@ document.addEventListener('load-graph', function () {
     const link = this.querySelector(
         'html > head > link[href][rel~="alternate"][type~="text/turtle"]');
 
-    // install the window onload
-    if (link) this.dataviz.installFetchOnLoad(link.href, '#force');
+    // install the window onload XXX also this conditional sucks
+    if (link && document.getElementById('force'))
+        this.dataviz.installFetchOnLoad(link.href, '#force');
     else console.log("wah wah link not found");
 
 

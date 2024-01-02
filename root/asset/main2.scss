@@ -63,6 +63,14 @@ html {
         }
     }
 
+    %generic-flex {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     body {
         border: 0;
         margin: 0;
@@ -341,6 +349,20 @@ html {
             }
         }
 
+        &[typeof~="cgto:Error"] {
+            @extend %generic-flex;
+        }
+
+        &[typeof~="cgto:Space"] {
+            @extend %generic-flex;
+        }
+
+        &[typeof~="ibis:Network"] {
+        }
+
+        &[typeof~="skos:ConceptScheme"] {
+        }
+
         // class-specific (mainly palette) stuff
         @each $class in $CLASSES {
             $pal: map-get($PALETTE, $class);
@@ -498,6 +520,7 @@ html {
             }
         }
     }
+
 
     // vertical orientation
     @media (max-aspect-ratio: 0.8) {

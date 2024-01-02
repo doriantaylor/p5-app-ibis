@@ -32,8 +32,8 @@
 <xsl:import href="/asset/transclude"/>
 
 <xsl:output
-    method="xml" media-type="application/xhtml+xml" indent="yes"
-    omit-xml-declaration="no"
+    method="xml" media-type="application/xhtml+xml"
+    indent="yes" omit-xml-declaration="no"
     encoding="utf-8" doctype-public=""/>
 
 <!-- note the namespace:: axis does not work in firefox or we could just use that -->
@@ -1996,6 +1996,7 @@
         </xsl:if>
       </ul>
     </article>
+    <figure id="force" class="aside"/>
   </main>
 </xsl:template>
 
