@@ -801,4 +801,19 @@ it under the same terms as Perl itself.
 
 __PACKAGE__->meta->make_immutable;
 
+# these noops exist because postgres (and mysql too now for that matter)
+# already encodes utf8.
+
+END {
+    no warnings 'redefine';
+
+    sub RDF::Trine::Store::DBI::encode {
+        return $_[1];
+    }
+
+    sub RDF::Trine::Store::DBI::decode {
+        return $_[1];
+    }
+}
+
 1;
