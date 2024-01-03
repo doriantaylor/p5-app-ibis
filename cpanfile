@@ -48,6 +48,7 @@ requires 'CSS::Sass'                    => 'v3.6.3';
 requires 'Data::GUID::Any'              => '0.004';
 requires 'DateTime::Format::W3CDTF'     => '0.06';
 requires 'HTTP::Negotiate'              => '6.00';
+requires 'IPC::Shareable'               => '1.13';
 requires 'RDF::Trine'                   => '1.019';
 requires 'Unicode::Collate'             => '1.19';
 requires 'URI::NamespaceMap'            => '0.06';

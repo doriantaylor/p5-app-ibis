@@ -1995,6 +1995,22 @@ DISTRIBUTIONS
       parent 0
       strict 0
       warnings 0
+  IPC-Shareable-1.13
+    pathname: S/ST/STEVEB/IPC-Shareable-1.13.tar.gz
+    provides:
+      IPC::Shareable 1.13
+      IPC::Shareable::SharedMem 1.13
+    requirements:
+      ExtUtils::MakeMaker 6.72
+      IPC::Semaphore 0
+      JSON 0
+      Mock::Sub 0
+      Scalar::Util 0
+      Storable 0.607
+      String::CRC32 0
+      Test::More 0
+      Test::SharedFork 0.35
+      perl 5.010
   IPC-System-Simple-1.30
     pathname: J/JK/JKEENAN/IPC-System-Simple-1.30.tar.gz
     provides:
@@ -2184,6 +2200,17 @@ DISTRIBUTIONS
       MRO::Compat 0.15
     requirements:
       ExtUtils::MakeMaker 0
+      perl 5.006
+  Mock-Sub-1.09
+    pathname: S/ST/STEVEB/Mock-Sub-1.09.tar.gz
+    provides:
+      Mock::Sub 1.09
+      Mock::Sub::Child 1.09
+    requirements:
+      Carp 0
+      ExtUtils::MakeMaker 0
+      Scalar::Util 0
+      Test::More 0
       perl 5.006
   Module-Build-0.4234
     pathname: L/LE/LEONT/Module-Build-0.4234.tar.gz
@@ -3672,6 +3699,12 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 6.30
       IO::File 1.14
+  String-CRC32-2.100
+    pathname: L/LE/LEEJO/String-CRC32-2.100.tar.gz
+    provides:
+      String::CRC32 2.100
+    requirements:
+      ExtUtils::MakeMaker 0
   String-RewritePrefix-0.009
     pathname: R/RJ/RJBS/String-RewritePrefix-0.009.tar.gz
     provides:
