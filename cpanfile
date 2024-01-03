@@ -30,6 +30,7 @@ requires 'namespace::autoclean';
 requires 'Catalyst::Runtime' => '5.90019';
 requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Static::Simple';
+requires 'Catalyst::Plugin::SubRequest';
 requires 'Catalyst::Action::RenderView';
 requires 'CatalystX::RoleApplicator';
 requires 'Catalyst::TraitFor::Request::ProxyBase';

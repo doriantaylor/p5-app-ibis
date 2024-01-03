@@ -426,28 +426,7 @@ optionally resetting it.
 sub rdf_cache {
     my ($c, $reset) = @_;
 
-    my $g = $c->graph;
-
-    my $cache = $c->model('Cache')->key('graph');
-    my $model = $cache->{$g->value};
-
-    if ($model) {
-        return $model unless $reset;
-        # make sure we empty this thing before overwriting it in case
-        # there are cyclical references
-        $model->_store->nuke;
-    }
-
-    $model = $cache->{$g->value} = RDF::Trine::Model->new
-        (RDF::Trine::Store::Hexastore->new);
-
-    # run this for side effects
-    $c->global_mtime(1);
-
-    $model->add_iterator(
-        $c->model('RDF')->get_statements(undef, undef, undef, $g));
-
-    $model;
+    $c->model('RDF')->cache($c->graph, $reset);
 }
 
 =head2 global_mtime
@@ -459,12 +438,7 @@ this will of course be a per-process mtime of the rdf cache but better than noth
 sub global_mtime {
     my ($c, $reset) = @_;
 
-    my $g = $c->graph;
-    my $mtimes = $c->model('Cache')->key('mtime');
-
-    my $now = DateTime->now;
-
-    $reset ? $mtimes->{$g->value} = $now : $mtimes->{$g->value} ||= $now;
+    $c->model('RDF')->mtime($c->graph, $reset);
 }
 
 =head2 graph
@@ -807,11 +781,11 @@ __PACKAGE__->meta->make_immutable;
 END {
     no warnings 'redefine';
 
-    sub RDF::Trine::Store::DBI::encode {
+    sub RDF::Trine::Store::DBI::encode ($$;$) {
         return $_[1];
     }
 
-    sub RDF::Trine::Store::DBI::decode {
+    sub RDF::Trine::Store::DBI::decode ($$;$) {
         return $_[1];
     }
 }

@@ -10,7 +10,7 @@ COPY root /nodejs/root
 RUN apt-get update
 RUN apt-get install -y libsass-dev sassc libxml2-dev libxslt1-dev
 WORKDIR /nodejs/root/asset
-RUN sassc -t expanded main.scss main.css
+RUN sassc -t expanded main2.scss main2.css
 
 # okay now do the javascript stuff
 COPY js /nodejs/js
@@ -49,6 +49,9 @@ COPY script/get* /tmp/
 
 RUN /tmp/get-jquery
 RUN /tmp/get-fa
+# RUN ls root/asset
+RUN rm -f /code/root/asset/{rdfa,transclude}.xsl
+RUN ROOT=/code /tmp/get-xslt
 
 RUN cpm install -L /carton \
     && rm -rf /home/catalyst/.cpanm /home/catalyst/.perl-cpm /tmp/*
@@ -70,6 +73,8 @@ VOLUME /home/catalyst
 
 # not sure what goes here (cargo cult)
 # VOLUME /vendor
+
+# ENV CATALYST_DEBUG=1
 
 EXPOSE 5000
 

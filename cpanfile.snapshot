@@ -355,6 +355,15 @@ DISTRIBUTIONS
       MIME::Types 2.03
       Moose 0
       namespace::autoclean 0
+  Catalyst-Plugin-SubRequest-0.21
+    pathname: J/JJ/JJNAPIORK/Catalyst-Plugin-SubRequest-0.21.tar.gz
+    provides:
+      Catalyst::Plugin::SubRequest 0.21
+      Catalyst::Plugin::SubRequest::Writer 0.21
+    requirements:
+      Catalyst::Runtime 5.9
+      ExtUtils::MakeMaker 6.36
+      Test::More 0
   Catalyst-Runtime-5.90131
     pathname: J/JJ/JJNAPIORK/Catalyst-Runtime-5.90131.tar.gz
     provides:

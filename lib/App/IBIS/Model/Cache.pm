@@ -2,6 +2,8 @@ package App::IBIS::Model::Cache;
 use Moose;
 use namespace::autoclean;
 
+use Time::HiRes ();
+
 extends 'Catalyst::Model';
 
 =head1 NAME
@@ -23,10 +25,8 @@ has _data => (
 );
 
 sub key {
-    my ($self, $key, $second) = @_;
+    my ($self, $key) = @_;
     my $out = $self->_data->{$key} ||= {};
-    # $out = $out->{$second} ||= {} if defined $second;
-    # $out;
 }
 
 =encoding utf8

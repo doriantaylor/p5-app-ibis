@@ -14,3 +14,7 @@ node_modules
 *.gz
 *.zip
 # root/asset/main.scss
+root/asset/fontawesome.old
+root/asset/jquery*
+root/asset/rdfa.xsl
+root/asset/transclude.xsl

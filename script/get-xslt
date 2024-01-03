@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ROOT=${ROOT:=.}
+GITHUB=https://raw.githubusercontent.com/doriantaylor
+
+pushd $ROOT/root/asset
+
+curl -o rdfa.xsl $GITHUB/xslt-rdfa/master/rdfa.xsl
+curl -o transclude.xsl $GITHUB/xslt-transclusion/master/transclude.xsl
+
+popd
