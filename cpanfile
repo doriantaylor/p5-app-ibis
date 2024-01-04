@@ -53,8 +53,8 @@ requires 'RDF::Trine'                   => '1.019';
 requires 'Unicode::Collate'             => '1.19';
 requires 'URI::NamespaceMap'            => '0.06';
 requires 'URI::urn::uuid'               => '0.03';
-requires 'XML::LibXML';
-requires 'XML::LibXSLT';
+requires 'XML::LibXML'                  => '2.0134';
+requires 'XML::LibXSLT'                 => '2.002001';
 
 # stuff i made
 requires 'Role::Markup::XML'            => '0.03';
