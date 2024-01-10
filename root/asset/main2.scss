@@ -71,6 +71,40 @@ html {
         justify-content: center;
     }
 
+    %generic-figure-body {
+        width: 100vw;
+        height: 100vh;
+        display: grid;
+        grid-template-rows: auto 2em;
+
+        > main {
+            grid-row: 1;
+            display: flex;
+            overflow: hidden;
+
+            > article {
+                flex-basis: 30rem;
+                margin: 0.5rem;
+                padding: 0.5rem;
+                @include vendor(border-radius, 1em);
+            }
+            > figure {
+                margin: auto;
+                display: flex;
+                align-items: center;
+                > svg {
+                    display: block;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+            }
+        }
+        > footer {
+            grid-row: 2;
+        }
+    }
+
     body {
         border: 0;
         margin: 0;
@@ -85,156 +119,129 @@ html {
 
         // common for *all* classes
         #{$common} {
-            width: 100vw;
-            height: 100vh;
-            display: grid;
-            grid-template-rows: auto 2em;
+            @extend %generic-figure-body;
 
-            > main {
-                grid-row: 1;
-                display: flex;
-                overflow: hidden;
-                > figure {
-                    margin: auto;
-                    display: flex;
-                    align-items: center;
-                    > svg {
+            > main > article {
+                display: grid;
+                grid-template-rows: 12rem auto;
+                font-size: 75%;
+
+                > hgroup {
+                    margin: 0.25rem;
+                    padding: 0.25rem;
+                    @include vendor(border-radius, 0.5rem);
+                    border-width: 0.125rem;
+                    border-style: solid;
+
+                    textarea {
+                        resize: none;
+                    }
+
+                    > h1 {
+                        max-width: 100%;
+                        display: flex;
+                        align-items: stretch;
+                        flex-basis: 100%;
+                        > form {
+                            display: flex;
+                            flex-basis: 100%;
+                            flex-grow: 2;
+                        }
+                        input[type="text"] {
+                            flex-grow: 2;
+                        }
+                        button {
+                            border-width: 0.125rem;
+                        }
+                    }
+                    > span.date {
                         display: block;
-                        width: 100%;
-                        height: 100%;
-                        object-fit: contain;
+                        text-align: right;
                     }
                 }
-                > article {
-                    flex-basis: 30rem;
-                    margin: 0.5rem;
-                    padding: 0.5rem;
-                    @include vendor(border-radius, 1em);
-                    display: grid;
-                    grid-template-rows: 12rem auto;
-                    font-size: 75%;
 
-                    > hgroup {
-                        margin: 0.25rem;
-                        padding: 0.25rem;
-                        @include vendor(border-radius, 0.5rem);
-                        border-width: 0.125rem;
-                        border-style: solid;
+                > section {
+                    margin: 0.5em;
 
-                        textarea {
-                            resize: none;
-                        }
-
-                        > h1 {
-                            max-width: 100%;
-                            display: flex;
-                            align-items: stretch;
-                            flex-basis: 100%;
-                            > form {
-                                display: flex;
-                                flex-basis: 100%;
-                                flex-grow: 2;
-                            }
-                            input[type="text"] {
-                                flex-grow: 2;
-                            }
-                            button {
-                                border-width: 0.125rem;
-                            }
-                        }
-                        > span.date {
-                            display: block;
-                            text-align: right;
-                        }
-                    }
-
-                    > section {
-                        margin: 0.5em;
-
-                        &.relations {
+                    &.relations {
+                        @include vendor(border-radius, 1em);
+                        overflow: auto;
+                        > section {
+                            margin: 0.5rem;
+                            padding: 0.25rem;
                             @include vendor(border-radius, 1em);
-                            overflow: auto;
-                            > section {
-                                margin: 0.5rem;
-                                padding: 0.25rem;
-                                @include vendor(border-radius, 1em);
 
-                                h1, h2, h3, h4, h5, h6 {
-                                    display: inline-block;
-                                    vertical-align: middle;
+                            h1, h2, h3, h4, h5, h6 {
+                                display: inline-block;
+                                vertical-align: middle;
+                                margin: 0.25rem;
+                                padding: 0.25rem;
+                                @include vendor(border-radius, 0.5rem);
+                            }
+                            > form {
+                                display: inline-block;
+                                vertical-align: middle;
+                                &:focus-within {
+                                    @include vendor(border-radius, 0.25rem);
+                                    border-width: 0.125rem;
+                                    border-style: solid;
                                     margin: 0.25rem;
                                     padding: 0.25rem;
-                                    @include vendor(border-radius, 0.5rem);
-                                }
-                                > form {
-                                    display: inline-block;
-                                    vertical-align: middle;
-                                    &:focus-within {
-                                        @include vendor(border-radius, 0.25rem);
+                                    display: flex;
+                                    gap: 0.125rem;
+                                    input[type="text"] {
                                         border-width: 0.125rem;
                                         border-style: solid;
-                                        margin: 0.25rem;
-                                        padding: 0.25rem;
-                                        display: flex;
-                                        gap: 0.125rem;
-                                        input[type="text"] {
-                                            border-width: 0.125rem;
-                                            border-style: solid;
-                                            display: inline-block;
-                                            flex-grow: 2;
-                                        }
-                                    }
-                                    input[type="text"] {
-                                        display: none;
+                                        display: inline-block;
+                                        flex-grow: 2;
                                     }
                                 }
-                                ul {
-                                    margin: 0.25rem;
-                                    padding-left: 0;
+                                input[type="text"] {
+                                    display: none;
                                 }
                             }
-                            > * {
+                            ul {
+                                margin: 0.25rem;
+                                padding-left: 0;
                             }
                         }
-                        input[type="radio"] {
-                            appearance: none;
-                            line-height: 1;
-                            margin: 0;
-                            padding: 0.25rem;
-                            border-width: 0.125rem;
-                            border-style: solid;
-                            @include vendor(border-radius, 0.25rem);
+                        > * {
                         }
                     }
-
-                    h1, h2, h3, h4, h5, h6 {
+                    input[type="radio"] {
+                        appearance: none;
                         line-height: 1;
                         margin: 0;
-                    }
-                    li[typeof] {
-                        display: block;
+                        padding: 0.25rem;
                         border-width: 0.125rem;
                         border-style: solid;
                         @include vendor(border-radius, 0.25rem);
-                        margin: 0.125rem 0;
-                        button {
-                            display: inline-block;
-                            float: right;
-                            margin: 0.125rem;
-                        }
-                        a[href] {
-                            display: block;
-                            color: inherit;
-                            text-decoration: none;
-                            padding: 0.25rem;
-                        }
+                    }
+                }
+
+                h1, h2, h3, h4, h5, h6 {
+                    line-height: 1;
+                    margin: 0;
+                }
+                li[typeof] {
+                    display: block;
+                    border-width: 0.125rem;
+                    border-style: solid;
+                    @include vendor(border-radius, 0.25rem);
+                    margin: 0.125rem 0;
+                    button {
+                        display: inline-block;
+                        float: right;
+                        margin: 0.125rem;
+                    }
+                    a[href] {
+                        display: block;
+                        color: inherit;
+                        text-decoration: none;
+                        padding: 0.25rem;
                     }
                 }
             }
-            > footer {
-                grid-row: 2;
-            }
-
         }
 
         // ibis-only selectors
@@ -358,9 +365,11 @@ html {
         }
 
         &[typeof~="ibis:Network"] {
+            @extend %generic-figure-body;
         }
 
         &[typeof~="skos:ConceptScheme"] {
+            @extend %generic-figure-body;
         }
 
         // class-specific (mainly palette) stuff

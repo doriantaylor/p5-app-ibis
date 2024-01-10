@@ -119,9 +119,11 @@ App-IBIS.*
 .*\.orig
 
 # stuff we don't want to distro
-root/asset/main.scss
+backstory\.org
+root/asset/.*\.scss
+root/asset/main\..*
 maint/
-root/asset/jquery-2.*
+root/asset/jquery.*
 root/asset/font-awesome.old
 js/
 root/bogon.*

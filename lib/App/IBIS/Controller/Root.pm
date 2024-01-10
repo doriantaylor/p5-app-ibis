@@ -9,7 +9,7 @@ use namespace::autoclean;
 BEGIN {
 #    extends 'App::IBIS::Base::Controller';
     extends 'Catalyst::Controller';
-    with    'App::IBIS::Role::Markup';
+    with    'App::IBIS::Role::Schema';
 #    require Devel::Gladiator;
 #    require Devel::FindRef;
 #    $RDF::Redland::Debug = 1;
@@ -746,7 +746,7 @@ sub rdf_kv_post :Path('/') :POST {
 sub _to_urn {
     my $path = shift;
     #warn "lols $path";
-    if (my ($uuid) = ($path =~ $App::IBIS::Role::Markup::UUID_RE)) {
+    if (my ($uuid) = ($path =~ $App::IBIS::Role::Schema::UUID_RE)) {
         #warn $uuid;
         my $out = URI->new("urn:uuid:$uuid");
         return $out;

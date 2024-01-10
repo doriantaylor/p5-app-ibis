@@ -29,7 +29,7 @@ catalyst;
 postamble <<'POSTAMBLE';
 .PHONY : scss nodejs .nodejs
 
-root/asset/main.scss :
+root/asset/main2.scss :
 	$(NOECHO) $(NOOP)
 
 js/d3.js :
@@ -47,10 +47,10 @@ js/force-directed.js :
 js/hierarchical.js :
 	$(NOECHO) $(NOOP)
 
-root/asset/main.css : root/asset/main.scss
-	if which psass > /dev/null && [ -e root/asset/main.scss ]; then cd root/asset; psass -t expanded -o main.css main.scss; cd -; fi
+root/asset/main2.css : root/asset/main2.scss
+	if which psass > /dev/null && [ -e root/asset/main2.scss ]; then cd root/asset; psass -t expanded -o main2.css main2.scss; cd -; fi
 
-scss : root/asset/main.css
+scss : root/asset/main2.css
 	$(NOECHO) $(NOOP)
 
 # .nodejs :
