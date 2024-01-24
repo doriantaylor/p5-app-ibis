@@ -284,7 +284,13 @@ Run DELETE on the root, which empties out the whole graph.
 =cut
 
 sub truncate :Path('/') :DELETE {
-    my ($self, $c) = @_;
+    my ($self, $c, @p) = @_;
+
+    # ABSOLUTELY FUCK THIS SHIT THIS COST ME AN HOUR OF WORK AND A STREAM
+    if ($p[0] and $p[0] =~ $self->UUID_RE) {
+        $c->forward(delete_uuid => [lc $p[0]]);
+        return;
+    }
 
     my $m = $c->model('RDF');
     my $g = $c->graph;
@@ -928,9 +934,9 @@ sub _do_404 {
 
     # new thing types
     my @types = map +["ibis:$_" => $_ ], qw(Issue Position Argument);
-    #push @types, ['skos:Concept' => 'Concept'];
+    push @types, ['skos:Concept' => 'Concept'];
 
-    return { %{$self->FORMBP}, class => "new-ibis", action => $new,
+    return { method => 'POST', 'accept-charset' => 'utf-8', action => $new,
              -content => {
                  -name => 'fieldset', -content => [
                      { -name => 'legend', -content => [
