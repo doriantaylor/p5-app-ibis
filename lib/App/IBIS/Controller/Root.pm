@@ -288,7 +288,8 @@ sub truncate :Path('/') :DELETE {
 
     # ABSOLUTELY FUCK THIS SHIT THIS COST ME AN HOUR OF WORK AND A STREAM
     if ($p[0] and $p[0] =~ $self->UUID_RE) {
-        $c->forward(delete_uuid => [lc $p[0]]);
+        my $uuid = iri('urn:uuid:' . lc $p[0]);
+        $c->forward(delete_uuid => [$uuid]);
         return;
     }
 

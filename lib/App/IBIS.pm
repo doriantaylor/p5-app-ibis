@@ -52,7 +52,7 @@ use Unicode::Collate ();
 use RDF::Trine qw(iri blank literal statement);
 use RDF::Trine::Namespace qw(RDF);
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 extends 'Catalyst';
 
@@ -628,9 +628,13 @@ sub render_simple {
     my (@p, @links);
     for my $x (map { [values %{$terms{$_}}] }
                sort { $c->collator->cmp($a, $b) } keys %terms) {
+
+        # $c->log->debug(Data::Dumper::Dumper($x));
+
         # term plus forward and reverse relations
         # for my $y (sort { RDF::Trine::Node::compare($a->[0], $b->[0]) } @$x) {
-        for my $y (sort { $c->collator->cmp($a->value, $b->value) } @$x) {
+        for my $y (sort {
+            $c->collator->cmp($a->[0]->value, $b->[0]->value) } @$x) {
             my $term = $y->[0];
             my @fwd  = map { $ns->abbreviate($_) } @{$y->[1]};
             my @rev  = map { $ns->abbreviate($_) } @{$y->[2]};
