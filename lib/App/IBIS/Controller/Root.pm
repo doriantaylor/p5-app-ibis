@@ -414,7 +414,9 @@ sub bulk :Local {
             title => 'Load a (Turtle) data file',
             uri   => $req->uri,
             content => {
-                %{$self->FORMBP}, enctype => 'multipart/form-data', -content => [
+                -name => 'form', method => 'POST',
+                action => '', 'accept-charset' => 'utf-8',
+                enctype => 'multipart/form-data', -content => [
                     { -name => 'input', type => 'file', name => 'data' },
                     { -name => 'button', -content => 'Upload' },
                 ] },
@@ -435,8 +437,9 @@ sub bulk :Local {
         # RDF::Trine 1.019 apparently no longer fucks up utf8
         my $p = RDF::Trine::Parser->new('turtle');
 
-        $p->parse(undef, $up->decoded_slurp(':utf8'),
-                  sub { $m->add_statement(shift, $g) });
+        $p->parse(undef, $up->decoded_slurp(':utf8'), sub {
+                      $m->add_statement(shift, $g);
+                  });
         $c->rdf_cache(1);
         $c->res->redirect($c->req->base, 303);
         return;

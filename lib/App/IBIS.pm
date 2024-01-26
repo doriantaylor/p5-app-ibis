@@ -52,7 +52,7 @@ use Unicode::Collate ();
 use RDF::Trine qw(iri blank literal statement);
 use RDF::Trine::Namespace qw(RDF);
 
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 extends 'Catalyst';
 
@@ -783,14 +783,35 @@ __PACKAGE__->meta->make_immutable;
 # already encodes utf8.
 
 END {
+    package RDF::Trine::Store::DBI;
+
     no warnings 'redefine';
 
-    sub RDF::Trine::Store::DBI::encode ($$;$) {
+    sub encode ($$;$) {
         return $_[1];
     }
 
-    sub RDF::Trine::Store::DBI::decode ($$;$) {
+    sub decode ($$;$) {
         return $_[1];
+    }
+
+    sub _mysql_hash {
+        if (ref($_[0])) {
+            my $self = shift;
+        }
+        my $data	= shift;
+        utf8::encode($data);
+        my @data	= unpack('C*', md5($data));
+        my $sum		= Math::BigInt->new('0');
+        foreach my $count (0 .. 7) {
+            my $data	= Math::BigInt->new( $data[ $count ] ); #shift(@data);
+            my $part	= $data << (8 * $count);
+            #		warn "+ $part\n";
+            $sum		+= $part;
+        }
+        #	warn "= $sum\n";
+        $sum	=~ s/\D//;	# get rid of the extraneous '+' that pops up under perl 5.6
+        return $sum;
     }
 }
 
