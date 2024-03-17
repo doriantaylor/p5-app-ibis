@@ -370,6 +370,9 @@ html {
 
         &[typeof~="skos:ConceptScheme"] {
             @extend %generic-figure-body;
+            > main > article {
+                overflow: auto;
+            }
         }
 
         // class-specific (mainly palette) stuff
