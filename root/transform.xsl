@@ -1932,13 +1932,14 @@
   <xsl:if test="string-length($first)">
     <xsl:variable name="value" select="substring-before($first, $rdfa:UNIT-SEP)"/>
     <xsl:variable name="lang-or-dt" select="substring-after($first, $rdfa:UNIT-SEP)"/>
-    <xsl:variable name="datatype">
-      <xsl:if test="contains($lang-or-dt, ':')"><xsl:value-of select="$lang-or-dt"/></xsl:if>
-    </xsl:variable>
-
     <xsl:variable name="language">
-      <xsl:if test="not(string-length($datatype))">
-        <xsl:value-of select="normalize-space($lang-or-dt)"/>
+      <xsl:if test="starts-with($lang-or-dt, '@')">
+        <xsl:value-of select="substring-after(normalize-space($lang-or-dt), '@')"/>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:variable name="datatype">
+      <xsl:if test="not(string-length($language))">
+	<xsl:value-of select="$lang-or-dt"/>
       </xsl:if>
     </xsl:variable>
 
