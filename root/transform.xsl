@@ -37,6 +37,7 @@
     encoding="utf-8" doctype-public=""/>
 
 <!-- note the namespace:: axis does not work in firefox or we could just use that -->
+<xsl:variable name="RDFS" select="'http://www.w3.org/2000/01/rdf-schema#'"/>
 <xsl:variable name="IBIS" select="'https://vocab.methodandstructure.com/ibis#'"/>
 <xsl:variable name="CGTO" select="'https://vocab.methodandstructure.com/graph-tool#'"/>
 <xsl:variable name="BIBO" select="'http://purl.org/ontology/bibo/'"/>
@@ -851,7 +852,15 @@
     </xsl:variable>
 
     <xsl:if test="$top and $top != $base">
-      <a href="{$top}">Overview</a>
+      <xsl:variable name="focus">
+	<xsl:apply-templates select="document($top)/*" mode="rdfa:object-resources">
+	  <!--<xsl:with-param name="subject" select="$top"/>-->
+	  <!--<xsl:with-param name="base" select="$base"/>-->
+	  <xsl:with-param name="predicate" select="concat($CGTO, 'focus')"/>
+	</xsl:apply-templates>
+      </xsl:variable>
+
+      <a href="{$focus}">Overview</a>
     </xsl:if>
   </footer>
 </xsl:template>
@@ -1421,6 +1430,11 @@
     </form>
   </h1>
   <span class="date" property="dct:created" content="{substring-before($created, $rdfa:UNIT-SEP)}" datatype="{substring-after($created, $rdfa:UNIT-SEP)}">Created <xsl:value-of select="substring-before($created, 'T')"/></span>
+  <xsl:apply-templates select="." mode="skos:object-form">
+    <xsl:with-param name="base" select="$base"/>
+    <xsl:with-param name="subject" select="$subject"/>
+  </xsl:apply-templates>
+
 </xsl:template>
 
 <xsl:template match="html:*" mode="ibis:process-neighbours">
@@ -1519,6 +1533,21 @@
   </xsl:variable>
 
   <xsl:variable name="scheme">
+    <xsl:variable name="top">
+      <xsl:apply-templates select="$current" mode="rdfa:object-resources">
+        <xsl:with-param name="subject" select="$subject"/>
+        <xsl:with-param name="base" select="$base"/>
+        <xsl:with-param name="predicate" select="'http://www.w3.org/1999/xhtml/vocab#top'"/>
+      </xsl:apply-templates>
+    </xsl:variable>
+    <xsl:variable name="_">
+      <xsl:apply-templates select="document($top)/*" mode="rdfa:object-resources">
+	<!--<xsl:with-param name="subject" select="$top"/>-->
+	<!--<xsl:with-param name="base" select="$base"/>-->
+	<xsl:with-param name="predicate" select="concat($CGTO, 'focus')"/>
+      </xsl:apply-templates>
+    </xsl:variable>
+    <!--
     <xsl:variable name="_">
       <xsl:call-template name="str:token-union">
         <xsl:with-param name="left">
@@ -1534,11 +1563,13 @@
           </xsl:apply-templates>
         </xsl:with-param>
       </xsl:call-template>
-    </xsl:variable>
+    </xsl:variable>-->
     <xsl:call-template name="str:safe-first-token">
       <xsl:with-param name="tokens" select="$_"/>
     </xsl:call-template>
   </xsl:variable>
+
+  <!--<xsl:message>SCHEME <xsl:value-of select="$scheme"/></xsl:message>-->
 
   <xsl:variable name="sequence" select="document('')/xsl:stylesheet/x:sequence[1]"/>
 
@@ -1759,7 +1790,15 @@
     </xsl:variable>
 
     <xsl:if test="$top and $top != $base">
-      <a href="{$top}">Overview</a>
+      <xsl:variable name="focus">
+	<xsl:apply-templates select="document($top)/*" mode="rdfa:object-resources">
+	  <!--<xsl:with-param name="subject" select="$top"/>-->
+	  <!--<xsl:with-param name="base" select="$base"/>-->
+	  <xsl:with-param name="predicate" select="concat($CGTO, 'focus')"/>
+	</xsl:apply-templates>
+      </xsl:variable>
+
+      <a href="{$focus}">Overview</a>
     </xsl:if>
   </footer>
 </xsl:template>
@@ -1822,19 +1861,24 @@
   </textarea>
   <button class="update fa fa-sync"></button>
 </form>
-<xsl:apply-templates select="." mode="skos:label-form">
+<xsl:apply-templates select="." mode="skos:literal-form">
   <xsl:with-param name="base" select="$base"/>
   <xsl:with-param name="subject" select="$subject"/>
 </xsl:apply-templates>
-<xsl:apply-templates select="." mode="skos:label-form">
+<xsl:apply-templates select="." mode="skos:literal-form">
   <xsl:with-param name="base" select="$base"/>
   <xsl:with-param name="subject" select="$subject"/>
   <xsl:with-param name="predicate" select="concat($SKOS, 'hiddenLabel')"/>
-  <xsl:with-param name="label" select="'Hidden Labels'"/>
+  <xsl:with-param name="heading" select="'Hidden Labels'"/>
 </xsl:apply-templates>
+<xsl:apply-templates select="." mode="skos:object-form">
+  <xsl:with-param name="base" select="$base"/>
+  <xsl:with-param name="subject" select="$subject"/>
+</xsl:apply-templates>
+
 </xsl:template>
 
-<xsl:template match="html:*" mode="skos:label-form">
+<xsl:template match="html:*" mode="skos:literal-form">
   <xsl:param name="base" select="normalize-space((ancestor-or-self::html:html[html:head/html:base[@href]][1]/html:head/html:base[@href])[1]/@href)"/>
   <xsl:param name="subject">
     <xsl:apply-templates select="." mode="rdfa:get-subject">
@@ -1843,9 +1887,9 @@
     </xsl:apply-templates>
   </xsl:param>
   <xsl:param name="predicate" select="concat($SKOS, 'altLabel')"/>
-  <xsl:param name="label" select="'Alternate Labels'"/>
+  <xsl:param name="heading" select="'Alternate Labels'"/>
 
-  <xsl:variable name="labels">
+  <xsl:variable name="literals">
     <xsl:apply-templates select="." mode="rdfa:object-literals">
       <xsl:with-param name="subject"   select="$subject"/>
       <xsl:with-param name="base"      select="$base"/>
@@ -1853,14 +1897,14 @@
     </xsl:apply-templates>
   </xsl:variable>
 
-  <!--<xsl:message><xsl:value-of select="$labels"/></xsl:message>-->
+  <!--<xsl:message><xsl:value-of select="$literals"/></xsl:message>-->
 
   <aside>
-    <h5><xsl:value-of select="$label"/></h5>
+    <h5><xsl:value-of select="$heading"/></h5>
     <ul>
-      <xsl:apply-templates select="." mode="skos:label-form-entry">
+      <xsl:apply-templates select="." mode="skos:literal-form-entry">
         <xsl:with-param name="predicate" select="$predicate"/>
-        <xsl:with-param name="labels"    select="$labels"/>
+        <xsl:with-param name="literals"    select="$literals"/>
       </xsl:apply-templates>
       <li>
         <form method="POST" action="" accept-charset="utf-8">
@@ -1872,16 +1916,16 @@
   </aside>
 </xsl:template>
 
-<xsl:template match="html:*" mode="skos:label-form-entry">
+<xsl:template match="html:*" mode="skos:literal-form-entry">
   <xsl:param name="predicate"/>
-  <xsl:param name="labels"/>
+  <xsl:param name="literals"/>
 
   <xsl:variable name="first">
     <xsl:choose>
-      <xsl:when test="contains($labels, $rdfa:RECORD-SEP)">
-        <xsl:value-of select="substring-before($labels, $rdfa:RECORD-SEP)"/>
+      <xsl:when test="contains($literals, $rdfa:RECORD-SEP)">
+        <xsl:value-of select="substring-before($literals, $rdfa:RECORD-SEP)"/>
       </xsl:when>
-      <xsl:otherwise><xsl:value-of select="$labels"/></xsl:otherwise>
+      <xsl:otherwise><xsl:value-of select="$literals"/></xsl:otherwise>
     </xsl:choose>
   </xsl:variable>
 
@@ -1927,13 +1971,137 @@
       </form>
     </li>
 
-    <xsl:variable name="rest" select="substring-after($labels, $rdfa:RECORD-SEP)"/>
+    <xsl:variable name="rest" select="substring-after($literals, $rdfa:RECORD-SEP)"/>
     <xsl:if test="string-length($rest)">
-      <xsl:apply-templates select="." mode="skos:label-form-entry">
+      <xsl:apply-templates select="." mode="skos:literal-form-entry">
         <xsl:with-param name="predicate" select="$predicate"/>
-        <xsl:with-param name="labels" select="$rest"/>
+        <xsl:with-param name="literals" select="$rest"/>
       </xsl:apply-templates>
     </xsl:if>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="html:*" mode="skos:object-form">
+  <xsl:param name="base" select="normalize-space((ancestor-or-self::html:html[html:head/html:base[@href]][1]/html:head/html:base[@href])[1]/@href)"/>
+  <xsl:param name="subject">
+    <xsl:apply-templates select="." mode="rdfa:get-subject">
+      <xsl:with-param name="base" select="$base"/>
+      <xsl:with-param name="debug" select="false()"/>
+    </xsl:apply-templates>
+  </xsl:param>
+  <xsl:param name="predicate" select="concat($RDFS, 'seeAlso')"/>
+  <xsl:param name="heading" select="'See Also'"/>
+
+  <xsl:variable name="objects">
+    <xsl:apply-templates select="." mode="rdfa:object-resources">
+      <xsl:with-param name="subject"   select="$subject"/>
+      <xsl:with-param name="base"      select="$base"/>
+      <xsl:with-param name="predicate" select="$predicate"/>
+    </xsl:apply-templates>
+  </xsl:variable>
+
+  <!--<xsl:message><xsl:value-of select="$labels"/></xsl:message>-->
+
+  <aside>
+    <h5><xsl:value-of select="$heading"/></h5>
+    <ul>
+      <xsl:apply-templates select="." mode="skos:object-form-entry">
+        <xsl:with-param name="predicate" select="$predicate"/>
+        <xsl:with-param name="objects"    select="$objects"/>
+      </xsl:apply-templates>
+      <li>
+        <form method="POST" action="" accept-charset="utf-8">
+          <input type="text" name="{$predicate} :"/>
+          <button class="fa fa-plus"/>
+        </form>
+      </li>
+    </ul>
+  </aside>
+</xsl:template>
+
+<xsl:template match="html:*" mode="skos:object-form-entry">
+  <xsl:param name="predicate"/>
+  <xsl:param name="objects"/>
+
+  <xsl:variable name="o" select="normalize-space($objects)"/>
+
+  <xsl:variable name="first">
+    <xsl:choose>
+      <xsl:when test="contains($o, ' ')">
+        <xsl:value-of select="substring-before($o, ' ')"/>
+      </xsl:when>
+      <xsl:otherwise><xsl:value-of select="$o"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <xsl:if test="string-length($first)">
+    <xsl:variable name="label">
+      <xsl:variable name="_">
+	<xsl:apply-templates select="." mode="skos:object-form-label">
+	  <xsl:with-param name="subject" select="$first"/>
+	</xsl:apply-templates>
+      </xsl:variable>
+      <xsl:value-of select="normalize-space($_)"/>
+    </xsl:variable>
+    <li>
+      <form method="POST" action="" accept-charset="utf-8">
+	<a rel="{$predicate}" href="{$first}">
+	  <xsl:choose>
+	    <xsl:when test="string-length($label)">
+	      <xsl:variable name="raw" select="substring-after($label, ' ')"/>
+	      <xsl:variable name="literal" select="substring-before($raw, $rdfa:UNIT-SEP)"/>
+	      <xsl:variable name="dt" select="substring-after($raw, $rdfa:UNIT-SEP)"/>
+	      <span property="{substring-before($label, ' ')}">
+		<xsl:choose>
+		  <xsl:when test="starts-with($dt, '@')">
+		    <xsl:attribute name="xml:lang"><xsl:value-of select="$dt"/></xsl:attribute>
+		  </xsl:when>
+		  <xsl:otherwise>
+		    <xsl:attribute name="datatype"><xsl:value-of select="$dt"/></xsl:attribute>
+		  </xsl:otherwise>
+		</xsl:choose>
+	      <xsl:value-of select="$literal"/></span>
+	    </xsl:when>
+	    <xsl:otherwise><xsl:value-of select="$first"/></xsl:otherwise>
+	  </xsl:choose>
+	</a>
+	<button class="disconnect fa fa-times" name="- {$predicate} :" value="{$first}"></button>
+      </form>
+    </li>
+    <xsl:variable name="rest" select="substring-after($o, ' ')"/>
+    <xsl:if test="string-length($rest)">
+      <xsl:apply-templates select="." mode="skos:object-form-entry">
+        <xsl:with-param name="predicate" select="$predicate"/>
+        <xsl:with-param name="objects" select="$rest"/>
+      </xsl:apply-templates>
+    </xsl:if>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="html:*" mode="skos:object-form-label">
+  <xsl:param name="subject"/>
+  <xsl:param name="predicates" select="document('')/xsl:stylesheet/x:lprops/x:prop/@uri"/>
+
+  <xsl:if test="count($predicates)">
+    <!--<xsl:message>PREDICATE LOL <xsl:value-of select="concat($subject, ' ', $predicates[1])"/></xsl:message>-->
+    <xsl:variable name="out">
+      <xsl:apply-templates select="." mode="rdfa:object-literal-quick">
+	<xsl:with-param name="subject" select="$subject"/>
+	<xsl:with-param name="predicate" select="normalize-space($predicates[1])"/>
+      </xsl:apply-templates>
+    </xsl:variable>
+    <xsl:choose>
+      <xsl:when test="string-length(normalize-space($out))">
+	<!--<xsl:message>FOUND <xsl:value-of select="$out"/></xsl:message>-->
+	<xsl:value-of select="concat($predicates[1], ' ', $out)"/>
+      </xsl:when>
+      <xsl:when test="count($predicates[position() &gt; 1])">
+	<xsl:apply-templates select="." mode="skos:object-form-label">
+	  <xsl:with-param name="subject" select="$subject"/>
+	  <xsl:with-param name="predicates" select="$predicates[position() &gt; 1]"/>
+	</xsl:apply-templates>
+      </xsl:when>
+    </xsl:choose>
   </xsl:if>
 </xsl:template>
 
@@ -2127,6 +2295,14 @@
     </xsl:apply-templates>
   </xsl:variable>
 
+  <xsl:variable name="concepts">
+    <xsl:apply-templates select="." mode="rdfa:filter-by-type">
+      <xsl:with-param name="subjects" select="$adjacents"/>
+      <xsl:with-param name="class" select="concat($SKOS, 'Concept')"/>
+      <xsl:with-param name="traverse" select="false()"/>
+    </xsl:apply-templates>
+  </xsl:variable>
+
   <main>
     <article>
       <form method="POST" action="" accept-charset="utf-8">
@@ -2142,7 +2318,7 @@
       </form>
       <xsl:if test="string-length(normalize-space($issues))">
         <section>
-          <h2>Issues</h2>
+          <h3>Issues</h3>
           <ul>
             <xsl:apply-templates select="." mode="skos:scheme-item">
               <xsl:with-param name="resources" select="$issues"/>
@@ -2153,7 +2329,7 @@
       </xsl:if>
       <xsl:if test="string-length(normalize-space($positions))">
         <section>
-          <h2>Positions</h2>
+          <h3>Positions</h3>
           <ul>
             <xsl:apply-templates select="." mode="skos:scheme-item">
               <xsl:with-param name="resources" select="$positions"/>
@@ -2164,7 +2340,7 @@
       </xsl:if>
       <xsl:if test="string-length(normalize-space($arguments))">
         <section>
-          <h2>Arguments</h2>
+          <h3>Arguments</h3>
           <ul>
             <xsl:apply-templates select="." mode="skos:scheme-item">
               <xsl:with-param name="resources" select="$arguments"/>
@@ -2173,6 +2349,24 @@
           </ul>
         </section>
       </xsl:if>
+      <section>
+        <h3>Concepts</h3>
+        <form method="POST" action="" accept-charset="utf-8">
+          <input type="hidden" name="$ SUBJECT $" value="$NEW_UUID_URN"/>
+          <input type="hidden" name="skos:inScheme :" value="{$subject}"/>
+          <input type="hidden" name="rdf:type :" value="skos:Concept"/>
+          <input type="text" name="= skos:prefLabel"/>
+          <button class="fa fa-plus"/>
+        </form>
+        <xsl:if test="string-length(normalize-space($concepts))">
+          <ul>
+            <xsl:apply-templates select="." mode="skos:scheme-item">
+              <xsl:with-param name="resources" select="$concepts"/>
+              <xsl:with-param name="lprop" select="concat($SKOS, 'prefLabel')"/>
+            </xsl:apply-templates>
+          </ul>
+        </xsl:if>
+      </section>
     </article>
   </main>
 

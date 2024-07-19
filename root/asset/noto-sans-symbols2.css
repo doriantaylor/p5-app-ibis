@@ -1,0 +1,8 @@
+@font-face {
+    font-family: "Noto Sans Symbols2";
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: local("Noto Sans Symbols2 Regular"), url("noto-sans-symbols-2/regualar.otf") format("opentype"),
+	 url("noto-sans-symbols2/regular.ttf") format("truetype");
+}

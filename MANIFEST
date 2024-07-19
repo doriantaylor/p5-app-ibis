@@ -32,10 +32,12 @@ lib/App/IBIS/Types.pm
 lib/App/IBIS/View/XML/Finish.pm
 LICENSE
 Makefile.PL
-MANIFEST			This list of files
+MANIFEST
 META.json
 META.yml
 README
+root/asset/chevron-r.svg
+root/asset/circos.css
 root/asset/complex.js
 root/asset/d3.js
 root/asset/font-awesome.css
@@ -58,9 +60,13 @@ root/asset/force-directed.js
 root/asset/hierarchical.js
 root/asset/main2.css
 root/asset/main2.js
+root/asset/noto-sans-symbols2.css
+root/asset/noto-sans-symbols2/regular.otf
+root/asset/noto-sans-symbols2/regular.ttf
 root/asset/rdf-viz.js
 root/asset/rdf.js
 root/asset/rdfa.xsl
+root/asset/svg.css
 root/asset/transclude.xsl
 root/favicon.ico
 root/generic-error.xhtml

@@ -517,7 +517,8 @@ has labels => (
 
 sub lprops {
     my (undef, $type, $alt) = @_;
-    my $pair = $LPROPS{$type->uri_value} || [\@DEFAULT_LABELS, \@ALT_LABELS];
+    $type = $type ? $type->uri_value : '';
+    my $pair = $LPROPS{$type} || [\@DEFAULT_LABELS, \@ALT_LABELS];
     my @out = @{$pair->[$alt ? 1 : 0]};
     wantarray ? @out : \@out;
 }

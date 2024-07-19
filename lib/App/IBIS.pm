@@ -52,7 +52,7 @@ use Unicode::Collate ();
 use RDF::Trine qw(iri blank literal statement);
 use RDF::Trine::Namespace qw(RDF);
 
-our $VERSION = '0.16';
+our $VERSION = '0.18';
 
 extends 'Catalyst';
 
@@ -304,6 +304,9 @@ sub label_for {
     my @types = $c->types_for($s, types => $tcache);
 
     my (@candidates, %out);
+
+    # XXX THIS IS BAD JUJU but it's to goose the defaults
+    push @types, undef unless @types;
 
     for my $type (@types) {
         my @preds = $c->lprops($type, $alt);
