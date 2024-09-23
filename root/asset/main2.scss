@@ -102,6 +102,15 @@ html {
         }
         > footer {
             grid-row: 2;
+	    > form {
+		display: flex;
+		fieldset {
+		    border: none;
+		    margin: auto;
+		    padding: 0;
+		    display: flex;
+		}
+	    }
         }
     }
 

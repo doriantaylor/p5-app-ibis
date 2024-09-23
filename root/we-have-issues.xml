@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="transform"?>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <title>Welcome to App::IBIS: We Have Issues.</title>
-    <link rel="stylesheet" type="text/css" href="asset/main.css"/>
+    <link rel="stylesheet" type="text/css" href="asset/main2.css"/>
   </head>
   <body typeof="bibo:Webpage">
     <main>

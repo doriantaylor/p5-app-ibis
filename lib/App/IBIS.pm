@@ -52,7 +52,7 @@ use Unicode::Collate ();
 use RDF::Trine qw(iri blank literal statement);
 use RDF::Trine::Namespace qw(RDF);
 
-our $VERSION = '0.18';
+our $VERSION = '0.18_01';
 
 extends 'Catalyst';
 
