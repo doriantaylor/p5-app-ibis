@@ -1,0 +1,1722 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:bibo="http://purl.org/ontology/bibo/"
+   xmlns:bs="http://purl.org/ontology/bibo/status/"
+   xmlns:cgto="https://vocab.methodandstructure.com/graph-tool#"
+   xmlns:dct="http://purl.org/dc/terms/"
+   xmlns:foaf="http://xmlns.com/foaf/0.1/"
+   xmlns:ibis="https://vocab.methodandstructure.com/ibis#"
+   xmlns:owl="http://www.w3.org/2002/07/owl#"
+   xmlns:qb="http://purl.org/linked-data/cube#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfa="http://www.w3.org/ns/rdfa#"
+   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+   xmlns:sh="http://www.w3.org/ns/shacl#"
+   xmlns:sioc="http://rdfs.org/sioc/ns#"
+   xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+   xmlns:vann="http://purl.org/vocab/vann/"
+   xmlns:vs="http://www.w3.org/2003/06/sw-vocab-status/ns#"
+   xmlns:wot="http://xmlns.com/wot/0.1/"
+   xmlns:xhv="http://www.w3.org/1999/xhtml/vocab#"
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <owl:DatatypeProperty rdf:about="http://purl.org/dc/terms/date"/>
+  <owl:DatatypeProperty rdf:about="http://purl.org/dc/terms/description"/>
+  <owl:ObjectProperty rdf:about="http://purl.org/dc/terms/references"/>
+  <owl:ObjectProperty rdf:about="http://purl.org/dc/terms/subject"/>
+  <owl:DatatypeProperty rdf:about="http://purl.org/dc/terms/title"/>
+  <owl:Ontology rdf:about="http://rdfs.org/sioc/ns#">
+    <dct:description xml:lang="en">SIOC (Semantically-Interlinked Online Communities) is an ontology for describing the information in online communities. 
+This information can be used to export information from online communities and to link them together. The scope of the application areas that SIOC can be used for includes (and is not limited to) weblogs, message boards, mailing lists and chat channels.</dct:description>
+    <dct:title xml:lang="en">SIOC Core Ontology Namespace</dct:title>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdfs:seeAlso rdf:resource="http://rdfs.org/sioc/spec"/>
+    <owl:versionInfo>Revision: 1.36</owl:versionInfo>
+  </owl:Ontology>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Community">
+    <rdfs:comment xml:lang="en">Community is a high-level concept that defines an online community and what it consists of.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Community</rdfs:label>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Container">
+    <rdfs:comment xml:lang="en">An area in which content Items are contained.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Container</rdfs:label>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Forum">
+    <rdfs:comment xml:lang="en">A discussion area on which Posts or entries are made.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Forum</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Item">
+    <rdfs:comment xml:lang="en">An Item is something which can be in a Container.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Item</rdfs:label>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Post">
+    <rdfs:comment xml:lang="en">An article or message that can be posted to a Forum.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Post</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:subClassOf rdf:resource="http://xmlns.com/foaf/0.1/Document"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Role">
+    <rdfs:comment xml:lang="en">A Role is a function of a UserAccount within a scope of a particular Forum, Site, etc.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Role</rdfs:label>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Site">
+    <rdfs:comment xml:lang="en">A Site can be the location of an online community or set of communities, with UserAccounts and Usergroups creating Items in a set of Containers. It can be thought of as a web-accessible data Space.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Site</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Space">
+    <rdfs:comment xml:lang="en">A Space is a place where data resides, e.g. on a website, desktop, fileshare, etc.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Space</rdfs:label>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Thread">
+    <rdfs:comment xml:lang="en">A container for a series of threaded discussion Posts or Items.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Thread</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+  </owl:Class>
+  <owl:DeprecatedClass rdf:about="http://rdfs.org/sioc/ns#User">
+    <rdfs:comment xml:lang="en">UserAccount is now preferred. This is a deprecated class for a User in an online community site.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">User</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://xmlns.com/foaf/0.1/OnlineAccount"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+    <owl:equivalentClass rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:versionInfo>This class is deprecated. Use sioc:UserAccount from the SIOC ontology instead.</owl:versionInfo>
+  </owl:DeprecatedClass>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#UserAccount">
+    <rdfs:comment xml:lang="en">A user account in an online community site.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">User Account</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://xmlns.com/foaf/0.1/OnlineAccount"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://rdfs.org/sioc/ns#Usergroup">
+    <rdfs:comment xml:lang="en">A set of UserAccounts whose owners have a common purpose or interest. Can be used for access control purposes.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">Usergroup</rdfs:label>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <owl:disjointWith rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#about">
+    <rdfs:comment xml:lang="en">Specifies that this Item is about a particular resource, e.g. a Post describing a book, hotel, etc.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">about</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#account_of">
+    <rdfs:comment xml:lang="en">Refers to the foaf:Agent or foaf:Person who owns this sioc:UserAccount.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">account of</rdfs:label>
+    <rdfs:range rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+    <owl:inverseOf rdf:resource="http://xmlns.com/foaf/0.1/account"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#addressed_to">
+    <rdfs:comment xml:lang="en">Refers to who (e.g. a UserAccount, e-mail address, etc.) a particular Item is addressed to.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">addressed to</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#administrator_of">
+    <rdfs:comment xml:lang="en">A Site that the UserAccount is an administrator of.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">administrator of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Site"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_administrator"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#attachment">
+    <rdfs:comment xml:lang="en">The URI of a file attached to an Item.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">attachment</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#avatar">
+    <rdfs:comment xml:lang="en">An image or depiction used to represent this UserAccount.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">avatar</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://xmlns.com/foaf/0.1/depiction"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#container_of">
+    <rdfs:comment xml:lang="en">An Item that this Container contains.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">container of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/hasPart"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_container"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#content">
+    <rdfs:comment xml:lang="en">The content of the Item in plain text format.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">content</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#content_encoded">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">The encoded content of the Post, contained in CDATA areas.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">content encoded</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use content:encoded from the RSS 1.0 content module instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#created_at">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">When this was created, in ISO 8601 format.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">created at</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use dcterms:created from the Dublin Core ontology instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#creator_of">
+    <rdfs:comment xml:lang="en">A resource that the UserAccount is a creator of.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">creator of</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_creator"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#delivered_at">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">When this was delivered, in ISO 8601 format.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">delivered at</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#description">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">The content of the Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">description</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use sioc:content or other methods (AtomOwl, content:encoded from RSS 1.0, etc.) instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#discussion_of">
+    <rdfs:comment xml:lang="en">The Item that this discussion is about.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">discussion of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_discussion"/>
+  </owl:ObjectProperty>
+  <owl:TransitiveProperty rdf:about="http://rdfs.org/sioc/ns#earlier_version">
+    <rdfs:comment xml:lang="en">Links to a previous (older) revision of this Item or Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">earlier version</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#later_version"/>
+  </owl:TransitiveProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#email">
+    <rdfs:comment xml:lang="en">An electronic mail address of the UserAccount.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">email</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#email_sha1">
+    <rdfs:comment xml:lang="en">An electronic mail address of the UserAccount, encoded using SHA1.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">email sha1</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#embeds_knowledge">
+    <rdfs:comment xml:lang="en">This links Items to embedded statements, facts and structured content.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">embeds knowledge</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2004/03/trix/rdfg-1/Graph"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#feed">
+    <rdfs:comment xml:lang="en">A feed (e.g. RSS, Atom, etc.) pertaining to this resource (e.g. for a Forum, Site, UserAccount, etc.).</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">feed</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#first_name">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">First (real) name of this User. Synonyms include given name or christian name.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">first name</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use foaf:name or foaf:firstName from the FOAF vocabulary instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#follows">
+    <rdfs:comment xml:lang="en">Indicates that one UserAccount follows another UserAccount (e.g. for microblog posts or other content item updates).</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">follows</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#function_of">
+    <rdfs:comment xml:lang="en">A UserAccount that has this Role.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">function of</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_function"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#generator">
+    <rdfs:comment xml:lang="en">A URI for the application used to generate this Item.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">generator</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:DeprecatedProperty rdf:about="http://rdfs.org/sioc/ns#group_of">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:label xml:lang="en">group of</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_group"/>
+    <owl:versionInfo>This property has been renamed. Use sioc:usergroup_of instead.</owl:versionInfo>
+  </owl:DeprecatedProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_administrator">
+    <rdfs:comment xml:lang="en">A UserAccount that is an administrator of this Site.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Site"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has administrator</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#administrator_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_container">
+    <rdfs:comment xml:lang="en">The Container to which this Item belongs.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has container</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/partOf"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#container_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_creator">
+    <rdfs:comment xml:lang="en">This is the UserAccount that made this resource.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has creator</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#creator_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_discussion">
+    <rdfs:comment xml:lang="en">A discussion that is related to this Item. The discussion can be anything, for example, a sioc:Forum or sioc:Thread, a sioct:WikiArticle or simply a foaf:Document.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has discussion</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#discussion_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_function">
+    <rdfs:comment xml:lang="en">A Role that this UserAccount has.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has function</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#function_of"/>
+  </owl:ObjectProperty>
+  <owl:DeprecatedProperty rdf:about="http://rdfs.org/sioc/ns#has_group">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:label xml:lang="en">has group</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#group_of"/>
+    <owl:versionInfo>This property has been renamed. Use sioc:has_usergroup instead.</owl:versionInfo>
+  </owl:DeprecatedProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_host">
+    <rdfs:comment xml:lang="en">The Site that hosts this Container.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has host</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Site"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#has_space"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#host_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_member">
+    <rdfs:comment xml:lang="en">A UserAccount that is a member of this Usergroup.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has member</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#member_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_moderator">
+    <rdfs:comment xml:lang="en">A UserAccount that is a moderator of this Forum.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Forum"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has moderator</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#moderator_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_modifier">
+    <rdfs:comment xml:lang="en">A UserAccount that modified this resource (e.g. Item, Container, Space).</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has modifier</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#modifier_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_owner">
+    <rdfs:comment xml:lang="en">A UserAccount that this resource is owned by.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has owner</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#owner_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_parent">
+    <rdfs:comment xml:lang="en">A Container or Forum that this Container or Forum is a child of.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has parent</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/partOf"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#parent_of"/>
+  </owl:ObjectProperty>
+  <owl:DeprecatedProperty rdf:about="http://rdfs.org/sioc/ns#has_part">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">An resource that is a part of this subject.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has part</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#part_of"/>
+    <owl:versionInfo>This property is deprecated. Use dcterms:hasPart from the Dublin Core ontology instead.</owl:versionInfo>
+  </owl:DeprecatedProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_reply">
+    <rdfs:comment xml:lang="en">Points to an Item or Post that is a reply or response to this Item or Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has reply</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#related_to"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#reply_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_scope">
+    <rdfs:comment xml:lang="en">A resource that this Role applies to.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has scope</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#scope_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_space">
+    <rdfs:comment xml:lang="en">A data Space which this resource is a part of.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has space</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/partOf"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#space_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_subscriber">
+    <rdfs:comment xml:lang="en">A UserAccount that is subscribed to this Container.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has subscriber</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:seeAlso rdf:resource="http://rdfs.org/sioc/ns#feed"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#subscriber_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#has_usergroup">
+    <rdfs:comment xml:lang="en">Points to a Usergroup that has certain access to this Space.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">has usergroup</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#usergroup_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#host_of">
+    <rdfs:comment xml:lang="en">A Container that is hosted on this Site.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Site"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">host of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#space_of"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_host"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#id">
+    <rdfs:comment xml:lang="en">An identifier of a SIOC concept instance. For example, a user ID. Must be unique for instances of each type of SIOC concept within the same site.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">id</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#ip_address">
+    <rdfs:comment xml:lang="en">The IP address used when creating this Item, UserAccount, etc. This can be associated with a creator. Some wiki articles list the IP addresses for the creator or modifiers when the usernames are absent.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">ip address</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#last_activity_date">
+    <rdfs:comment xml:lang="en">The date and time of the last activity associated with a SIOC concept instance, and expressed in ISO 8601 format. This could be due to a reply Post or Comment, a modification to an Item, etc.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">last activity date</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/date"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#last_item_date">
+    <rdfs:comment xml:lang="en">The date and time of the last Post (or Item) in a Forum (or a Container), in ISO 8601 format.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">last item date</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/date"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#last_name">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">Last (real) name of this user. Synonyms include surname or family name.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">last name</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use foaf:name or foaf:surname from the FOAF vocabulary instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#last_reply_date">
+    <rdfs:comment xml:lang="en">The date and time of the last reply Post or Comment, which could be associated with a starter Item or Post or with a Thread, and expressed in ISO 8601 format.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">last reply date</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/date"/>
+  </owl:DatatypeProperty>
+  <owl:TransitiveProperty rdf:about="http://rdfs.org/sioc/ns#later_version">
+    <rdfs:comment xml:lang="en">Links to a later (newer) revision of this Item or Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">later version</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#earlier_version"/>
+  </owl:TransitiveProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#latest_version">
+    <rdfs:comment xml:lang="en">Links to the latest revision of this Item or Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">latest version</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#likes">
+    <rdfs:comment xml:lang="en">Used to indicate some form of endorsement by a UserAccount or Agent of an Item, Container, Space, UserAccount, etc.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">likes</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#link">
+    <rdfs:comment xml:lang="en">A URI of a document which contains this SIOC object.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">link</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#links_to">
+    <rdfs:comment xml:lang="en">Links extracted from hyperlinks within a SIOC concept, e.g. Post or Site.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">links to</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/references"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#member_of">
+    <rdfs:comment xml:lang="en">A Usergroup that this UserAccount is a member of.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">member of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_member"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#mentions">
+    <rdfs:comment xml:lang="en">Refers to a UserAccount that a particular Item mentions.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">mentions</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#moderator_of">
+    <rdfs:comment xml:lang="en">A Forum that a UserAccount is a moderator of.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">moderator of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Forum"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_moderator"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#modified_at">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">When this was modified, in ISO 8601 format.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">modified at</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use dcterms:modified from the Dublin Core ontology instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#modifier_of">
+    <rdfs:comment xml:lang="en">A resource that this UserAccount has modified.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">modifier of</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_modifier"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#name">
+    <rdfs:comment xml:lang="en">The name of a SIOC concept instance, e.g. a username for a UserAccount, group name for a Usergroup, etc.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">name</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#next_by_date">
+    <rdfs:comment xml:lang="en">Next Item or Post in a given Container sorted by date.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">next by date</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#previous_by_date"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#next_version">
+    <rdfs:comment xml:lang="en">Links to the next revision of this Item or Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">next version</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#later_version"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#previous_version"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#note">
+    <rdfs:comment xml:lang="en">A note associated with this resource, for example, if it has been edited by a UserAccount.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">note</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#num_authors">
+    <rdfs:comment xml:lang="en">The number of unique authors (UserAccounts and unregistered posters) who have contributed to this Item, Thread, Post, etc.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">num authors</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#num_items">
+    <rdfs:comment xml:lang="en">The number of Posts (or Items) in a Forum (or a Container).</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">num items</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#num_replies">
+    <rdfs:comment xml:lang="en">The number of replies that this Item, Thread, Post, etc. has. Useful for when the reply structure is absent.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">num replies</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#num_threads">
+    <rdfs:comment xml:lang="en">The number of Threads (AKA discussion topics) in a Forum.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Forum"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">num threads</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#num_views">
+    <rdfs:comment xml:lang="en">The number of times this Item, Thread, UserAccount profile, etc. has been viewed.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">num views</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#owner_of">
+    <rdfs:comment xml:lang="en">A resource owned by a particular UserAccount, for example, a weblog or image gallery.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">owner of</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_owner"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#parent_of">
+    <rdfs:comment xml:lang="en">A child Container or Forum that this Container or Forum is a parent of.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">parent of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/hasPart"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_parent"/>
+  </owl:ObjectProperty>
+  <owl:DeprecatedProperty rdf:about="http://rdfs.org/sioc/ns#part_of">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">A resource that the subject is a part of.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">part of</rdfs:label>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_part"/>
+    <owl:versionInfo>This property is deprecated. Use dcterms:isPartOf from the Dublin Core ontology instead.</owl:versionInfo>
+  </owl:DeprecatedProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#previous_by_date">
+    <rdfs:comment xml:lang="en">Previous Item or Post in a given Container sorted by date.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">previous by date</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#next_by_date"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#previous_version">
+    <rdfs:comment xml:lang="en">Links to the previous revision of this Item or Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">previous version</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#earlier_version"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#next_version"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#read_at">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">When this was read, in ISO 8601 format.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">read at</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </owl:DatatypeProperty>
+  <owl:DeprecatedProperty rdf:about="http://rdfs.org/sioc/ns#reference">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">Links either created explicitly or extracted implicitly on the HTML level from the Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">reference</rdfs:label>
+    <owl:versionInfo>Renamed to sioc:links_to.</owl:versionInfo>
+  </owl:DeprecatedProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#related_to">
+    <rdfs:comment xml:lang="en">Related resources for this resource, e.g. for Posts, perhaps determined implicitly from topics or references.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">related to</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#reply_of">
+    <rdfs:comment xml:lang="en">Links to an Item or Post which this Item or Post is a reply to.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">reply of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#related_to"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_reply"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#respond_to">
+    <rdfs:comment xml:lang="en">For the reply-to address set in email messages, IMs, etc. The property name was chosen to avoid confusion with has_reply/reply_of (the reply graph).</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">respond to</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#scope_of">
+    <rdfs:comment xml:lang="en">A Role that has a scope of this resource.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">scope of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Role"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_scope"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#shared_by">
+    <rdfs:comment xml:lang="en">For shared Items where there is a certain creator_of and an intermediary who shares or forwards it (e.g. as a sibling Item).</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">shared by</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:seeAlso rdf:resource="http://rdfs.org/sioc/ns#sibling"/>
+  </owl:ObjectProperty>
+  <owl:SymmetricProperty rdf:about="http://rdfs.org/sioc/ns#sibling">
+    <rdfs:comment xml:lang="en">An Item may have a sibling or a twin that exists in a different Container, but the siblings may differ in some small way (for example, language, category, etc.). The sibling of this Item should be self-describing (that is, it should contain all available information).</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">sibling</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Item"/>
+  </owl:SymmetricProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#space_of">
+    <rdfs:comment xml:lang="en">A resource which belongs to this data Space.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">space of</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/hasPart"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_space"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#subject">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">Keyword(s) describing subject of the Post.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">subject</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use dcterms:subject from the Dublin Core ontology for text keywords and sioc:topic if the subject can be represented by a URI instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#subscriber_of">
+    <rdfs:comment xml:lang="en">A Container that a UserAccount is subscribed to.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#UserAccount"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">subscriber of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+    <rdfs:seeAlso rdf:resource="http://rdfs.org/sioc/ns#feed"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_subscriber"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://rdfs.org/sioc/ns#title">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DeprecatedProperty"/>
+    <rdfs:comment xml:lang="en">This is the title (subject line) of the Post. Note that for a Post within a threaded discussion that has no parents, it would detail the topic thread.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">title</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <owl:versionInfo>This property is deprecated. Use dcterms:title from the Dublin Core ontology instead.</owl:versionInfo>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#topic">
+    <rdfs:comment xml:lang="en">A topic of interest, linking to the appropriate URI, e.g. in the Open Directory Project or of a SKOS category.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">topic</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/subject"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://rdfs.org/sioc/ns#usergroup_of">
+    <rdfs:comment xml:lang="en">A Space that the Usergroup has access to.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://rdfs.org/sioc/ns#Usergroup"/>
+    <rdfs:isDefinedBy rdf:resource="http://rdfs.org/sioc/ns#"/>
+    <rdfs:label xml:lang="en">usergroup of</rdfs:label>
+    <rdfs:range rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+    <owl:inverseOf rdf:resource="http://rdfs.org/sioc/ns#has_usergroup"/>
+  </owl:ObjectProperty>
+  <rdf:Description rdf:about="http://rdfs.org/sioc/spec">
+    <rdfs:label>SIOC Core Ontology Specification</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.cc.gatech.edu/~ellendo/rittel/rittel-issues.pdf">
+    <dct:creator xml:lang="en">Horst Rittel</dct:creator>
+    <dct:creator xml:lang="en">Werner Kunz</dct:creator>
+    <dct:date rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">1970</dct:date>
+    <dct:title xml:lang="en">Issues as Elements of Information Systems</dct:title>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.cs.hut.fi/Opinnot/T-93.850/2005/Papers/gIBIS1988-conklin.pdf">
+    <dct:creator xml:lang="en">Jeff Conklin</dct:creator>
+    <dct:creator xml:lang="en">Michael L. Begeman</dct:creator>
+    <dct:date rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">1988</dct:date>
+    <dct:title xml:lang="en">gIBIS: a hypertext tool for exploratory policy discussion</dct:title>
+  </rdf:Description>
+  <owl:Ontology rdf:about="http://www.w3.org/2004/02/skos/core">
+    <dct:contributor>Dave Beckett</dct:contributor>
+    <dct:contributor>Nikki Rogers</dct:contributor>
+    <dct:contributor>Participants in W3C's Semantic Web Deployment Working Group.</dct:contributor>
+    <dct:creator>Alistair Miles</dct:creator>
+    <dct:creator>Sean Bechhofer</dct:creator>
+    <dct:description xml:lang="en">An RDF vocabulary for describing the basic structure and content of concept schemes such as thesauri, classification schemes, subject heading lists, taxonomies, 'folksonomies', other types of controlled vocabulary, and also concept schemes embedded in glossaries and terminologies.</dct:description>
+    <dct:title xml:lang="en">SKOS Vocabulary</dct:title>
+    <rdfs:seeAlso rdf:resource="http://www.w3.org/TR/skos-reference/"/>
+  </owl:Ontology>
+  <owl:Class rdf:about="http://www.w3.org/2004/02/skos/core#Collection">
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">Collection</rdfs:label>
+    <owl:disjointWith rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <owl:disjointWith rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+    <skos:definition xml:lang="en">A meaningful collection of concepts.</skos:definition>
+    <skos:scopeNote xml:lang="en">Labelled collections can be used where you would like a set of concepts to be displayed under a 'node label' in the hierarchy.</skos:scopeNote>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.w3.org/2004/02/skos/core#Concept">
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">Concept</rdfs:label>
+    <skos:definition xml:lang="en">An idea or notion; a unit of thought.</skos:definition>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.w3.org/2004/02/skos/core#ConceptScheme">
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">Concept Scheme</rdfs:label>
+    <owl:disjointWith rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <skos:definition xml:lang="en">A set of concepts, optionally including statements about semantic relationships between those concepts.</skos:definition>
+    <skos:example xml:lang="en">Thesauri, classification schemes, subject heading lists, taxonomies, 'folksonomies', and other types of controlled vocabulary are all examples of concept schemes. Concept schemes are also embedded in glossaries and terminologies.</skos:example>
+    <skos:scopeNote xml:lang="en">A concept scheme may be defined to include concepts from different sources.</skos:scopeNote>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.w3.org/2004/02/skos/core#OrderedCollection">
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">Ordered Collection</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.w3.org/2004/02/skos/core#Collection"/>
+    <skos:definition xml:lang="en">An ordered collection of concepts, where both the grouping and the ordering are meaningful.</skos:definition>
+    <skos:scopeNote xml:lang="en">Ordered collections can be used where you would like a set of concepts to be displayed in a specific order, and optionally under a 'node label'.</skos:scopeNote>
+  </owl:Class>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#altLabel">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:comment xml:lang="en">The range of skos:altLabel is the class of RDF plain literals.</rdfs:comment>
+    <rdfs:comment xml:lang="en">skos:prefLabel, skos:altLabel and skos:hiddenLabel are pairwise disjoint properties.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">alternative label</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+    <skos:definition xml:lang="en">An alternative lexical label for a resource.</skos:definition>
+    <skos:example xml:lang="en">Acronyms, abbreviations, spelling variants, and irregular plural/singular forms may be included among the alternative labels for a concept. Mis-spelled terms are normally included as hidden labels (see skos:hiddenLabel).</skos:example>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#broadMatch">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has broader match</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#broader"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#mappingRelation"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#narrowMatch"/>
+    <skos:definition xml:lang="en">skos:broadMatch is used to state a hierarchical mapping link between two conceptual resources in different concept schemes.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#broader">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">Broader concepts are typically rendered as parents in a concept hierarchy (tree).</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has broader</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#broaderTransitive"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#narrower"/>
+    <skos:definition xml:lang="en">Relates a concept to a concept that is more general in meaning.</skos:definition>
+    <skos:scopeNote xml:lang="en">By convention, skos:broader is only used to assert an immediate (i.e. direct) hierarchical link between two conceptual resources.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#broaderTransitive">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has broader transitive</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#narrowerTransitive"/>
+    <skos:definition>skos:broaderTransitive is a transitive superproperty of skos:broader.</skos:definition>
+    <skos:scopeNote xml:lang="en">By convention, skos:broaderTransitive is not used to make assertions. Rather, the properties can be used to draw inferences about the transitive closure of the hierarchical relation, which is useful e.g. when implementing a simple query expansion algorithm in a search application.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#changeNote">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">change note</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#note"/>
+    <skos:definition xml:lang="en">A note about a modification to a concept.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#closeMatch">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has close match</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#mappingRelation"/>
+    <skos:definition xml:lang="en">skos:closeMatch is used to link two concepts that are sufficiently similar that they can be used interchangeably in some information retrieval applications. In order to avoid the possibility of "compound errors" when combining mappings across more than two concept schemes, skos:closeMatch is not declared to be a transitive property.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#definition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">definition</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#note"/>
+    <skos:definition xml:lang="en">A statement or formal explanation of the meaning of a concept.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#editorialNote">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">editorial note</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#note"/>
+    <skos:definition xml:lang="en">A note for an editor, translator or maintainer of the vocabulary.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#exactMatch">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+    <rdfs:comment xml:lang="en">skos:exactMatch is disjoint with each of the properties skos:broadMatch and skos:relatedMatch.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has exact match</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#closeMatch"/>
+    <skos:definition xml:lang="en">skos:exactMatch is used to link two concepts, indicating a high degree of confidence that the concepts can be used interchangeably across a wide range of information retrieval applications. skos:exactMatch is a transitive property, and is a sub-property of skos:closeMatch.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#example">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">example</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#note"/>
+    <skos:definition xml:lang="en">An example of the use of a concept.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#hasTopConcept">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has top concept</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#topConceptOf"/>
+    <skos:definition xml:lang="en">Relates, by convention, a concept scheme to a concept which is topmost in the broader/narrower concept hierarchies for that scheme, providing an entry point to these hierarchies.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#hiddenLabel">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:comment xml:lang="en">The range of skos:hiddenLabel is the class of RDF plain literals.</rdfs:comment>
+    <rdfs:comment xml:lang="en">skos:prefLabel, skos:altLabel and skos:hiddenLabel are pairwise disjoint properties.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">hidden label</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+    <skos:definition xml:lang="en">A lexical label for a resource that should be hidden when generating visual displays of the resource, but should still be accessible to free text search operations.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#historyNote">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">history note</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#note"/>
+    <skos:definition xml:lang="en">A note about the past state/use/meaning of a concept.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#inScheme">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">is in scheme</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+    <skos:definition xml:lang="en">Relates a resource (for example a concept) to a concept scheme in which it is included.</skos:definition>
+    <skos:scopeNote xml:lang="en">A concept may be a member of more than one concept scheme.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#mappingRelation">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">These concept mapping relations mirror semantic relations, and the data model defined below is similar (with the exception of skos:exactMatch) to the data model defined for semantic relations. A distinct vocabulary is provided for concept mapping relations, to provide a convenient way to differentiate links within a concept scheme from links between concept schemes. However, this pattern of usage is not a formal requirement of the SKOS data model, and relies on informal definitions of best practice.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">is in mapping relation with</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <skos:definition xml:lang="en">Relates two concepts coming, by convention, from different schemes, and that have comparable meanings</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#member">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2004/02/skos/core#Collection"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has member</rdfs:label>
+    <rdfs:range>
+      <owl:Class>
+        <owl:unionOf>
+          <rdf:Description>
+            <rdf:first rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+            <rdf:rest>
+              <rdf:Description>
+                <rdf:first rdf:resource="http://www.w3.org/2004/02/skos/core#Collection"/>
+                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+              </rdf:Description>
+            </rdf:rest>
+          </rdf:Description>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:range>
+    <skos:definition xml:lang="en">Relates a collection to one of its members.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#memberList">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">For any resource, every item in the list given as the value of the
+      skos:memberList property is also a value of the skos:member property.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://www.w3.org/2004/02/skos/core#OrderedCollection"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has member list</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+    <skos:definition xml:lang="en">Relates an ordered collection to the RDF list containing its members.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#narrowMatch">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has narrower match</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#mappingRelation"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#narrower"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#broadMatch"/>
+    <skos:definition xml:lang="en">skos:narrowMatch is used to state a hierarchical mapping link between two conceptual resources in different concept schemes.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#narrower">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">Narrower concepts are typically rendered as children in a concept hierarchy (tree).</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has narrower</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#narrowerTransitive"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#broader"/>
+    <skos:definition xml:lang="en">Relates a concept to a concept that is more specific in meaning.</skos:definition>
+    <skos:scopeNote xml:lang="en">By convention, skos:broader is only used to assert an immediate (i.e. direct) hierarchical link between two conceptual resources.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#narrowerTransitive">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has narrower transitive</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#broaderTransitive"/>
+    <skos:definition>skos:narrowerTransitive is a transitive superproperty of skos:narrower.</skos:definition>
+    <skos:scopeNote xml:lang="en">By convention, skos:narrowerTransitive is not used to make assertions. Rather, the properties can be used to draw inferences about the transitive closure of the hierarchical relation, which is useful e.g. when implementing a simple query expansion algorithm in a search application.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#notation">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">notation</rdfs:label>
+    <skos:definition xml:lang="en">A notation, also known as classification code, is a string of characters such as "T58.5" or "303.4833" used to uniquely identify a concept within the scope of a given concept scheme.</skos:definition>
+    <skos:scopeNote xml:lang="en">By convention, skos:notation is used with a typed literal in the object position of the triple.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#note">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">note</rdfs:label>
+    <skos:definition xml:lang="en">A general note, for any purpose.</skos:definition>
+    <skos:scopeNote xml:lang="en">This property may be used directly, or as a super-property for more specific note types.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#prefLabel">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:comment xml:lang="en">A resource has no more than one value of skos:prefLabel per language tag, and no more than one value of skos:prefLabel without language tag.</rdfs:comment>
+    <rdfs:comment xml:lang="en">The range of skos:prefLabel is the class of RDF plain literals.</rdfs:comment>
+    <rdfs:comment xml:lang="en">skos:prefLabel, skos:altLabel and skos:hiddenLabel are pairwise
+      disjoint properties.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">preferred label</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+    <skos:definition xml:lang="en">The preferred lexical label for a resource, in a given language.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#related">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdfs:comment xml:lang="en">skos:related is disjoint with skos:broaderTransitive</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has related</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <skos:definition xml:lang="en">Relates a concept to a concept with which there is an associative semantic relationship.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#relatedMatch">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">has related match</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#mappingRelation"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#related"/>
+    <skos:definition xml:lang="en">skos:relatedMatch is used to state an associative mapping link between two conceptual resources in different concept schemes.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#scopeNote">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">scope note</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#note"/>
+    <skos:definition xml:lang="en">A note that helps to clarify the meaning and/or the use of a concept.</skos:definition>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#semanticRelation">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">is in semantic relation with</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <skos:definition xml:lang="en">Links a concept to a concept related by meaning.</skos:definition>
+    <skos:scopeNote xml:lang="en">This property should not be used directly, but as a super-property for all properties denoting a relationship of meaning between concepts.</skos:scopeNote>
+  </rdf:Property>
+  <rdf:Property rdf:about="http://www.w3.org/2004/02/skos/core#topConceptOf">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    <rdfs:label xml:lang="en">is top concept in scheme</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#inScheme"/>
+    <owl:inverseOf rdf:resource="http://www.w3.org/2004/02/skos/core#hasTopConcept"/>
+    <skos:definition xml:lang="en">Relates a concept to the concept scheme that it is a top level concept of.</skos:definition>
+  </rdf:Property>
+  <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Agent"/>
+  <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Document"/>
+  <owl:Class rdf:about="http://xmlns.com/foaf/0.1/OnlineAccount"/>
+  <owl:ObjectProperty rdf:about="http://xmlns.com/foaf/0.1/account"/>
+  <owl:ObjectProperty rdf:about="http://xmlns.com/foaf/0.1/depiction"/>
+  <foaf:Person rdf:about="https://doriantaylor.com/person/dorian-taylor#me">
+    <foaf:name xml:lang="en">Dorian Taylor</foaf:name>
+  </foaf:Person>
+  <bibo:Specification rdf:about="https://vocab.methodandstructure.com/graph-tool">
+    <bibo:status rdf:resource="http://purl.org/ontology/bibo/status/draft"/>
+    <xhv:contents rdf:resource="https://vocab.methodandstructure.com/"/>
+    <xhv:index rdf:resource="https://vocab.methodandstructure.com/"/>
+    <xhv:top rdf:resource="https://vocab.methodandstructure.com/"/>
+    <xhv:up rdf:resource="https://vocab.methodandstructure.com/"/>
+    <rdfa:usesVocabulary rdf:resource="http://www.w3.org/1999/xhtml/vocab#"/>
+    <foaf:primaryTopic rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+  </bibo:Specification>
+  <owl:Ontology rdf:about="https://vocab.methodandstructure.com/graph-tool#">
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2022-12-04T20:12:02Z</dct:created>
+    <dct:creator rdf:resource="https://doriantaylor.com/person/dorian-taylor#me"/>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2023-01-22T02:09:02Z</dct:modified>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2023-12-12T21:48:55Z</dct:modified>
+    <dct:title xml:lang="en">Collaborative Graph Tool Ontology</dct:title>
+    <bibo:uri rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <vann:preferredNamespacePrefix rdf:datatype="http://www.w3.org/2001/XMLSchema#token">cgto</vann:preferredNamespacePrefix>
+    <vann:preferredNamespaceUri rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:comment xml:lang="en">Ontologies like the IBIS vocabulary are intended to only convey their essential semantic content. There are nevertheless additional constructs, that do not belong in the core vocabulary, that need to be expressed in order to fully operationalize the information it describes as a piece of user-facing software. Such constructs include the users of the environment, and the graphical representation of the network itself, from colour palette to the relative (or absolute) geometry of the individual nodes.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <owl:imports rdf:resource="http://purl.org/linked-data/cube#"/>
+    <owl:versionInfo>0.1</owl:versionInfo>
+    <sh:namespace rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <sh:prefix rdf:datatype="http://www.w3.org/2001/XMLSchema#token">cgto</sh:prefix>
+  </owl:Ontology>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/graph-tool#Error">
+    <rdfs:comment xml:lang="en">An error is a type of cgto:View the tool can send the user when something is wrong. It is more suitable to send as a response body than http:Response, which would be problematically self-referential.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">Error</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://vocab.methodandstructure.com/graph-tool#View"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/graph-tool#Index">
+    <rdfs:comment xml:lang="en">An index relates a cgto:Space to a set of cgto:Inventory resources, via a set of cgto:Summary resources.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">Index</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/graph-tool#Inventory">
+    <rdfs:comment xml:lang="en">An inventory is a de facto grouping of resources according to some criterion.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">Inventory</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Container"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/graph-tool#Space">
+    <rdfs:comment xml:lang="en">A graph tool needs a shared logical space to lay out its universe of discourse.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">Space</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Space"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/graph-tool#Summary">
+    <rdfs:comment xml:lang="en">A summary indexes the available cgto:Inventory resources.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">Summary</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://purl.org/linked-data/cube#DataSet"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/graph-tool#View">
+    <rdfs:comment xml:lang="en">A partially or fully computed geometric rendering of a (sub)graph, or the structured information needed to do so.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">View</rdfs:label>
+  </owl:Class>
+  <qb:AttributeProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#asserted-domain">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">asserted-domain</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Inventory"/>
+  </qb:AttributeProperty>
+  <qb:MeasureProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#asserted-domain-count">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">asserted-domain-count</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </qb:MeasureProperty>
+  <qb:AttributeProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#asserted-range">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">asserted-range</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Inventory"/>
+  </qb:AttributeProperty>
+  <qb:MeasureProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#asserted-range-count">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">asserted-range-count</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </qb:MeasureProperty>
+  <qb:MeasureProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#asserted-subject-count">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:comment xml:lang="en">Specifies the number of subject resources asserted to relate according to the given criterion.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">asserted-subject-count</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </qb:MeasureProperty>
+  <qb:AttributeProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#assertedsubjects">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">asserted-subjects</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Inventory"/>
+  </qb:AttributeProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#by-class">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:comment xml:lang="en">Specifies the index of inventories organized by rdfs:Class.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/graph-tool#Index"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">by-class</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Summary"/>
+    <rdfs:subPropertyOf rdf:resource="https://vocab.methodandstructure.com/graph-tool#summary"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#by-property">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:comment xml:lang="en">Connects the cgto:Space to its cgto:Index of resources.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/graph-tool#Index"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">by-property</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Summary"/>
+    <rdfs:subPropertyOf rdf:resource="https://vocab.methodandstructure.com/graph-tool#summary"/>
+  </owl:ObjectProperty>
+  <qb:DimensionProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#class">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">Specifies the owl:Class found in the rdf:type of the subjects.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">class</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+  </qb:DimensionProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#focus">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:comment xml:lang="en">The entity that takes primary focus in the space is what will be shown, e.g. on the front page of a Web app.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/graph-tool#Space"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">focus</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#space_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#index">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:comment xml:lang="en">Connects the cgto:Space to its cgto:Index of resources.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/graph-tool#Space"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">index</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Index"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#space_of"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/1999/xhtml/vocab#index"/>
+  </owl:ObjectProperty>
+  <qb:AttributeProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#inferred-domain">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">inferred-domain</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Inventory"/>
+  </qb:AttributeProperty>
+  <qb:MeasureProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#inferred-domain-count">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">inferred-domain-count</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </qb:MeasureProperty>
+  <qb:AttributeProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#inferred-range">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">inferred-range</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Inventory"/>
+  </qb:AttributeProperty>
+  <qb:MeasureProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#inferred-range-count">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">inferred-range-count</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </qb:MeasureProperty>
+  <qb:MeasureProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#inferred-subject-count">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:comment xml:lang="en">Specifies the number of subject resources inferred to relate according to the given criterion.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">inferred-subject-count</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+  </qb:MeasureProperty>
+  <qb:AttributeProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#inferred-subjects">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en"></rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">inferred-subjects</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Inventory"/>
+  </qb:AttributeProperty>
+  <qb:DimensionProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#property">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:comment xml:lang="en">Specifies the property (predicate) in the statements from which subject and object resources are enumerated.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://purl.org/linked-data/cube#Observation"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">property</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+  </qb:DimensionProperty>
+  <qb:DataStructureDefinition rdf:about="https://vocab.methodandstructure.com/graph-tool#resources-by-class">
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:dimension rdf:resource="https://vocab.methodandstructure.com/graph-tool#class"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:attribute rdf:resource="https://vocab.methodandstructure.com/graph-tool#subjects"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:measure rdf:resource="https://vocab.methodandstructure.com/graph-tool#asserted-subject-count"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:attribute rdf:resource="https://vocab.methodandstructure.com/graph-tool#inferred-subjects"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:measure rdf:resource="https://vocab.methodandstructure.com/graph-tool#inferred-subject-count"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <rdfs:comment xml:lang="en">This structure describes a data set that tabulates subject resources of a certain rdf:type.</rdfs:comment>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">resources-by-class</rdfs:label>
+  </qb:DataStructureDefinition>
+  <qb:DataStructureDefinition rdf:about="https://vocab.methodandstructure.com/graph-tool#resources-by-property">
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:dimension rdf:resource="https://vocab.methodandstructure.com/graph-tool#property"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:attribute rdf:resource="https://vocab.methodandstructure.com/graph-tool#asserted-domain"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:measure rdf:resource="https://vocab.methodandstructure.com/graph-tool#asserted-domain-count"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:attribute rdf:resource="https://vocab.methodandstructure.com/graph-tool#asserted-range"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:measure rdf:resource="https://vocab.methodandstructure.com/graph-tool#asserted-range-count"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:attribute rdf:resource="https://vocab.methodandstructure.com/graph-tool#inferred-domain"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:measure rdf:resource="https://vocab.methodandstructure.com/graph-tool#inferred-domain-count"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:attribute rdf:resource="https://vocab.methodandstructure.com/graph-tool#inferred-range"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <qb:component>
+      <qb:ComponentSpecification>
+        <qb:measure rdf:resource="https://vocab.methodandstructure.com/graph-tool#inferred-range-count"/>
+      </qb:ComponentSpecification>
+    </qb:component>
+    <rdfs:comment xml:lang="en">This structure describes a data set that tabulates both subject and object resources by property (predicate).</rdfs:comment>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">resources-by-property</rdfs:label>
+  </qb:DataStructureDefinition>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#summary">
+    <rdfs:comment xml:lang="en">Connects the cgto:Space to its cgto:Index of resources.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/graph-tool#Index"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">summary</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Summary"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#parent_of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#view">
+    <rdfs:comment xml:lang="en">Relates the space to a view of said space.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/graph-tool#Space"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">view</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#View"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#space_of"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/graph-tool#view-of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/graph-tool#view-of">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:comment xml:lang="en">Relates a view back to its cgto:Space.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/graph-tool#View"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/graph-tool#"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#token">view-of</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/graph-tool#Space"/>
+    <rdfs:subPropertyOf rdf:resource="http://rdfs.org/sioc/ns#has_space"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/graph-tool#view"/>
+  </owl:ObjectProperty>
+  <bibo:Specification rdf:about="https://vocab.methodandstructure.com/ibis">
+    <xhv:contents rdf:resource="https://vocab.methodandstructure.com/"/>
+    <xhv:index rdf:resource="https://vocab.methodandstructure.com/"/>
+    <xhv:top rdf:resource="https://vocab.methodandstructure.com/"/>
+    <xhv:up rdf:resource="https://vocab.methodandstructure.com/"/>
+    <rdfa:usesVocabulary rdf:resource="http://www.w3.org/1999/xhtml/vocab#"/>
+  </bibo:Specification>
+  <owl:Ontology rdf:about="https://vocab.methodandstructure.com/ibis#">
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2012-12-11T22:22:53-08:00</dct:created>
+    <dct:creator rdf:resource="https://doriantaylor.com/person/dorian-taylor#me"/>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2012-12-12T16:04:50-08:00</dct:modified>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2014-02-24T21:14:13Z</dct:modified>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2018-02-22T03:39:14Z</dct:modified>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2019-03-24T22:37:22Z</dct:modified>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2023-12-18T02:25:31Z</dct:modified>
+    <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2024-01-05T04:05:24Z</dct:modified>
+    <dct:references rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <dct:title xml:lang="en">IBIS (bis) Vocabulary</dct:title>
+    <bibo:uri rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <vann:preferredNamespacePrefix>ibis</vann:preferredNamespacePrefix>
+    <rdfs:comment xml:lang="en">This document specifies a vocabulary for describing an IBIS (issue-based information system).</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">IBIS</rdfs:label>
+    <rdfs:seeAlso rdf:resource="http://dublincore.org/documents/dcmi-terms/"/>
+    <rdfs:seeAlso rdf:resource="http://en.wikipedia.org/wiki/Issue-Based_Information_System"/>
+    <rdfs:seeAlso rdf:resource="http://www.cc.gatech.edu/~ellendo/rittel/rittel-issues.pdf"/>
+    <rdfs:seeAlso rdf:resource="http://www.cs.hut.fi/Opinnot/T-93.850/2005/Papers/gIBIS1988-conklin.pdf"/>
+    <rdfs:seeAlso rdf:resource="http://www.w3.org/TR/prov-o/"/>
+    <rdfs:seeAlso rdf:resource="https://vocab.methodandstructure.com/ibis.n3"/>
+    <rdfs:seeAlso rdf:resource="https://vocab.methodandstructure.com/ibis.rdf"/>
+    <rdfs:seeAlso rdf:resource="https://vocab.methodandstructure.com/process-model#"/>
+    <rdfs:seeAlso rdf:resource="https://web.archive.org/web/20120606063823/http://hyperdata.org/xmlns/ibis/"/>
+    <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core#"/>
+    <owl:versionInfo>0.5</owl:versionInfo>
+  </owl:Ontology>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/ibis#Argument">
+    <rdfs:comment xml:lang="en">An Argument is a type of Issue that explicitly supports or refutes a Position.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">Argument</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Argument"/>
+        <owl:onProperty rdf:resource="https://vocab.methodandstructure.com/ibis#replaces"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Argument"/>
+        <owl:onProperty rdf:resource="https://vocab.methodandstructure.com/ibis#replaced-by"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <owl:disjointWith rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+    <skos:usageNote xml:lang="en">An Argument need not only relate in scope to another Argument, but it must only be replaced by another argument.</skos:usageNote>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/ibis#Entity">
+    <rdfs:comment xml:lang="en">ibis:Entity is the abstract superclass of from which the more specific entities are derived.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">Entity</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/ibis#Invariant">
+    <rdfs:comment xml:lang="en">An ibis:Entity can be marked ibis:Invariant to denote that it has been deemed outside of the influence of the agents in the system, i.e., something to be steered around.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">Invariant</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/ibis#Issue">
+    <rdfs:comment xml:lang="en">An Issue is a state of affairs, claimed by one or more Agents to either be a misfit itself, or affecting some other Issue or Position.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">Issue</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+        <owl:onProperty rdf:resource="http://www.w3.org/2004/02/skos/core#narrowerTransitive"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+        <owl:onProperty rdf:resource="http://www.w3.org/2004/02/skos/core#broaderTransitive"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+        <owl:onProperty rdf:resource="https://vocab.methodandstructure.com/ibis#replaces"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+        <owl:onProperty rdf:resource="https://vocab.methodandstructure.com/ibis#replaced-by"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <owl:disjointWith rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/ibis#Network">
+    <rdfs:comment xml:lang="en">A network of issues, positions, and arguments.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">Network</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://vocab.methodandstructure.com/ibis#Position">
+    <rdfs:comment xml:lang="en">A Position asserts a moral, ethical, pragmatic, or similar kind of assertion, typically identifying what, if anything, should be done about an Issue.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">Position</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+        <owl:onProperty rdf:resource="http://www.w3.org/2004/02/skos/core#narrowerTransitive"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+        <owl:onProperty rdf:resource="http://www.w3.org/2004/02/skos/core#broaderTransitive"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+        <owl:onProperty rdf:resource="https://vocab.methodandstructure.com/ibis#replaces"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+        <owl:onProperty rdf:resource="https://vocab.methodandstructure.com/ibis#replaced-by"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <owl:disjointWith rdf:resource="https://vocab.methodandstructure.com/ibis#Argument"/>
+    <owl:disjointWith rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#concern-of">
+    <rdfs:comment xml:lang="en">The subject is an issue concerning the object, which can be any resource.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">concern-of</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#concerns"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#concerns">
+    <rdfs:comment xml:lang="en">The subject is an issue concerning the object, which can be any resource.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">concerns</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#concern-of"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#endorsed-by">
+    <rdfs:comment xml:lang="en">A concept can be endorsed by an Agent without said Agent having mentioned or advanced it initially, and without any additional comment.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">endorsed by</rdfs:label>
+    <rdfs:range rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#endorses"/>
+    <skos:note xml:lang="en">This term, along with ibis:endorses, enables an Agent to signal its agreement with a concept. To signal disagreement, explain why with an ibis:Argument that ibis:opposes the concept.</skos:note>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#endorses">
+    <rdfs:comment xml:lang="en">An Agent can endorse a concept without having initially mentioned or advanced it, and without any additional comment.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">endorses</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#endorsed-by"/>
+    <skos:note xml:lang="en">This term, along with ibis:endorsed-by, enables an Agent to signal its agreement with a concept. To signal disagreement, explain why with an ibis:Argument that ibis:opposes the concept.</skos:note>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#generalizes">
+    <rdfs:comment xml:lang="en">The subject is a more generic form of the object.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">generalizes</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#narrower"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#specializes"/>
+    <skos:note xml:lang="en">The equivalent property skos:narrower asserts that the object is narrower than the subject, while the subject of ibis:generalizes is more general than the object.</skos:note>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#opposed-by">
+    <rdfs:comment xml:lang="en">Indicates a subject position opposed by an object argument.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">opposed-by</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Argument"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#opposes"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#opposes">
+    <rdfs:comment xml:lang="en">Indicates a subject argument that opposes an object position.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Argument"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">opposes</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#opposed-by"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#questioned-by">
+    <rdfs:comment xml:lang="en">Indicates a belief called into question by an issue.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">questioned-by</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+    <rdfs:subPropertyOf rdf:resource="https://vocab.methodandstructure.com/ibis#suggests"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#questions"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#questions">
+    <rdfs:comment xml:lang="en">Indicates an issue that raises doubt on a belief.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">questions</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subPropertyOf rdf:resource="https://vocab.methodandstructure.com/ibis#suggested-by"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#questioned-by"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#replaced-by">
+    <rdfs:comment xml:lang="en">Indicates when a concept is replaced by another concept of the same type.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">replaced-by</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/isReplacedBy"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#replaces"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#replaces">
+    <rdfs:comment xml:lang="en">Indicates when a concept replaces another concept of the same type.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">replaces</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/replaces"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#replaced-by"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#responds-to">
+    <rdfs:comment xml:lang="en">Indicates an issue to which the subject position responds.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">responds-to</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#response"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#response">
+    <rdfs:comment xml:lang="en">Indicates a position that responds to the subject issue.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">response</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#responds-to"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#specializes">
+    <rdfs:comment xml:lang="en">The subject is a more specific form of the object.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">specializes</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#broader"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#generalizes"/>
+    <skos:note xml:lang="en">The equivalent property skos:broader asserts that the object is broader than the subject, while the subject of ibis:specializes is more specific than the object.</skos:note>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#suggested-by">
+    <rdfs:comment xml:lang="en">Indicates when the subject issue is suggested by the object belief.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">suggested-by</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#suggests"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#suggests">
+    <rdfs:comment xml:lang="en">Indicates when the subject belief suggests the object issue.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Entity"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">suggests</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Issue"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#suggested-by"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#supported-by">
+    <rdfs:comment xml:lang="en">Indicates a subject position supported by an object argument.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">supported-by</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Argument"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#supports"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://vocab.methodandstructure.com/ibis#supports">
+    <rdfs:comment xml:lang="en">Indicates a subject argument that supports an object position.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://vocab.methodandstructure.com/ibis#Argument"/>
+    <rdfs:isDefinedBy rdf:resource="https://vocab.methodandstructure.com/ibis#"/>
+    <rdfs:label xml:lang="en">supports</rdfs:label>
+    <rdfs:range rdf:resource="https://vocab.methodandstructure.com/ibis#Position"/>
+    <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#semanticRelation"/>
+    <owl:inverseOf rdf:resource="https://vocab.methodandstructure.com/ibis#supported-by"/>
+  </owl:ObjectProperty>
+  <rdf:Description rdf:about="https://web.archive.org/web/20120606063823/http://hyperdata.org/xmlns/ibis/">
+    <dct:creator rdf:resource="https://web.archive.org/web/20130113103138/http://danny.ayers.name/index.rdf#me"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://web.archive.org/web/20130113103138/http://danny.ayers.name/index.rdf#me">
+    <foaf:name xml:lang="en">Danny Ayers</foaf:name>
+  </rdf:Description>
+</rdf:RDF>

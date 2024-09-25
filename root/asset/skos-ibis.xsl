@@ -1,17 +1,216 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns:x="urn:x-dummy"
-		exclude-result-prefixes="html x">
+		xmlns:ibis="https://vocab.methodandstructure.com/ibis#"
+                xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+		xmlns:cgto="https://vocab.methodandstructure.com/graph-tool#"
+		xmlns:x="urn:x-dummy:"
+                xmlns:rdfa="http://www.w3.org/ns/rdfa#"
+                xmlns:xc="https://makethingsmakesense.com/asset/transclude#"
+                xmlns:str="http://xsltsl.org/string"
+                xmlns:uri="http://xsltsl.org/uri"
+		xmlns="http://www.w3.org/1999/xhtml"
+		exclude-result-prefixes="html str uri rdfa xc x">
 
+<xsl:import href="cgto"/>
 
 <x:doc>
   <h1>SKOS/IBIS UI</h1>
   <p>This stylesheet transforms markup specific to SKOS and IBIS.</p>
 </x:doc>
 
+<xsl:variable name="RDFS" select="'http://www.w3.org/2000/01/rdf-schema#'"/>
+<xsl:variable name="IBIS" select="'https://vocab.methodandstructure.com/ibis#'"/>
+<xsl:variable name="CGTO" select="'https://vocab.methodandstructure.com/graph-tool#'"/>
+<xsl:variable name="BIBO" select="'http://purl.org/ontology/bibo/'"/>
+<xsl:variable name="DCT"  select="'http://purl.org/dc/terms/'"/>
+<xsl:variable name="QB"   select="'http://purl.org/linked-data/cube#'"/>
+<xsl:variable name="SIOC" select="'http://rdfs.org/sioc/ns#'"/>
+<xsl:variable name="SKOS" select="'http://www.w3.org/2004/02/skos/core#'"/>
+<xsl:variable name="XHV"  select="'http://www.w3.org/1999/xhtml/vocab#'"/>
+
+<x:lprops>
+  <x:prop uri="http://www.w3.org/1999/02/22-rdf-syntax-ns#value"/>
+  <x:prop uri="http://www.w3.org/2004/02/skos/core#prefLabel"/>
+  <x:prop uri="http://www.w3.org/2000/01/rdf-schema#label"/>
+  <x:prop uri="http://purl.org/dc/terms/title"/>
+  <x:prop uri="http://purl.org/dc/terms/identifier"/>
+  <x:prop uri="http://xmlns.com/foaf/0.1/name"/>
+</x:lprops>
+
+<x:inverses>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#concerns" b="https://vocab.methodandstructure.com/ibis#concern-of"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#endorses" b="https://vocab.methodandstructure.com/ibis#endorsed-by"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#generalizes" b="https://vocab.methodandstructure.com/ibis#specializes"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#replaces" b="https://vocab.methodandstructure.com/ibis#replaced-by"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#questions" b="https://vocab.methodandstructure.com/ibis#questioned-by"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#suggests" b="https://vocab.methodandstructure.com/ibis#suggested-by"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#response" b="https://vocab.methodandstructure.com/ibis#responds-to"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#supports" b="https://vocab.methodandstructure.com/ibis#supported-by"/>
+  <x:pair a="https://vocab.methodandstructure.com/ibis#opposes" b="https://vocab.methodandstructure.com/ibis#opposed-by"/>
+  <x:pair a="http://www.w3.org/2004/02/skos/core#related" b="http://www.w3.org/2004/02/skos/core#related"/>
+  <x:pair a="http://www.w3.org/2004/02/skos/core#narrower" b="http://www.w3.org/2004/02/skos/core#broader"/>
+  <x:pair a="http://www.w3.org/2004/02/skos/core#narrowerTransitive" b="http://www.w3.org/2004/02/skos/core#broaderTransitive"/>
+  <x:pair a="http://www.w3.org/2004/02/skos/core#narrowMatch" b="http://www.w3.org/2004/02/skos/core#broadMatch"/>
+  <x:pair a="http://www.w3.org/2004/02/skos/core#closeMatch" b="http://www.w3.org/2004/02/skos/core#closeMatch"/>
+  <x:pair a="http://www.w3.org/2004/02/skos/core#exactMatch" b="http://www.w3.org/2004/02/skos/core#exactMatch"/>
+</x:inverses>
+
+<!-- XXX i feel like some of this could be SHACL and the rest of it could be the ontologies themselves -->
+<!-- maybe make something better like an rdfa page iunno -->
+<x:sequence>
+  <x:class uri="https://vocab.methodandstructure.com/ibis#Issue" icon="&#xf071;">
+    <x:lprop uri="http://www.w3.org/1999/02/22-rdf-syntax-ns#value"/>
+    <x:label>Issue</x:label>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#response">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:label>Has Response</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#questioned-by">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Questioned By</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#questions">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Questions</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#suggests">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:label>Suggests</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#suggested-by">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Suggested By</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#generalizes">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Generalizes</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#specializes">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Specializes</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#concerns">
+      <x:range uri="http://www.w3.org/2004/02/skos/core#Concept"/>
+      <x:label>Concerns</x:label>
+    </x:prop>
+  </x:class>
+  <x:class uri="https://vocab.methodandstructure.com/ibis#Position" icon="&#xf0e3;">
+    <x:lprop uri="http://www.w3.org/1999/02/22-rdf-syntax-ns#value"/>
+    <x:label>Position</x:label>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#responds-to">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Responds To</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#supported-by">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Supported By</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#opposed-by">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Opposed By</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#questioned-by">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Questioned By</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#suggests">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Suggests</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#generalizes">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:label>Generalizes</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#specializes">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:label>Specializes</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#concerns">
+      <x:range uri="http://www.w3.org/2004/02/skos/core#Concept"/>
+      <x:label>Concerns</x:label>
+    </x:prop>
+  </x:class>
+  <x:class uri="https://vocab.methodandstructure.com/ibis#Argument" icon="&#xf086;">
+    <x:lprop uri="http://www.w3.org/1999/02/22-rdf-syntax-ns#value"/>
+    <x:label>Argument</x:label>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#supports">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:label>Supports</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#opposes">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:label>Opposes</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#response">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:label>Has Response</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#questioned-by">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Questioned By</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#suggests">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Suggests</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#suggested-by">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Suggested By</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#generalizes">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Generalizes</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#specializes">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Specializes</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#concerns">
+      <x:range uri="http://www.w3.org/2004/02/skos/core#Concept"/>
+      <x:label>Concerns</x:label>
+    </x:prop>
+  </x:class>
+  <x:class uri="http://www.w3.org/2004/02/skos/core#Concept" icon="&#x1f5ed;">
+    <x:lprop uri="http://www.w3.org/2004/02/skos/core#prefLabel"/>
+    <x:label>Position</x:label>
+    <x:prop uri="http://www.w3.org/2004/02/skos/core#broader">
+      <x:range uri="http://www.w3.org/2004/02/skos/core#Concept"/>
+      <x:label>Has Broader</x:label>
+    </x:prop>
+    <x:prop uri="http://www.w3.org/2004/02/skos/core#narrower">
+      <x:range uri="http://www.w3.org/2004/02/skos/core#Concept"/>
+      <x:label>Has Narrower</x:label>
+    </x:prop>
+    <x:prop uri="http://www.w3.org/2004/02/skos/core#related">
+      <x:range uri="http://www.w3.org/2004/02/skos/core#Concept"/>
+      <x:label>Has Related</x:label>
+    </x:prop>
+    <x:prop uri="https://vocab.methodandstructure.com/ibis#concern-of">
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Issue"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Position"/>
+      <x:range uri="https://vocab.methodandstructure.com/ibis#Argument"/>
+      <x:label>Concern Of</x:label>
+    </x:prop>
+  </x:class>
+</x:sequence>
+
+<!-- -->
 
 <xsl:template match="html:body" mode="ibis:Entity">
   <xsl:param name="base" select="normalize-space((ancestor-or-self::html:html[html:head/html:base[@href]][1]/html:head/html:base[@href])[1]/@href)"/>
@@ -358,7 +557,7 @@
       </xsl:apply-templates>
       <xsl:if test="normalize-space($targets)">
       <ul about="" rel="{$curie}">
-        <xsl:apply-templates select="$current" mode="link-stack">
+        <xsl:apply-templates select="$current" mode="ibis:link-stack">
           <xsl:with-param name="base"          select="$base"/>
           <xsl:with-param name="resource-path" select="$resource-path"/>
           <xsl:with-param name="rewrite"       select="$rewrite"/>
