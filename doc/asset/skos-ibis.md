@@ -16,37 +16,28 @@ We then have to determine if the scheme is in *focus*. For this we first
 find the `xhv:top` (at least for now; I may come up with a better one
 later) relative to the scheme.
 
-Note that there is nothing preventing a conceptual entity from belonging
-to zero schemes, or belonging to more than one scheme. There is
-furthermore nothing preventing none of the associated schemes from being
-in focus, although having more than one scheme in focus is an error.
-(This is partly why I have to change the focus mechanism from being
-relative to the *space*, to being relative to the *user*, not only
-because it can potentially get into this state in a multiuser system,
-but also because people will be continually clobbering each other's
-state.)
-
-If a concept belongs to zero schemes, we should throw up a modal to
-force the user to pick a scheme. We should default to the scheme in
-focus. If there are other schemes present, we should provide an option
-to set the focus as well as attach the concept. We should provide a
-mechanism to create a new scheme (which we assume will attach the
-concept). There should be an option (default?) to focus a new scheme.
+> Note that there is nothing preventing a conceptual entity from
+> belonging to zero schemes, or belonging to more than one scheme. There
+> is furthermore nothing preventing none of the associated schemes from
+> being in focus, although having more than one scheme in focus is an
+> error. (This is partly why I have to change the focus mechanism from
+> being relative to the *space*, to being relative to the *user*, not
+> only because it can potentially get into this state in a multiuser
+> system, but also because people will be continually clobbering each
+> other's focus.)
+>
+> If a concept belongs to zero schemes, we should throw up a modal to
+> force the user to pick a scheme. We should default to the scheme in
+> focus. If there are other schemes present, we should provide an option
+> to set the focus as well as attach the concept. We should provide a
+> mechanism to create a new scheme (which we assume will attach the
+> concept). There should be an option (default?) to focus a new scheme.
 
 A concept attached to multiple schemes needs UI to be able to detach
 from one scheme, but only if there are multiples.
 
 A concept should also be able to import all of its neighbours into the
 scheme
-
-<div class="section" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-xmlns:html="http://www.w3.org/1999/xhtml"
-xmlns:ibis="https://vocab.methodandstructure.com/ibis#"
-xmlns:skos="http://www.w3.org/2004/02/skos/core#"
-xmlns:cgto="https://vocab.methodandstructure.com/graph-tool#"
-xmlns:x="urn:x-dummy:" xmlns:rdfa="http://www.w3.org/ns/rdfa#"
-xmlns:xc="https://makethingsmakesense.com/asset/transclude#"
-xmlns:str="http://xsltsl.org/string" xmlns:uri="http://xsltsl.org/uri">
 
 ### Concept UI
 
@@ -69,17 +60,6 @@ xmlns:str="http://xsltsl.org/string" xmlns:uri="http://xsltsl.org/uri">
   - go to
   - set focus
 
-</div>
-
-<div class="section" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-xmlns:html="http://www.w3.org/1999/xhtml"
-xmlns:ibis="https://vocab.methodandstructure.com/ibis#"
-xmlns:skos="http://www.w3.org/2004/02/skos/core#"
-xmlns:cgto="https://vocab.methodandstructure.com/graph-tool#"
-xmlns:x="urn:x-dummy:" xmlns:rdfa="http://www.w3.org/ns/rdfa#"
-xmlns:xc="https://makethingsmakesense.com/asset/transclude#"
-xmlns:str="http://xsltsl.org/string" xmlns:uri="http://xsltsl.org/uri">
-
 ### Scheme UI
 
 - schemes do not have to worry about attaching concepts, so when the
@@ -87,7 +67,5 @@ xmlns:str="http://xsltsl.org/string" xmlns:uri="http://xsltsl.org/uri">
   to another one of the listed schemes, or otherwise focusing it (and
   presumably navigating to it as well).
 - 
-
-</div>
 
 ## skos:footer-option
