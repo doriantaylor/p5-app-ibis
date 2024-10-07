@@ -592,7 +592,7 @@
     </xsl:call-template>
   </xsl:variable>
 
-  <xsl:variable name="inverse">
+ <xsl:variable name="inverse">
     <xsl:variable name="_" select="document('')/xsl:stylesheet/x:inverses"/>
     <xsl:value-of select="($_/x:pair[@a=$predicate]/@b|$_/x:pair[@b=$predicate]/@a)[1]"/>
   </xsl:variable>
@@ -903,7 +903,7 @@
     <h3>Scheme UI</h3>
     <ul>
       <li>schemes do not have to worry about attaching concepts, so when the subject location is a scheme, there is only the matter of navigating to another one of the listed schemes, or otherwise focusing it (and presumably navigating to it as well).</li>
-      <li></li>
+      <li>in other words the scheme UI is the same as the concept UI minus the <em>attach</em> business.</li>
     </ul>
   </section>
 </x:doc>

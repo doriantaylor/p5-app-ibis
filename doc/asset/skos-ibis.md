@@ -66,6 +66,7 @@ scheme
   subject location is a scheme, there is only the matter of navigating
   to another one of the listed schemes, or otherwise focusing it (and
   presumably navigating to it as well).
-- 
+- in other words the scheme UI is the same as the concept UI minus the
+  *attach* business.
 
 ## skos:footer-option
