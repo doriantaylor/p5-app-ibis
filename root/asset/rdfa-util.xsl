@@ -215,6 +215,21 @@
   </xsl:if>
 </xsl:template>
 
+<xsl:template match="html:*" mode="rdfa:get-type">
+  <xsl:param name="base" select="normalize-space((ancestor-or-self::html:html[html:head/html:base[@href]][1]/html:head/html:base[@href])[1]/@href)"/>
+  <xsl:param name="subject">
+    <xsl:apply-templates select="." mode="rdfa:get-subject">
+      <xsl:with-param name="base" select="$base"/>
+    </xsl:apply-templates>
+  </xsl:param>
+
+  <xsl:apply-templates select="." mode="rdfa:object-resources">
+    <xsl:with-param name="base" select="$base"/>
+    <xsl:with-param name="subject" select="$subjects"/>
+    <xsl:with-param name="predicate" select="$rdfa:RDF-TYPE"/>
+  </xsl:apply-templates>
+</xsl:template>
+
 <!-- okay actual templates now -->
 
 <xsl:template match="html:head">

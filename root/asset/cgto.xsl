@@ -13,9 +13,77 @@
 
 <xsl:import href="rdfa-util"/>
 
+<!-- too bad firefox still has no namespace:: axis -->
+<xsl:variable name="CGTO" select="'https://vocab.methodandstructure.com/graph-tool#'"/>
+
 <x:doc>
   <h1>Graph tool UI</h1>
   <p>This stylesheet handles UI peculiar to the collaborative graph tool ontology.</p>
+</x:doc>
+
+<x:doc>
+  <h2>cgto:get-focus</h2>
+  <p>Obtain the focus (foci) from the <code>cgto:Space</code> which is assumed to be the subject. More than one focus should be interpreted as an error.</p>
+</x:doc>
+
+<xsl:template match="html:*" mode="cgto:get-focus">
+  <xsl:param name="base" select="normalize-space((ancestor-or-self::html:html[html:head/html:base[@href]][1]/html:head/html:base[@href])[1]/@href)"/>
+  <xsl:param name="subject">
+    <xsl:apply-templates select="." mode="rdfa:get-subject">
+      <xsl:with-param name="base" select="$base"/>
+    </xsl:apply-templates>
+  </xsl:param>
+  <xsl:param name="type">
+    <xsl:text> </xsl:text>
+    <xsl:apply-templates select="." mode="rdfa:get-type">
+      <xsl:with-param name="base" select="$base"/>
+      <xsl:with-param name="subject" select="$subject"/>
+    </xsl:apply-templates>
+    <xsl:text> </xsl:text>
+  </xsl:param>
+  <xsl:param name="via" select="concat($XHV, 'top')"/>
+  <!-- this either *is* the space or you *get* the space -->
+
+  <xsl:variable name="actual-subject">
+    <xsl:choose>
+      <xsl:when test="contains($type, concat(' ', $CGTO, 'Space '))">
+	<xsl:value-of select="$subject"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:call-template name="str:safe-first-token">
+	  <xsl:with-param name="tokens">
+	    <xsl:apply-templates select="." mode="rdfa:object-resources">
+	      <xsl:with-param name="base" select="$base"/>
+	      <xsl:with-param name="subject" select="$subject"/>
+	      <xsl:with-param name="predicate" select="$via"/>
+	    </xsl:apply-templates>
+	  </xsl:with-param>
+	</xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <xsl:if test="string-length(normalize-space($actual-subject)) = 0">
+    <xsl:message terminate="yes">No <xsl:value-of select="$via"/> for subject <xsl:value-of select="$subject"/></xsl:message>
+  </xsl:if>
+
+  <xsl:variable name="doc">
+    <xsl:call-template name="uri:document-for-uri">
+      <xsl:with-param name="uri" select="$actual-subject"/>
+    </xsl:call-template>
+  </xsl:variable>
+
+  <xsl:variable name="root" select="document($doc)/*"/>
+
+  <xsl:apply-templates select="$root" mode="rdfa:object-resources">
+    <xsl:with-param name="subject" select="$actual-subject"/>
+    <xsl:with-param name="predicate" select="concat($CGTO, 'focus')"/>
+  </xsl:apply-templates>
+</xsl:template>
+
+<x:doc>
+  <h2>cgto:find-indices</h2>
+  <p></p>
 </x:doc>
 
 <!-- extremely specific i know but we use this more than once -->

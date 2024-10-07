@@ -864,7 +864,48 @@
 
 <x:doc>
   <h2>skos:footer</h2>
-  <p>This is a UI component for <code>skos:Concept</code> (i.e. <code>ibis:Entity</code>)-derived </p>
+  <p>This is a UI component for <code>skos:Concept</code> (i.e. <code>ibis:Entity</code>)-derived subjects, as well as <code>skos:ConceptScheme</code>/<code>ibis:Network</code> aggregates.</p>
+  <p>If it's a concept or derivative thereof (I should really change <code>ibis:Entity</code> to <code>ibis:Statement</code>), it has to first find the <em>scheme</em> it belongs to (via <code>skos:inScheme</code>, <code>skos:topConceptOf</code>, or its inverse, <code>skos:hasTopConcept</code>), otherwise we are currently looking at the scheme.</p>
+  <p>We then have to determine if the scheme is in <em>focus</em>. For this we first find the <code>xhv:top</code> (at least for now; I may come up with a better one later) relative to the scheme.</p>
+  <aside role="note">
+    <p>Note that there is nothing preventing a conceptual entity from belonging to zero schemes, or belonging to more than one scheme. There is furthermore nothing preventing none of the associated schemes from being in focus, although having more than one scheme in focus is an error. (This is partly why I have to change the focus mechanism from being relative to the <em>space</em>, to being relative to the <em>user</em>, not only because it can potentially get into this state in a multiuser system, but also because people will be continually clobbering each other's state.)</p>
+    <p>If a concept belongs to zero schemes, we should throw up a modal to force the user to pick a scheme. We should default to the scheme in focus. If there are other schemes present, we should provide an option to set the focus as well as attach the concept. We should provide a mechanism to create a new scheme (which we assume will attach the concept). There should be an option (default?) to focus a new scheme.</p>
+  </aside>
+  <p>A concept attached to multiple schemes needs UI to be able to detach from one scheme, but only if there are multiples.</p>
+  <p>A concept should also be able to import all of its neighbours into the scheme</p>
+  <section>
+    <h3>Concept UI</h3>
+    <ul>
+      <li>
+	<p>flyout list of all schemes</p>
+	<ul>
+	  <li>participating scheme(s) gathered at the top</li>
+	  <li>focused scheme at the tippy-top (if participating)</li>
+	  <li>then non-participating schemes, whether focused or not</li>
+	  <li>each has a link to the scheme itself</li>
+	  <li>unfocused schemes have a set focus button</li>
+	  <li>non-participating schemes have attach+set focus, attach+no-focus buttons as well</li>
+	</ul>
+      </li>
+      <li>
+	<p>create new scheme UI</p>
+	<ul>
+	  <li>text box for name</li>
+	  <li>attach concept?</li>
+	  <li>if current subject is <em>not</em> an <code>ibis:Entity</code>, provide toggle between <code>skos:ConceptScheme</code> and <code>ibis:Network</code></li>
+	  <li>go to</li>
+	  <li>set focus</li>
+	</ul>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h3>Scheme UI</h3>
+    <ul>
+      <li>schemes do not have to worry about attaching concepts, so when the subject location is a scheme, there is only the matter of navigating to another one of the listed schemes, or otherwise focusing it (and presumably navigating to it as well).</li>
+      <li></li>
+    </ul>
+  </section>
 </x:doc>
 
 <xsl:template match="html:*" mode="skos:footer">
@@ -966,8 +1007,7 @@
    <xsl:message>inventory: <xsl:value-of select="$inventory"/></xsl:message>
 
   <footer>
-	  <a href="{$scheme}">Overview</a>
-	  <!--
+    <!--<a href="{$scheme}">Overview</a>-->
       <form id="overview" method="post" action="">
 	<fieldset id="overview-selector">
 	  <a href="{$scheme}">Overview</a>
@@ -996,7 +1036,7 @@
 	  <input type="text" placeholder="Name"/>
 	  <button>Create</button>
 	</fieldset>
-      </form>-->
+      </form>
   </footer>
 </xsl:template>
 

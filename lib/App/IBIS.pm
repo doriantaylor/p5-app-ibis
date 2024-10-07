@@ -383,6 +383,12 @@ sub uri_for {
     $uri = URI->new_abs(lc $uri->uuid, $c->req->base) if $uri->can('uuid');
 
     my $rel = $uri->rel($c->req->base);
+
+    # lol how many places do i have to put this so it covers everything
+    my $p = $rel->path;
+    $p =~ s|(?:(?<!\.)\./)+$||g;
+    $rel->path($p);
+
     return $uri if $rel->eq($uri);
 
     $uri = $rel->as_string;
@@ -671,6 +677,10 @@ sub render_simple {
                 $a{rel}      = \@fwd if @fwd;
                 $a{rev}      = \@rev if @rev;
                 $a{typeof}   = \@t if @t;
+
+		my $p = $a{href}->path;
+		$p =~ s|(?:(?<!\.)\./)+$||g;
+		$a{href}->path($p);
 
                 if (@fwd or grep { $revp{$_->value} } @{$y->[2]}) {
                     if ($lp and $lv->is_literal) {

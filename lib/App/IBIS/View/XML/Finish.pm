@@ -133,7 +133,13 @@ sub _rewrite_uris {
 
             # turn absolute URIs back into relative ones where
             # applicable
-            push @out, $is_abs ? $href : $href->rel($base);
+            push @out, $is_abs ? $href : do {
+		my $rel = $href->rel($base);
+		my $p = $rel->path;
+		$p =~ s|(?:(?<!\.)\./)+$||g;
+		$rel->path($p);
+		$rel;
+	    };
         }
 
         # join everything back into a string
