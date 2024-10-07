@@ -880,7 +880,7 @@
 	<p>flyout list of all schemes</p>
 	<ul>
 	  <li>participating scheme(s) gathered at the top</li>
-	  <li>focused scheme at the tippy-top (if participating)</li>
+	  <li>focused scheme at the tippy-top/closed position (if participating)</li>
 	  <li>then non-participating schemes, whether focused or not</li>
 	  <li>each has a link to the scheme itself</li>
 	  <li>unfocused schemes have a set focus button</li>
