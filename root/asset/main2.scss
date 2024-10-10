@@ -102,13 +102,19 @@ html {
         }
         > footer {
             grid-row: 2;
-	    > form {
-		display: flex;
-		fieldset {
-		    border: none;
-		    margin: auto;
-		    padding: 0;
+	    > ul.schemes {
+		position: absolute;
+		bottom: 0;
+		background-color: inherit;
+		border-width: 1px;
+		border-radius: 0.25em;
+		padding: 0.25em;
+		margin: 0.25em;
+		> li {
 		    display: flex;
+		    *:first-child {
+			flex: 2 1 auto;
+		    }
 		}
 	    }
         }
@@ -468,6 +474,16 @@ html {
 			}
                     }
                 }
+		> footer {
+		    > ul.schemes {
+                        color: nth($pal, 1);
+                        border-color: nth($pal, 1);
+                        background-color: nth($pal, 4);
+			a[href] {
+			    color: inherit;
+			}
+		    }
+		}
             }
         }
 

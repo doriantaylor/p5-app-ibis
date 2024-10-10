@@ -626,11 +626,13 @@ sub rdf_kv_post :Path('/') :POST {
         subject    => $req->uri->canonical,
         namespaces => $c->uns,
         graph      => $g->value,
-        callback   => sub { $c->internal_uri_for(shift) },
+        callback   => sub { $c->internal_uri_for(shift, as => 'uri') },
     );
+
 
     my $patch = eval { $kv->process($req->body_parameters) };
     if ($@) {
+	$c->log->debug('okay fail lol');
         $resp->status(409);
         $resp->body($@);
         return;

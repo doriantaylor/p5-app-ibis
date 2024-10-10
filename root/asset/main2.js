@@ -3,7 +3,7 @@
 
 document.addEventListener('load-graph', function () {
     // console.log('zap lol');
-    this.graph = RDF.graph();
+    const graph = this.graph = RDF.graph();
     this.rdfa  = new RDF.RDFaProcessor(
         this.graph, { base: window.location.href });
 
@@ -11,6 +11,7 @@ document.addEventListener('load-graph', function () {
 
     const ibis = RDF.Namespace('https://vocab.methodandstructure.com/ibis#');
     const skos = RDF.Namespace('http://www.w3.org/2004/02/skos/core#');
+    const xhv  = RDF.Namespace('http://www.w3.org/1999/xhtml/vocab#');
 
     const ibisTypes = ['Issue', 'Position', 'Argument'].map(t => ibis(t));
     const skosc = skos('Concept');
@@ -27,6 +28,20 @@ document.addEventListener('load-graph', function () {
         types = ibisTypes;
     }
 
+    // skos:inScheme|skos:topConceptOf|^skos:hasTopConcept
+    // XXX is this *really* how you do this??
+    const getSchemes = s => this.graph.match(s, skos('inScheme')).concat(
+	this.graph.match(s, skos('topConceptOf'))).concat(
+	    this.graph.match(null, skos('hasTopConcept'), s)).reduce(
+		(a, s) => (RDF.isNamedNode(s.object) ?
+			   a.some(x => x.equals(s.object)) ? a :
+			   a.concat([s.object]) : a), []);
+    // anyway get the scheme
+    const schemes = isEntity ? getSchemes(me) : [me];
+
+    console.log(schemes);
+
+    // test if these are the types we're after
     const test = ts => ts.filter(t => types.some(x => x.equals(t))).length > 0;
 
     // console.log(types);
@@ -37,9 +52,15 @@ document.addEventListener('load-graph', function () {
     // coord: Simplex Quad Greedy Center
     const dataviz = this.dataviz = new HierRDF(this.graph, {
         validateNode: function (node) {
-            //return true;
-            if (!isEntity) return true;
-            return node.neighbours.length > 0 ? true : test(node.type);
+	    // `this` goes missing because javascript
+	    const s1 = schemes.map(x => dataviz.rewriteUUID(x));
+	    const s2 = getSchemes(node.subject).map(x => dataviz.rewriteUUID(x));
+	    // console.log(s1, s2);
+	    if (s1.some(s => s2.some(x => x.equals(s)))) {
+		if (!isEntity) return true;
+		return node.neighbours.length > 0 ? true : test(node.type);
+	    }
+	    return false;
         },
         validateEdge: function (source, target) {
             //return true;
@@ -58,7 +79,6 @@ document.addEventListener('load-graph', function () {
     if (link && document.getElementById('force'))
         this.dataviz.installFetchOnLoad(link.href, '#force');
     else console.log("wah wah link not found");
-
 
     return true;
 });
