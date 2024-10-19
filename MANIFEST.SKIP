@@ -127,6 +127,7 @@ root/asset/jquery.*
 root/asset/font-awesome.old
 js/
 root/bogon.*
+doc/.*
 
 # docker stuff
 .dockerignore

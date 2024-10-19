@@ -103,8 +103,11 @@ html {
         > footer {
             grid-row: 2;
 	    > ul.schemes {
+		display: none;
 		position: absolute;
 		bottom: 0;
+		opacity: 0;
+		transition: opacity 0.5s, display 0s allow-discrete;
 		background-color: inherit;
 		border-width: 1px;
 		border-radius: 0.25em;
@@ -116,6 +119,13 @@ html {
 			flex: 2 1 auto;
 		    }
 		}
+		&.open {
+		    display: block;
+		    opacity: 1;
+		}
+	    }
+	    > form {
+		padding: 0 0.25em;
 	    }
         }
     }

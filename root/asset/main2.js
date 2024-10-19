@@ -9,6 +9,7 @@ document.addEventListener('load-graph', function () {
 
     this.rdfa.process(this);
 
+    const rdfv = RDF.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
     const ibis = RDF.Namespace('https://vocab.methodandstructure.com/ibis#');
     const skos = RDF.Namespace('http://www.w3.org/2004/02/skos/core#');
     const xhv  = RDF.Namespace('http://www.w3.org/1999/xhtml/vocab#');
@@ -17,7 +18,7 @@ document.addEventListener('load-graph', function () {
     const skosc = skos('Concept');
 
     const me = RDF.sym(window.location.href);
-    const a  = RDF.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
+    const a  = rdfv('type');
     let types = this.graph.match(me, a).filter(
         s => RDF.isNamedNode(s.object)).map(s => s.object);
 
@@ -39,7 +40,7 @@ document.addEventListener('load-graph', function () {
     // anyway get the scheme
     const schemes = isEntity ? getSchemes(me) : [me];
 
-    console.log(schemes);
+    // console.log(schemes);
 
     // test if these are the types we're after
     const test = ts => ts.filter(t => types.some(x => x.equals(t))).length > 0;
@@ -235,6 +236,34 @@ window.addEventListener('load', function () {
         form['$ label'].addEventListener('input', handleAutoFill, false);
 
     });
+
+    const overlayOn = function (e) {
+	e.cancelBubble = true;
+	e.preventDefault();
+	const ov = document.getElementById('scheme-list');
+	ov.classList.add('open');
+
+	return true;
+    };
+    const overlayOff = function (e) {
+	const ov = document.getElementById('scheme-list');
+	if (ov && ov.classList.contains('open')) {
+	    e.preventDefault();
+	    ov.classList.remove('open');
+	}
+
+	return true;
+    };
+
+    // open the panel
+    document.getElementById('scheme-collapsed')?.addEventListener(
+	'click', overlayOn);
+    // add this to the popout that does nothing but kill the bubbling
+    // so the next one doesn't fire
+    document.getElementById('scheme-list')?.addEventListener(
+	'click', e => e.cancelBubble = true);
+    // click anywhere but the panel itself to dismiss it
+    window.addEventListener('click', overlayOff);
 
     return true;
 });

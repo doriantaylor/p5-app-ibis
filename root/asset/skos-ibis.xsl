@@ -1010,8 +1010,16 @@
 
 
   <footer>
-    <ul class="schemes">
-      <xsl:call-template name="skos:footer-item">
+    <form>
+      <button type="button" id="scheme-collapsed">
+      <xsl:call-template name="skos:scheme-collapsed-item">
+	<xsl:with-param name="schemes"    select="$attached"/>
+	<xsl:with-param name="focus"      select="$focus"/>
+      </xsl:call-template>
+      </button>
+    </form>
+    <ul id="scheme-list" class="schemes">
+      <xsl:call-template name="skos:scheme-item">
 	<xsl:with-param name="schemes"    select="$schemes"/>
 	<xsl:with-param name="attached"   select="$attached"/>
 	<xsl:with-param name="focus"      select="$focus"/>
@@ -1044,15 +1052,122 @@
 </xsl:template>
 
 <x:doc>
-  <h2>skos:footer-item</h2>
+  <h2>skos:scheme-item-label</h2>
+  <p>this is just a plain list</p>
+</x:doc>
+
+<xsl:template name="skos:scheme-item-label">
+  <xsl:param name="subject" select="''"/>
+  <xsl:param name="is-focused" select="false()"/>
+
+  <xsl:variable name="doc" select="document($subject)/*"/>
+  <!-- get label shenanigans -->
+  <xsl:variable name="label-raw">
+    <xsl:apply-templates select="$doc" mode="skos:object-form-label">
+      <xsl:with-param name="subject" select="$subject"/>
+    </xsl:apply-templates>
+  </xsl:variable>
+  <xsl:variable name="label-prop" select="substring-before($label-raw, ' ')"/>
+  <xsl:variable name="label-val" select="substring-after($label-raw, ' ')"/>
+  <xsl:variable name="label" select="substring-before($label-val, $rdfa:UNIT-SEP)"/>
+  <xsl:variable name="label-type">
+    <xsl:if test="not(starts-with(substring-after($label-val, $rdfa:UNIT-SEP), '@'))">
+      <xsl:value-of select="substring-after($label-val, $rdfa:UNIT-SEP)"/>
+    </xsl:if>
+  </xsl:variable>
+  <xsl:variable name="label-lang">
+    <xsl:if test="starts-with(substring-after($label-val, $rdfa:UNIT-SEP), '@')">
+      <xsl:value-of select="substring-after($label-val, concat($rdfa:UNIT-SEP, ' '))"/>
+    </xsl:if>
+  </xsl:variable>
+
+  <xsl:variable name="span">
+    <xsl:choose>
+      <xsl:when test="$is-focused">strong</xsl:when>
+      <xsl:otherwise>span</xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <xsl:element name="{$span}">
+    <xsl:if test="$label-prop">
+      <xsl:attribute name="property">
+	<xsl:value-of select="$label-prop"/>
+      </xsl:attribute>
+      <xsl:if test="$label-type">
+	<xsl:attribute name="datatype"><xsl:value-of select="$label-type"/></xsl:attribute>
+      </xsl:if>
+      <xsl:if test="$label-lang">
+	<xsl:attribute name="xml:lang"><xsl:value-of select="$label-lang"/></xsl:attribute>
+      </xsl:if>
+    </xsl:if>
+    <xsl:value-of select="$label"/>
+  </xsl:element>
+</xsl:template>
+
+<x:doc>
+  <h2>skos:scheme-collapsed-item</h2>
+  <p>this is just a plain list</p>
+</x:doc>
+
+<xsl:template name="skos:scheme-collapsed-item">
+  <xsl:param name="schemes" select="''"/>
+  <xsl:param name="focus"   select="''"/>
+
+  <xsl:variable name="first">
+    <xsl:choose>
+      <xsl:when test="string-length(normalize-space($focus)) and contains(concat(' ', $focus, ' '), concat(' ', $schemes, ' '))">
+	<xsl:value-of select="normalize-space($focus)"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:call-template name="str:safe-first-token">
+	  <xsl:with-param name="tokens" select="$schemes"/>
+	</xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <xsl:variable name="is-focused" select="normalize-space($focus) = $first"/>
+
+  <xsl:variable name="rest">
+    <xsl:choose>
+      <xsl:when test="$is-focused">
+	<xsl:call-template name="str:token-minus">
+	  <xsl:with-param name="tokens" select="$schemes"/>
+	  <xsl:with-param name="minus" select="$first"/>
+	</xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="substring-after(normalize-space($schemes), ' ')"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <xsl:if test="string-length($first)">
+    <xsl:call-template name="skos:scheme-item-label">
+      <xsl:with-param name="subject" select="$first"/>
+      <xsl:with-param name="is-focused" select="$is-focused"/>
+    </xsl:call-template>
+
+    <xsl:if test="string-length($rest)">
+      <xsl:text>, </xsl:text>
+      <xsl:call-template name="skos:scheme-collapsed-item">
+	<xsl:with-param name="schemes" select="$rest"/>
+	<xsl:with-param name="focus" select="$focus"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:if>
+</xsl:template>
+
+<x:doc>
+  <h2>skos:scheme-item</h2>
   <p>okay so this is supposed consume a space-delimited queue of addresses recursively and produce a list of things.</p>
   <p>it needs to know</p>
 </x:doc>
 
-<xsl:template name="skos:footer-item">
+<xsl:template name="skos:scheme-item">
   <xsl:param name="schemes"  select="''"/>
   <xsl:param name="attached" select="''"/>
-  <xsl:param name="focus"  select="''"/>
+  <xsl:param name="focus"    select="''"/>
   <xsl:param name="space">
     <xsl:message terminate="yes">`space` parameter required</xsl:message>
   </xsl:param>
@@ -1078,48 +1193,15 @@
     </xsl:variable>
     <xsl:variable name="is-attached" select="string-length($attach-intersection)"/>
 
-    <!-- get label shenanigans -->
-    <xsl:variable name="label-raw">
-      <xsl:apply-templates select="$scheme-doc" mode="skos:object-form-label">
-	<xsl:with-param name="subject" select="$first"/>
-      </xsl:apply-templates>
-    </xsl:variable>
-    <xsl:variable name="label-prop" select="substring-before($label-raw, ' ')"/>
-    <xsl:variable name="label-val" select="substring-after($label-raw, ' ')"/>
-    <xsl:variable name="label" select="substring-before($label-val, $rdfa:UNIT-SEP)"/>
-    <xsl:variable name="label-type">
-      <xsl:if test="not(starts-with(substring-after($label-val, $rdfa:UNIT-SEP), '@'))">
-	<xsl:value-of select="substring-after($label-val, $rdfa:UNIT-SEP)"/>
-      </xsl:if>
-    </xsl:variable>
-    <xsl:variable name="label-lang">
-      <xsl:if test="starts-with(substring-after($label-val, $rdfa:UNIT-SEP), '@')">
-	<xsl:value-of select="substring-after($label-val, concat($rdfa:UNIT-SEP, ' '))"/>
-      </xsl:if>
-    </xsl:variable>
-
     <li>
-      <a rel="skos:inScheme" href="{$first}">
-	<xsl:variable name="span">
-	  <xsl:choose>
-	    <xsl:when test="$first = $focus">strong</xsl:when>
-	    <xsl:otherwise>span</xsl:otherwise>
-	  </xsl:choose>
-	</xsl:variable>
-	<xsl:element name="{$span}">
-	  <xsl:if test="$label-prop">
-	    <xsl:attribute name="property">
-	      <xsl:value-of select="$label-prop"/>
-	    </xsl:attribute>
-	    <xsl:if test="$label-type">
-	      <xsl:attribute name="datatype"><xsl:value-of select="$label-type"/></xsl:attribute>
-	    </xsl:if>
-	    <xsl:if test="$label-lang">
-	      <xsl:attribute name="xml:lang"><xsl:value-of select="$label-lang"/></xsl:attribute>
-	    </xsl:if>
-	  </xsl:if>
-	  <xsl:value-of select="$label"/>
-	</xsl:element>
+      <a href="{$first}">
+	<xsl:if test="$is-attached">
+	  <xsl:attribute name="rel">skos:inScheme</xsl:attribute>
+	</xsl:if>
+	<xsl:call-template name="skos:scheme-item-label">
+	  <xsl:with-param name="subject" select="$first"/>
+	  <xsl:with-param name="is-focused" select="$first = $focus"/>
+	</xsl:call-template>
       </a>
       <!-- 'set focus' button (if not focused, unconditional) -->
       <form method="POST" action="">
@@ -1142,7 +1224,7 @@
 
     <xsl:variable name="rest" select="normalize-space(substring-after($snorm, ' '))"/>
     <xsl:if test="string-length($rest)">
-      <xsl:call-template name="skos:footer-item">
+      <xsl:call-template name="skos:scheme-item">
 	<xsl:with-param name="schemes"    select="$rest"/>
 	<xsl:with-param name="attached"   select="$attached"/>
 	<xsl:with-param name="focus"      select="$focus"/>

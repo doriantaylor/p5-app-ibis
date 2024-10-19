@@ -36,6 +36,7 @@ MANIFEST
 META.json
 META.yml
 README
+root/asset/cgto.xsl
 root/asset/chevron-r.svg
 root/asset/circos.css
 root/asset/complex.js
@@ -65,9 +66,12 @@ root/asset/noto-sans-symbols2/regular.otf
 root/asset/noto-sans-symbols2/regular.ttf
 root/asset/rdf-viz.js
 root/asset/rdf.js
+root/asset/rdfa-util.xsl
 root/asset/rdfa.xsl
+root/asset/skos-ibis.xsl
 root/asset/svg.css
 root/asset/transclude.xsl
+root/asset/vocabs.rdf
 root/favicon.ico
 root/generic-error.xhtml
 root/icon.svg
@@ -80,6 +84,8 @@ script/app_ibis_create.pl
 script/app_ibis_fastcgi.pl
 script/app_ibis_server.pl
 script/app_ibis_test.pl
+script/doc-extract.xsl
+script/extract-docs.sh
 script/get-fa
 script/get-jquery
 script/get-xslt
